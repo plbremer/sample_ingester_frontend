@@ -1,7 +1,7 @@
 
 
 import dash
-from dash import dcc, html,callback,dash_table
+from dash import dcc, html,callback
 from dash.dependencies import Input, Output, State
 
 import plotly.express as px
@@ -175,7 +175,7 @@ layout = html.Div(
                                 ),
                             ],
                             href='/curate-and-download',
-                            refresh=True
+                            #refresh=True
                         )
 
                     ],
@@ -229,7 +229,7 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
 
     return [
         dcc.send_data_frame(
-            temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information"
+            temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information", index=False
         )
     ]
 
@@ -246,13 +246,15 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     [
         State(component_id="upload_form", component_property="filename"),
         State(component_id="upload_form", component_property="last_modified"),
+        State(component_id="main_store",component_property="data"),
     ],
     prevent_initial_call=True
 )
 def upload_form(
     upload_form_contents,
     upload_form_filename,
-    upload_form_last_modified
+    upload_form_last_modified,
+    TEMP
 ):
     if upload_form_contents==None:
         raise PreventUpdate
@@ -260,6 +262,10 @@ def upload_form(
     '''
     need to have things like prevent update if its not an excel file
     '''
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`')
+    print(TEMP)
+    
+    
     print(upload_form_contents)
 
     # decoded = base64.b64decode(content_string)
@@ -279,5 +285,6 @@ def upload_form(
 
     temp_dataframe_as_json=temp_dataframe.to_records()
 
+    print(temp_dataframe_as_json)
     displayed_name=[html.H5(upload_form_filename)]
     return [displayed_name,temp_dataframe_as_json]
