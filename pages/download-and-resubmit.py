@@ -1,7 +1,7 @@
 
 
 import dash
-from dash import dcc, html,callback
+from dash import dcc, html,callback,dash_table
 from dash.dependencies import Input, Output, State
 
 import plotly.express as px
@@ -10,6 +10,9 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 
 import pandas as pd
+
+import base64
+import io
 
 dash.register_page(__name__, path='/download-and-resubmit')
 
@@ -108,7 +111,6 @@ layout = html.Div(
                 dbc.Col(width=5),
                 dbc.Col(
                     children=[
-
                         dcc.Upload(
                             id='upload_form',
                             children=html.Div([
@@ -126,13 +128,70 @@ layout = html.Div(
                                 'margin': '10px'
                             },
                         ),
+                    ],
+                    width=2
+                ),
+                dbc.Col(width=5)
+            ]
+        ),
+        html.Br(),
+
+
+        dbc.Row(
+            children=[
+                dbc.Col(width=5),
+                dbc.Col(
+                    children=[
+                        html.Div(id='div_filename')
+                    ],
+                    width=2
+                ),
+                dbc.Col(width=5)
+            ]
+        ),
+
+
+
+
+
+
+
+
+
+        dbc.Row(
+            children=[
+                dbc.Col(width=5),
+                dbc.Col(
+                    children=[
+                        
+                        dcc.Link(
+                            children=[                        
+                                html.Div(
+                                    dbc.Button(
+                                        'Process Form',
+                                        id='button_form',
+                                    ),
+                                    className="d-grid gap-2 col-6 mx-auto",
+                                ),
+                            ],
+                            href='/curate-and-download',
+                            refresh=True
+                        )
 
                     ],
                     width=2
                 ),
                 dbc.Col(width=5)
             ]
-        )
+        ),
+
+
+
+
+
+
+
+
 
     ],
 )
@@ -173,3 +232,52 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
             temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information"
         )
     ]
+
+
+@callback(
+    [
+        #Output(component_id="here_is_where_we_put_the curation_interface", component_property="children"),
+        Output(component_id="div_filename", component_property="children"),
+        Output(component_id="main_store",component_property="data")
+    ],
+    [
+        Input(component_id="upload_form", component_property="contents"),
+    ],
+    [
+        State(component_id="upload_form", component_property="filename"),
+        State(component_id="upload_form", component_property="last_modified"),
+    ],
+    prevent_initial_call=True
+)
+def upload_form(
+    upload_form_contents,
+    upload_form_filename,
+    upload_form_last_modified
+):
+    if upload_form_contents==None:
+        raise PreventUpdate
+    
+    '''
+    need to have things like prevent update if its not an excel file
+    '''
+    print(upload_form_contents)
+
+    # decoded = base64.b64decode(content_string)
+    # df = pd.read_excel(io.BytesIO(decoded))
+
+    content_type, content_string = upload_form_contents.split(',')
+    # decoded = base64.b64decode(content_string)
+    # df = pd.read_excel(io.BytesIO(decoded))
+
+    decoded=base64.b64decode(content_string)
+
+    temp_dataframe=pd.read_excel(
+        io.BytesIO(decoded)
+    )
+
+    print(temp_dataframe)
+
+    temp_dataframe_as_json=temp_dataframe.to_records()
+
+    displayed_name=[html.H5(upload_form_filename)]
+    return [displayed_name,temp_dataframe_as_json]

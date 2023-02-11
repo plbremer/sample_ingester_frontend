@@ -16,24 +16,17 @@ my_page_link_list=[
     dbc.NavLink('Curate and download', href='/curate-and-download',style = {'color': 'white','font-weight':'bold'}),
 ]
 
-app.layout = html.Div([
+app.layout = html.Div(
+    [
+        dcc.Store('main_store'),
         dbc.NavbarSimple(
-            # dbc.Container(
+            #dbc.Container(
             children=[
                 # html.A(
-                #     # Use row and col to control vertical alignment of logo / brand
-                #     dbc.Row([
-                #         dbc.Col(html.Img(src='https://avatars.githubusercontent.com/u/45467465?s=200&v=4', height="50px")),
-                #         dbc.Col(dbc.NavbarBrand(id="header", children="Binvestigate, a FiehnLab Production")),#, className="ms-2")),
-                #         ], 
-                #         align="center",
-                #     ),
-                #     href="https://fiehnlab.ucdavis.edu/",
-                #     style={"textDecoration": "none"},
                 # )
             # the earlier viersion that was alphabetized
             ]+my_page_link_list,
-            brand='brand here',
+            brand='hello',
             color='#1A3E68',
             brand_style = {'color': '#FFCD00'},
             #links_left=True,
