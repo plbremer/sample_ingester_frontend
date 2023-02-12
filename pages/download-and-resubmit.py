@@ -278,12 +278,13 @@ def upload_form(
     decoded=base64.b64decode(content_string)
 
     temp_dataframe=pd.read_excel(
-        io.BytesIO(decoded)
+        io.BytesIO(decoded),
+        #index_col=False
     )
 
     print(temp_dataframe)
 
-    temp_dataframe_as_json=temp_dataframe.to_records()
+    temp_dataframe_as_json=temp_dataframe.to_records(index=False)
 
     print(temp_dataframe_as_json)
     displayed_name=[html.H5(upload_form_filename)]
