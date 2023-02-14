@@ -27,13 +27,13 @@ def generate_form_headers(selected_sample_archetypes):
     '''
     form_header_dict={
         'tissue':['species','organ','disease','sex','height','height_unit','weight','weight_unit','age','age_unit'],
-        'fluid':['species','organ','disease','sex','height','height_unit','weight','weight_unit','age','age_unit'],
+        'fluid':['species','organ','disease','sex','height','height_unit','mass','mass_unit','age','age_unit'],
         'cells':['species','cell_line','cell_count'],
-        'raw_material':['medium','mass','mass_unit','volume','volume_unit'],
+        'raw_material':['material','mass','mass_unit','volume','volume_unit'],
         'genetic':['gene'],
         'longitudinal':['zero_time_event','time','time_unit'],
-        'effect':['drug_name','drug_dose','drug_dose_unit','diet','exercise'],
-        'general':['other_inclusion_criteria','other_inclusion_criteria_exclusion_criteria']
+        'effect':['drug_name','drug_dose_volume_or_mass','drug_dose_unit','diet','exercise'],
+        'general':['other_inclusion_criteria','other_exclusion_criteria']
     }
 
     total_headers=[]
