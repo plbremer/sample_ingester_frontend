@@ -11,6 +11,8 @@ from dash.exceptions import PreventUpdate
 
 import pandas as pd
 
+import xlsxwriter
+
 import base64
 import io
 
@@ -24,13 +26,14 @@ def generate_form_headers(selected_sample_archetypes):
     need to make it so that properties dont appear multiple times
     '''
     form_header_dict={
-        'living_tissue':['species','organ','sex','diet','height','height_unit','weight','weight_unit','age','age_unit'],
-        'living_cells':['species','cell_line','cell_count'],
+        'tissue':['species','organ','disease','sex','height','height_unit','weight','weight_unit','age','age_unit'],
+        'fluid':['species','organ','disease','sex','height','height_unit','weight','weight_unit','age','age_unit'],
+        'cells':['species','cell_line','cell_count'],
         'raw_material':['medium','mass','mass_unit','volume','volume_unit'],
-        'knockout':['gene'],
-        'time':['zero_time_event','time','time_unit'],
-        'drug':['drug_name','drug_dose','drug_dose_unit'],
-        'general':['inclusion_criteria','exclusion_criteria']
+        'genetic':['gene'],
+        'longitudinal':['zero_time_event','time','time_unit'],
+        'effect':['drug_name','drug_dose','drug_dose_unit','diet','exercise'],
+        'general':['other_inclusion_criteria','other_inclusion_criteria_exclusion_criteria']
     }
 
     total_headers=[]
@@ -50,15 +53,17 @@ layout = html.Div(
         html.Br(),
         dbc.Row(
             children=[
-                dbc.Col(width=1),
+                dbc.Col(width=3),
                 dbc.Col(
                     children=[
-                        html.H3('Sample Descriptors'),
+                        html.H3('Sample Types'),
+                        html.Br(),
                         dbc.Checklist(
                             options=[
-                                {"label": "Living Tissue, Organs (plasma, lung, etc.)", "value": 'living_tissue'},
-                                {"label": "Living Cells (pure cells?)", "value": 'living_cells'},
-                                {"label": "Raw Material (soil, water, etc.)", "value": 'raw_material'},
+                                {"label": "Tissue, Organs (lung, heart, etc.)", "value": 'tissue'},
+                                {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
+                                {"label": "Cells", "value": 'cells'},
+                                {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
                             ],
                             #value=[1],
                             id="sample_checklist",
@@ -68,12 +73,13 @@ layout = html.Div(
                 ),
                 dbc.Col(
                     children=[
-                        html.H3('Study Descriptors'),
+                        html.H3('Study Types'),
+                        html.Br(),
                         dbc.Checklist(
                             options=[
-                                {"label": "Gene Knockout", "value": 'knockout'},
-                                {"label": "Time Series", "value": 'time'},
-                                {"label": "Drug Administration", "value": 'drug'},
+                                {"label": "Genetic", "value": 'genetic'},
+                                {"label": "Time Series (Longitudinal)", "value": 'longitudinal'},
+                                {"label": "Intervention/Effect", "value": 'effect'},
                             ],
                             #value=[1],
                             id="study_checklist",
@@ -81,9 +87,11 @@ layout = html.Div(
                     ],
                     width=4
                 ),
-                dbc.Col(width=2)
+                dbc.Col(width=1)
             ]
         ),
+        html.Br(),
+        html.Br(),
         html.Br(),
         html.Br(),
         dbc.Row(
@@ -134,7 +142,7 @@ layout = html.Div(
                 dbc.Col(width=5)
             ]
         ),
-        html.Br(),
+        #html.Br(),
 
 
         dbc.Row(
@@ -157,7 +165,8 @@ layout = html.Div(
 
 
 
-
+        html.Br(),
+        html.Br(),
         dbc.Row(
             children=[
                 dbc.Col(width=5),
@@ -227,11 +236,37 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     )
     print(temp_dataframe)
 
+    output_stream=io.BytesIO()
+    temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+
+    empty_df=pd.DataFrame()
+    empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
+    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False)
+
+    #https://xlsxwriter.readthedocs.io/working_with_pandas.html
+    #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
+    workbook=temp_writer.book
+    worksheet=temp_writer.sheets['sample_sheet']
+    worksheet.autofit()
+
+    worksheet=temp_writer.sheets['title_page']
+    worksheet.hide_gridlines()
+    worksheet.write('B2','Hello. Please write one sample per row.')
+    worksheet.write('B3','Please leave unused metadata blank.')
+
+    temp_writer.save()
+    temp_data=output_stream.getvalue()
+    #output_excel
+
     return [
-        dcc.send_data_frame(
-            temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information", index=False
-        )
+        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form.xlsx")
     ]
+
+    # return [
+    #     dcc.send_data_frame(
+    #         temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information", index=False
+    #     )
+    # ]
 
 
 @callback(
@@ -287,5 +322,5 @@ def upload_form(
     temp_dataframe_as_json=temp_dataframe.to_records(index=False)
 
     print(temp_dataframe_as_json)
-    displayed_name=[html.H5(upload_form_filename)]
+    displayed_name=[html.H5(upload_form_filename,className='text-center')]
     return [displayed_name,temp_dataframe_as_json]
