@@ -1,5 +1,6 @@
+from re import T
 import dash
-from dash import dcc, html,dash_table,callback, ctx
+from dash import dcc, html,dash_table,callback, ctx,MATCH
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -264,87 +265,90 @@ layout = html.Div(
         
         html.Br(),
         html.Br(),
+        # dbc.Row(
+        #     children=[
+        #         dbc.Col(width=1),
+        #         dbc.Col(
+        #             children=[
+
+
+        #                 dash_table.DataTable(
+        #                     id='table_curation',
+        #                     editable=True,
+        #                     columns=[
+        #                         {"name": "header_type", "id": "header_type"},
+        #                         {"name": "value_parsed", "id": "value_parsed"},
+        #                         {"name": "best_guess", "id": "best_guess"},
+        #                         {"name": "alternative_guesses", "id": "alternative_guesses","presentation": "dropdown"},
+        #                         {"name": "free_text", "id": "free_text"},
+        #                     ],
+        #                     #data=[{'header_type': 0, 'value_parsed': 'human', 'best_guess': 'human AKA Homo sapiens NODE ncbi_9606', 'free_text': ''}, {'header_type': 0, 'value_parsed': 'Humen', 'best_guess': 'Humerus AKA Humerus NODE mesh_A02.835.232.087.090.400', 'free_text': ''}, {'header_type': 1, 'value_parsed': 'serum', 'best_guess': 'Serum AKA Serum NODE mesh_A12.207.152.846', 'free_text': ''}, {'header_type': 2, 'value_parsed': 10, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}, {'header_type': 2, 'value_parsed': 11, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}, {'header_type': 2, 'value_parsed': 12, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}],
+        #                     #dropdown_data=[{'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}}],
+        #                     data=[],
+        #                     dropdown_data=[],
+        #                     # data=curate_data(
+        #                     #     State(component_id="main_store",component_property="data")
+        #                     # ),
+        #                     #page_current=0,  
+        #                     #for whatever reason, case insensitive breaks the magnitude filter                              
+        #                     # filter_options={
+        #                     #     'case':'insensitive',
+        #                     #     'placeholder_text':'Type here to filter'
+        #                     # },
+        #                     page_size=50,
+        #                     page_action='native',
+        #                     sort_action='native',
+        #                     sort_mode='multi',
+        #                     #filter_action='native',
+        #                     style_cell={
+        #                         'fontSize': 17,
+        #                         'padding': '8px',
+        #                         'textAlign': 'center'
+        #                     },
+        #                     style_header={
+        #                         'font-family': 'arial',
+        #                         'fontSize': 15,
+        #                         'fontWeight': 'bold',
+        #                         'textAlign': 'center'
+        #                     },
+        #                     style_data={
+        #                         'textAlign': 'center',
+        #                         'fontWeight': 'bold',
+        #                         'font-family': 'Roboto',
+        #                         'fontSize': 15,
+        #                     },
+        #                     css=[ {"selector": ".Select-menu-outer", "rule": 'display : block !important'} ]
+        #                 )
+        #             ],
+        #             width=4
+        #         ),
+        #         dbc.Col(
+        #             # children=[
+        #             #     html.H3('Study Descriptors'),
+        #             # ],
+        #             width=4
+        #         ),
+        #         dbc.Col(width=2)
+        #     ]
+        # ),
+
         dbc.Row(
             children=[
-                dbc.Col(width=1),
-                dbc.Col(
-                    children=[
-
-
-                        dash_table.DataTable(
-                            id='table_curation',
-                            editable=True,
-                            columns=[
-                                {"name": "header_type", "id": "header_type"},
-                                {"name": "value_parsed", "id": "value_parsed"},
-                                {"name": "best_guess", "id": "best_guess"},
-                                {"name": "alternative_guesses", "id": "alternative_guesses","presentation": "dropdown"},
-                                {"name": "free_text", "id": "free_text"},
-                            ],
-                            #data=[{'header_type': 0, 'value_parsed': 'human', 'best_guess': 'human AKA Homo sapiens NODE ncbi_9606', 'free_text': ''}, {'header_type': 0, 'value_parsed': 'Humen', 'best_guess': 'Humerus AKA Humerus NODE mesh_A02.835.232.087.090.400', 'free_text': ''}, {'header_type': 1, 'value_parsed': 'serum', 'best_guess': 'Serum AKA Serum NODE mesh_A12.207.152.846', 'free_text': ''}, {'header_type': 2, 'value_parsed': 10, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}, {'header_type': 2, 'value_parsed': 11, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}, {'header_type': 2, 'value_parsed': 12, 'best_guess': 'Ablabys taenianotus AKA Ablabys taenianotus NODE ncbi_1604563', 'free_text': ''}],
-                            #dropdown_data=[{'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}},                            {'alternative_guesses': {'options': [{'label': 'hi', 'value': 'hi'}]}}],
-                            data=[],
-                            dropdown_data=[],
-                            # data=curate_data(
-                            #     State(component_id="main_store",component_property="data")
-                            # ),
-                            #page_current=0,  
-                            #for whatever reason, case insensitive breaks the magnitude filter                              
-                            # filter_options={
-                            #     'case':'insensitive',
-                            #     'placeholder_text':'Type here to filter'
-                            # },
-                            page_size=50,
-                            page_action='native',
-                            sort_action='native',
-                            sort_mode='multi',
-                            #filter_action='native',
-                            style_cell={
-                                'fontSize': 17,
-                                'padding': '8px',
-                                'textAlign': 'center'
-                            },
-                            style_header={
-                                'font-family': 'arial',
-                                'fontSize': 15,
-                                'fontWeight': 'bold',
-                                'textAlign': 'center'
-                            },
-                            style_data={
-                                'textAlign': 'center',
-                                'fontWeight': 'bold',
-                                'font-family': 'Roboto',
-                                'fontSize': 15,
-                            },
-                            css=[ {"selector": ".Select-menu-outer", "rule": 'display : block !important'} ]
-                        )
-
-
-
-
-
-
-                    ],
-                    width=4
-                ),
-                dbc.Col(
-                    # children=[
-                    #     html.H3('Study Descriptors'),
-                    # ],
-                    width=4
-                ),
-                dbc.Col(width=2)
+                html.Div(
+                    id='here_is_where_we_put_the curation_interface'
+                )
             ]
         )
+
     ],
 )
 
 
 @callback(
     [
-        #Output(component_id="here_is_where_we_put_the curation_interface", component_property="children"),
-        Output(component_id="table_curation", component_property="data"),
-        Output(component_id="table_curation", component_property="dropdown_data"),
+        Output(component_id="here_is_where_we_put_the curation_interface", component_property="children"),
+        #Output(component_id="table_curation", component_property="data"),
+        #Output(component_id="table_curation", component_property="dropdown_data"),
         #Output(component_id="main_store",component_property="data")
     ],
     [
@@ -388,46 +392,100 @@ def curate_data(
     pprint(valid_string_neighbors)
 
     dropdown_options=generate_dropdown_options(valid_string_neighbors)
-    # pprint(dropdown_options)
+    pprint(dropdown_options)
 
-    #ultimatley, there is a rwo for every written component
-    curation_datatable_data=generate_input_to_other_columns_for_datatable(dropdown_options)
-    temp_panda=pd.DataFrame.from_dict(curation_datatable_data)
-    # print(test_panda)
+
+    output_children=list()
+    for temp_header in dropdown_options.keys():
+        for temp_written_string in dropdown_options[temp_header].keys():
+            output_children.append(
+                dbc.Row(
+                    children=[
+                        #dbc.Col(width=1),
+                        dbc.Col(
+                            html.H6(str(temp_header)+': '+str(temp_written_string))
+                        ),    
+                        dbc.Col(
+                            html.H6(
+                                dropdown_options[temp_header][temp_written_string][0]['label']
+                            ),
+                        ),
+                        #the dropdown for strings that are close
+                        dbc.Col(
+                            dcc.Dropdown(
+                                id={
+                                    'type':'dropdown_similar_strings',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                options=[label_value_pair for label_value_pair in dropdown_options[temp_header][temp_written_string]]
+                            )
+                        ),
+                        #the dropdown with completely empty boxes
+                        dbc.Col(
+                            dcc.Dropdown(
+                                id={
+                                    'type':'dropdown_empty_options',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                multi=False,
+                                placeholder='Type compound name to search',
+                                options=['Type substring to populate options.']
+                            ),  
+                        ),
+
+                        #the empty input to create your own
+                        dbc.Col(
+                            dcc.Input(
+                                id={
+                                    'type':'input_curation',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                placeholder="hate all the proposals? enter your own here!"
+                            )
+                        )
+
+                    ]
+                )
+            )
+
+
+    # #ultimatley, there is a rwo for every written component
+    # curation_datatable_data=generate_input_to_other_columns_for_datatable(dropdown_options)
+    # temp_panda=pd.DataFrame.from_dict(curation_datatable_data)
+    # print(temp_panda)
     # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-    curation_datatable_data_records=temp_panda.to_dict(orient='records')
+    # curation_datatable_data_records=temp_panda.to_dict(orient='records')
+    # print(curation_datatable_data_records)
+    # curation_datatable_dropdowns=generate_input_to_dropdown_column_for_datatable(dropdown_options)
+    # pprint(curation_datatable_dropdowns)
+
+
+    #return [curation_datatable_data_records,curation_datatable_dropdowns]
+
+    return [output_children]
+
+@callback(
+    Output({'type':'dropdown_empty_options','index':MATCH},'options'),
+    #Input("dropdown_bin", "search_value")
+    Input({'type':'dropdown_empty_options','index':MATCH},'search_value')
+)
+def update_options(search_value):
+    if not search_value:
+        raise PreventUpdate
     
-    print(curation_datatable_data_records)
-    
-    
-    curation_datatable_dropdowns=generate_input_to_dropdown_column_for_datatable(dropdown_options)
-    # curation_datatable_dropdowns=[
-    #     {
-    #         'alternative_guesses':{
-    #             'options':[
-    #                 {
-    #                     'label':'hi',
-    #                     'value':'hi'
-    #                 }
-    #             ]
-    #         }
-    #     }
-    #     for i in curation_datatable_data_records
-    # ]
-    
-    #curation_data['alternative_guesses']=dropdown_options
+    #valid_string_list_dataframe
+    temp_valid_values=valid_string_list_dataframe['valid_strings'].loc[
+        valid_string_list_dataframe['valid_strings'].str.contains(search_value)
+    ].values
 
-    #output_data_records_format=generate_datatable_records(dropdown_options)
+    return [
+        {   #this form does not match the others. the others take the valid string and plug it into the json.
+            'label': temp_string,
+            'value': temp_string
+        } for temp_string in temp_valid_values
+    ]
 
-
-
-    pprint(curation_datatable_dropdowns)
-
-
-    return [curation_datatable_data_records,curation_datatable_dropdowns]
-
-
-
+    #return [o for o in bins_dict if search_value in o["label"]]
 
 
 
