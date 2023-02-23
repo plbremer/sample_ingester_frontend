@@ -142,9 +142,6 @@ layout = html.Div(
                 dbc.Col(width=5)
             ]
         ),
-        #html.Br(),
-
-
         dbc.Row(
             children=[
                 dbc.Col(width=5),
@@ -157,14 +154,6 @@ layout = html.Div(
                 dbc.Col(width=5)
             ]
         ),
-
-
-
-
-
-
-
-
         html.Br(),
         html.Br(),
         dbc.Row(
@@ -186,7 +175,6 @@ layout = html.Div(
                             href='/curate-and-download',
                             #refresh=True
                         )
-
                     ],
                     width=2
                 ),
@@ -281,6 +269,7 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     [
         State(component_id="upload_form", component_property="filename"),
         State(component_id="upload_form", component_property="last_modified"),
+        #this state component is not necessary
         State(component_id="main_store",component_property="data"),
     ],
     prevent_initial_call=True
@@ -289,7 +278,7 @@ def upload_form(
     upload_form_contents,
     upload_form_filename,
     upload_form_last_modified,
-    TEMP
+    main_store_data
 ):
     if upload_form_contents==None:
         raise PreventUpdate
@@ -298,13 +287,9 @@ def upload_form(
     need to have things like prevent update if its not an excel file
     '''
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`')
-    print(TEMP)
-    
-    
-    print(upload_form_contents)
+    print(main_store_data)
+    #print(upload_form_contents)
 
-    # decoded = base64.b64decode(content_string)
-    # df = pd.read_excel(io.BytesIO(decoded))
 
     content_type, content_string = upload_form_contents.split(',')
     # decoded = base64.b64decode(content_string)
@@ -319,7 +304,7 @@ def upload_form(
 
     print(temp_dataframe)
 
-    temp_dataframe_as_json=temp_dataframe.to_records(index=False)
+    temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
     print(temp_dataframe_as_json)
     displayed_name=[html.H5(upload_form_filename,className='text-center')]

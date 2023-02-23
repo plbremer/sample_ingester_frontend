@@ -19,33 +19,64 @@ import pandas as pd
 from pprint import pprint
 
 
-nearest_neighbors_model_address='additional_files/NearestNeighbors.bin'
-tfidf_vectorizer_model_address='additional_files/tfidfVectorizer.bin'
-valid_string_as_key_json_address='additional_files/combined_valid_string_as_key.json'
-valid_string_list_dataframe_address='additional_files/valid_string_list_dataframe.bin'
+#get all of the models
+nearest_neighbors_dict=dict()
+tfidf_vectorizer_dict=dict()
+model_files=os.listdir('additional_files/')
+for temp_file_name in model_files:
+    temp_header=temp_file_name.split('.')[0].split('_')[-1]
+    if 'NearestNeighbors' in temp_file_name:
+        with open(f'additional_files/{temp_file_name}', 'rb') as f:
+            nearest_neighbors_dict[temp_header]=pickle.load(f)
+    elif 'tfidfVectorizer' in temp_file_name:
+        with open(f'additional_files/{temp_file_name}', 'rb') as f:
+            tfidf_vectorizer_dict[temp_header]=pickle.load(f)
 
-with open(nearest_neighbors_model_address, 'rb') as f: 
-    nearest_neighbors_model=pickle.load(f)
-with open(tfidf_vectorizer_model_address, 'rb') as f:
-    tfidf_vectorizer_model=pickle.load(f)
-valid_string_list_dataframe=pd.read_pickle(valid_string_list_dataframe_address)
-valid_string_list_array=valid_string_list_dataframe['valid_strings'].values
-with open(valid_string_as_key_json_address, 'r') as f:
-    valid_string_as_key_json=json.load(f)
 
-# def curate_data(
-#     main_store_data
-# ):
+#get all of the vocabulary dicts
+conglomerate_vocabulary_panda_dict=dict()
+for temp_file_name in model_files:
+    temp_header=temp_file_name.split('.')[0].split('_')[-1]
+    if 'conglomerate_vocabulary_panda' in temp_file_name:
+        temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
+        #temp panda has header 0 not "valid string unique" for some reason
+        conglomerate_vocabulary_panda_dict[temp_header]=temp_panda
+        #vocabulary_dict[temp_header]=temp_panda[0].values
+#print(conglomerate_vocabulary_panda_dict.keys())
+#its_ya_boy=input('key check')
 
-#     #print(ctx.triggered_id)
-#     print(main_store_data)
 
-#     print('hi')
-#     return ['hji']
+
+#conglomerate_vocabulary_panda=pd.read_pickle('additional_files/conglomerate_vocabulary_panda.bin')
+
+# #get a view for each of the temp headers, the same view that was used to make the models
+# header_vocabulary_json_address="additional_files/subset_per_heading.json"
+# with open(header_vocabulary_json_address,'r') as f:
+#     header_vocabulary_json=json.load(f)
+# # gui_headers=header_vocabulary_json.keys()
+
+#get the vocaulary for each header. used to infer the valid_string from locattion.
+#nearest neighbors model outputs location of match on list.
+vocabulary_dict=dict()
+for temp_file_name in model_files:
+    temp_header=temp_file_name.split('.')[0].split('_')[-1]
+    if 'unique_valid_strings' in temp_file_name:
+        temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
+        #temp panda has header 0 not "valid string unique" for some reason
+        vocabulary_dict[temp_header]=temp_panda[0].values
+
+
+# print(tfidf_vectorizer_dict.keys())
+# print(tfidf_vectorizer_dict['species'])
+# hold=input('key check')
+# for temp_header in header_vocabulary_json.keys():
+#     temp_subset_definitions=header_vocabulary_json[temp_header]
+#     temp_panda_list=list()
+#strictly speaking, we should proabbly subset the panda. the reason being that we fcould technically reach out into a region that is unrelated
+#like "DDT" has meaning for both chemicals and genes. so we wouldnt want the chemical nodes showing up during a gene search
 
 
 def parse_excel_file(store_panda):
-
     output_dict=dict()
     for temp_header in store_panda.columns:
         output_dict[temp_header]=store_panda[temp_header].unique().tolist()
@@ -54,11 +85,13 @@ def parse_excel_file(store_panda):
 def find_neighbors_per_string(written_strings_per_category):
     '''
     receives
-
     {0: ['human', 'Humen'], 1: ['serum'], 2: [10, 11, 12]}
     '''
-    
     output_dict=dict()
+
+    # temp_nearest_neighbors_dict=dict()
+    # temp_tfidf_vectorizer_dict=dict()
+
 
     #we can upgrade the vectorization to a, no pun intended, vectorized way, later
     for temp_header in written_strings_per_category.keys():
@@ -66,17 +99,21 @@ def find_neighbors_per_string(written_strings_per_category):
         for temp_written_string in written_strings_per_category[temp_header]:
             #vectorizer expects iterable. wrap in list to achieve
             #FIX: atm we typecase ints to strings
-            vectorized_string=tfidf_vectorizer_model.transform([str(temp_written_string)])
+            print('123456789012345678901234567890')
+            print(tfidf_vectorizer_dict['species'])
+            print(tfidf_vectorizer_dict[temp_header])
+            vectorized_string=tfidf_vectorizer_dict[temp_header].transform([str(temp_written_string)])
             #kn_ind is an array of indices of the nieghbors in the training matrix
-            _,kn_ind=nearest_neighbors_model.kneighbors(
+            _,kn_ind=nearest_neighbors_dict[temp_header].kneighbors(
                 vectorized_string,
                 5
-                )
+            )
             #[0] because the shape of the array is array([[842652, 842654, 842651, 842649, 842653]]
-            output_dict[temp_header][temp_written_string]=valid_string_list_array[kn_ind[0]]
-
+            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
             
+    pprint(output_dict)
     return output_dict
+
 
 
 def generate_dropdown_options(valid_string_neighbors):
@@ -92,7 +129,10 @@ def generate_dropdown_options(valid_string_neighbors):
         11: array(['Ablabys taenianotus', 'Sillaginopsis domina', 'cockatoo waspfish',
         'Synodus fuscus', 'Taeniamia dispilus'], dtype=object),
         12: array(['Ablabys taenianotus', 'Sillaginopsis domina', 'cockatoo waspfish',
-        'Synodus fuscus', 'Taeniamia dispilus'], dtype=object)}}    
+        'Synodus fuscus', 'Taeniamia dispilus'], dtype=object)}}  
+
+
+    outputs 
     '''
     output_dict=dict()
     for temp_header in valid_string_neighbors.keys():
@@ -103,149 +143,147 @@ def generate_dropdown_options(valid_string_neighbors):
 
             for temp_valid_string in valid_string_neighbors[temp_header][temp_written_string]:
 
-                temp_relevant_nodes_list=valid_string_as_key_json[temp_valid_string]
+                ###temp_relevant_nodes_list=valid_string_as_key_json[temp_valid_string]
+                temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+                    conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
+                ]
                 #we have to do this extra one because in a few cases there is more than one node for a valid string
-                for temp_relevant_node in temp_relevant_nodes_list:
-
+                #this entire appraoch is proabbly a little dated because we grew to use padnas not jsons but oh well
+                ###for temp_relevant_node in temp_relevant_nodes_list:
+                for index,series in temp_relevant_nodes_rows.iterrows():
                     output_dict[temp_header][temp_written_string].append(
                         {
-                            'label':temp_valid_string+' AKA '+temp_relevant_node['main_string']+' NODE '+temp_relevant_node['node_id'],
-                            'value':temp_valid_string+' AKA '+temp_relevant_node['main_string']+' NODE '+temp_relevant_node['node_id']
+                            'label':temp_valid_string+' AKA '+series['main_string']+' NODE '+series['node_id'],
+                            'value':temp_valid_string+' AKA '+series['main_string']+' NODE '+series['node_id']                
                         }
                     )
+                    # output_dict[temp_header][temp_written_string].append(
+                    #     {
+                    #         'label':temp_valid_string+' AKA '+temp_relevant_node['main_string']+' NODE '+temp_relevant_node['node_id'],
+                    #         'value':temp_valid_string+' AKA '+temp_relevant_node['main_string']+' NODE '+temp_relevant_node['node_id']
+                    #     }
+                    # )
                     
     return output_dict
 
-def generate_input_to_dropdown_column_for_datatable(dropdown_options):
-    '''
-    receives
+# def generate_input_to_dropdown_column_for_datatable(dropdown_options):
+#     '''
+#     receives
 
-    {0: {'Humen': [{'label': 'Humerus AKA Humerus',
-                    'value': 'Humerus AKA Humerus NODE '
-                            'mesh_A02.835.232.087.090.400'},
-                {'label': 'Humerana AKA Humerana',
-                    'value': 'Humerana AKA Humerana NODE ncbi_1659744'},
-                {'label': 'ume AKA Prunus mume',
-                    'value': 'ume AKA Prunus mume NODE ncbi_102107'},
-                {'label': 'Rumen AKA Rumen',
-                    'value': 'Rumen AKA Rumen NODE mesh_A13.869.804'},
-                {'label': 'Cerumen AKA Cerumen',
-                    'value': 'Cerumen AKA Cerumen NODE mesh_A12.200.147'}],
-        'human': [{'label': 'human AKA Homo sapiens',
-                    'value': 'human AKA Homo sapiens NODE ncbi_9606'},
-                {'label': 'humans AKA Homo',
-                    'value': 'humans AKA Homo NODE ncbi_9605'},
-                {'label': 'Schumannia AKA Schumannia',
-                    'value': 'Schumannia AKA Schumannia NODE ncbi_489378'},
-                {'label': 'human lice AKA Pediculus humanus',
-                    'value': 'human lice AKA Pediculus humanus NODE ncbi_121225'},
-                {'label': 'Schumannella AKA Schumannella',
-                    'value': 'Schumannella AKA Schumannella NODE ncbi_472058'}]},
-    1: {'serum': [{'label': 'Serum AKA Serum',    
+#     {0: {'Humen': [{'label': 'Humerus AKA Humerus',
+#                     'value': 'Humerus AKA Humerus NODE '
+#                             'mesh_A02.835.232.087.090.400'},
+#                 {'label': 'Humerana AKA Humerana',
+#                     'value': 'Humerana AKA Humerana NODE ncbi_1659744'},
+#                 {'label': 'ume AKA Prunus mume',
+#                     'value': 'ume AKA Prunus mume NODE ncbi_102107'},
+#                 {'label': 'Rumen AKA Rumen',
+#                     'value': 'Rumen AKA Rumen NODE mesh_A13.869.804'},
+#                 {'label': 'Cerumen AKA Cerumen',
+#                     'value': 'Cerumen AKA Cerumen NODE mesh_A12.200.147'}],
+#         'human': [{'label': 'human AKA Homo sapiens',
+#                     'value': 'human AKA Homo sapiens NODE ncbi_9606'},
+#                 {'label': 'humans AKA Homo',
+#                     'value': 'humans AKA Homo NODE ncbi_9605'},
+#                 {'label': 'Schumannia AKA Schumannia',
+#                     'value': 'Schumannia AKA Schumannia NODE ncbi_489378'},
+#                 {'label': 'human lice AKA Pediculus humanus',
+#                     'value': 'human lice AKA Pediculus humanus NODE ncbi_121225'},
+#                 {'label': 'Schumannella AKA Schumannella',
+#                     'value': 'Schumannella AKA Schumannella NODE ncbi_472058'}]},
+#     1: {'serum': [{'label': 'Serum AKA Serum',    
 
-    want
-    [
-        {
-            'options':{
-                'label':
-                'value'
-            }
-        },
-        {
-            'options':{
-                'label':
-                'value'
-            }
-        }
-    ]
+#     want
+#     [
+#         {
+#             'options':{
+#                 'label':
+#                 'value'
+#             }
+#         },
+#         {
+#             'options':{
+#                 'label':
+#                 'value'
+#             }
+#         }
+#     ]
 
-    1/2 helpers taht ultimatley didnt work. combined into "generate_datatable_records"
-    '''
+#     1/2 helpers taht ultimatley didnt work. combined into "generate_datatable_records"
+#     '''
 
-    output_list=list()
+#     output_list=list()
 
-    for temp_header in dropdown_options.keys():
-        for temp_written_string in dropdown_options[temp_header].keys():
+#     for temp_header in dropdown_options.keys():
+#         for temp_written_string in dropdown_options[temp_header].keys():
             
-            #print(dropdown_options[temp_header][temp_written_string])
-            #hold=input('&^%*(&^)(*&)(_*&)(*&^*(&^(*&^(*)&')
+#             #print(dropdown_options[temp_header][temp_written_string])
+#             #hold=input('&^%*(&^)(*&)(_*&)(*&^*(&^(*&^(*)&')
 
 
 
-            output_list.append(
-                {
+#             output_list.append(
+#                 {
                     
-                    'alternative_guesses':{
-                        'options':dropdown_options[temp_header][temp_written_string],
-                        #'placeholder':'hi'
-                    }
+#                     'alternative_guesses':{
+#                         'options':dropdown_options[temp_header][temp_written_string],
+#                         #'placeholder':'hi'
+#                     }
                     
-                }
-            )
+#                 }
+#             )
 
-    return output_list
+#     return output_list
 
-def generate_input_to_other_columns_for_datatable(dropdown_options):
-    '''
-    #2/2 helpers taht ultimatley didnt work. combined into "generate_datatable_records"
-    '''
+# def generate_input_to_other_columns_for_datatable(dropdown_options):
+#     '''
+#     #2/2 helpers taht ultimatley didnt work. combined into "generate_datatable_records"
+#     '''
     
-    output_dict={
-        "header_type":[],
-        "value_parsed":[],
-        "best_guess":[],
-        #"alternative_guesses":['hi'],
-        "free_text":[]
-    }       
+#     output_dict={
+#         "header_type":[],
+#         "value_parsed":[],
+#         "best_guess":[],
+#         #"alternative_guesses":['hi'],
+#         "free_text":[]
+#     }       
 
-    for temp_header in dropdown_options.keys():
-        for temp_written_string in dropdown_options[temp_header].keys():
-            output_dict['header_type'].append(temp_header)
-            output_dict['best_guess'].append(dropdown_options[temp_header][temp_written_string][0]['value'])
-            output_dict['value_parsed'].append(temp_written_string)
-            output_dict['free_text'].append('')
+#     for temp_header in dropdown_options.keys():
+#         for temp_written_string in dropdown_options[temp_header].keys():
+#             output_dict['header_type'].append(temp_header)
+#             output_dict['best_guess'].append(dropdown_options[temp_header][temp_written_string][0]['value'])
+#             output_dict['value_parsed'].append(temp_written_string)
+#             output_dict['free_text'].append('')
 
-    return output_dict
-
-
+#     return output_dict
 
 
 
-def generate_datatable_records(dropdown_options):
 
 
-    output_list=list()
+# def generate_datatable_records(dropdown_options):
 
-    for temp_header in dropdown_options.keys():
-        for temp_written_string in dropdown_options[temp_header].keys():
-            output_list.append(
-                {
-                    "header_type":temp_header,
-                    "value_parsed":temp_written_string,
-                    "best_guess":dropdown_options[temp_header][temp_written_string][0]['value'],
-                    #"alternative_guesses":'hi',
-                    "free_text":'',
-                    'alternative_guesses':{
-                        'options':{
-                            dropdown_options[temp_header][temp_written_string]
-                        }
-                    }
-                }              
-            )
 
-            
-            
-            
-            
-            # output_list.append(
-            #     {
-            #         'options':{
-            #             dropdown_options[temp_header][temp_written_string]
-            #         }
-            #     }
-            # )
+#     output_list=list()
 
-    return output_list
+#     for temp_header in dropdown_options.keys():
+#         for temp_written_string in dropdown_options[temp_header].keys():
+#             output_list.append(
+#                 {
+#                     "header_type":temp_header,
+#                     "value_parsed":temp_written_string,
+#                     "best_guess":dropdown_options[temp_header][temp_written_string][0]['value'],
+#                     #"alternative_guesses":'hi',
+#                     "free_text":'',
+#                     'alternative_guesses':{
+#                         'options':{
+#                             dropdown_options[temp_header][temp_written_string]
+#                         }
+#                     }
+#                 }              
+#             )
+
+#     return output_list
 
 
 
@@ -381,12 +419,14 @@ def curate_data(
 
     print(main_store_data)
 
-    store_panda=pd.DataFrame.from_records(main_store_data)
+    store_panda=pd.read_json(main_store_data,orient='records')
     print(store_panda)
 
 
     written_strings_per_category=parse_excel_file(store_panda)
     print(written_strings_per_category)
+
+    print('`````````````````````````````````````````````````')
 
     valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
     pprint(valid_string_neighbors)
@@ -396,6 +436,46 @@ def curate_data(
 
 
     output_children=list()
+
+
+    output_children.append(
+        dbc.Row(
+            children=[
+                #dbc.Col(width=1),
+                dbc.Col(
+                    children=[
+                        html.H3('User Entry'),
+                        html.Br()                        
+                    ]
+                ),    
+                dbc.Col(
+                    html.H3('Best Guess')
+                ),
+                #the dropdown for strings that are close
+                dbc.Col(
+                    html.H3('Similar Guesses')
+                ),
+                #the dropdown with completely empty boxes
+                dbc.Col(
+                    html.H3('Type to match text')  
+                ),
+
+                #the empty input to create your own
+                dbc.Col(
+                    html.H3('Reject suggestions, create new')
+                )
+
+            ]
+        )
+    )
+
+
+
+
+
+
+    
+    #there is a row per (temp_header,temp_written_string)
     for temp_header in dropdown_options.keys():
         for temp_written_string in dropdown_options[temp_header].keys():
             output_children.append(
@@ -472,14 +552,27 @@ def curate_data(
 def update_options(search_value):
     if not search_value:
         raise PreventUpdate
-    
+
+    if len(search_value)<3:
+        raise PreventUpdate
+    #conglomerate_vocabulary_panda_dict=dict()
+    current_index=ctx.triggered_id['index'].split('_')[0]
+    #need to access the index
+    print(ctx.triggered_id)
+    print('y halo thar')
     #valid_string_list_dataframe
-    temp_valid_values=valid_string_list_dataframe['valid_strings'].loc[
-        valid_string_list_dataframe['valid_strings'].str.contains(search_value)
-    ].values
+    #at the moment we make it so that the list just serves {'value':'valid_string','label':'valid_string'}
+    # temp_valid_values=vocabulary_dict[current_index][
+    #     vocabulary_dict[current_index].contains(search_value)
+    # ]
+    temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
+        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.contains(search_value)
+    ]['valid_string'].tolist()
+
+    #temp_valid_values=np.core.defchararray.find
 
     return [
-        {   #this form does not match the others. the others take the valid string and plug it into the json.
+        {   #this form does not match the others. the others take the valid string and plug it into the json. "this is an oldier comment? plb after json to pandas"
             'label': temp_string,
             'value': temp_string
         } for temp_string in temp_valid_values
