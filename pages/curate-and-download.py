@@ -146,15 +146,16 @@ def generate_dropdown_options(valid_string_neighbors):
                 ###temp_relevant_nodes_list=valid_string_as_key_json[temp_valid_string]
                 temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
                     conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
-                ]
+                ].drop_duplicates(subset=('valid_string','main_string'))
                 #we have to do this extra one because in a few cases there is more than one node for a valid string
                 #this entire appraoch is proabbly a little dated because we grew to use padnas not jsons but oh well
                 ###for temp_relevant_node in temp_relevant_nodes_list:
+                
                 for index,series in temp_relevant_nodes_rows.iterrows():
                     output_dict[temp_header][temp_written_string].append(
                         {
-                            'label':temp_valid_string+' AKA '+series['main_string']+' NODE '+series['node_id'],
-                            'value':temp_valid_string+' AKA '+series['main_string']+' NODE '+series['node_id']                
+                            'label':temp_valid_string+' AKA '+series['main_string'],#+' NODE '+series['node_id'],
+                            'value':temp_valid_string+' AKA '+series['main_string']#+' NODE '+series['node_id']                
                         }
                     )
                     # output_dict[temp_header][temp_written_string].append(
