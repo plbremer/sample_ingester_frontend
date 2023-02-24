@@ -19,6 +19,11 @@ import pandas as pd
 from pprint import pprint
 
 
+
+#get the headers and their subset definitions
+with open('additional_files/subset_per_heading.json', 'r') as fp:
+    subset_per_heading_json=json.load(fp)
+
 #get all of the models
 nearest_neighbors_dict=dict()
 tfidf_vectorizer_dict=dict()
@@ -95,6 +100,11 @@ def find_neighbors_per_string(written_strings_per_category):
 
     #we can upgrade the vectorization to a, no pun intended, vectorized way, later
     for temp_header in written_strings_per_category.keys():
+        
+        #we dont curate certain categories esp numerical like height, weight, etc
+        if temp_header not in subset_per_heading_json.keys():
+            continue
+        
         output_dict[temp_header]=dict()
         for temp_written_string in written_strings_per_category[temp_header]:
             #vectorizer expects iterable. wrap in list to achieve
@@ -102,11 +112,19 @@ def find_neighbors_per_string(written_strings_per_category):
             print('123456789012345678901234567890')
             print(tfidf_vectorizer_dict['species'])
             print(tfidf_vectorizer_dict[temp_header])
+            
+            #neighbors
+            
             vectorized_string=tfidf_vectorizer_dict[temp_header].transform([str(temp_written_string)])
+            
+            neghbors_to_retrieve=5
+            if (nearest_neighbors_dict[temp_header].n_samples_fit_) < neghbors_to_retrieve:
+                neghbors_to_retrieve=nearest_neighbors_dict[temp_header].n_samples_fit_
+
             #kn_ind is an array of indices of the nieghbors in the training matrix
             _,kn_ind=nearest_neighbors_dict[temp_header].kneighbors(
                 vectorized_string,
-                5
+                neghbors_to_retrieve
             )
             #[0] because the shape of the array is array([[842652, 842654, 842651, 842649, 842653]]
             output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
@@ -136,6 +154,12 @@ def generate_dropdown_options(valid_string_neighbors):
     '''
     output_dict=dict()
     for temp_header in valid_string_neighbors.keys():
+
+        #we dont curate certain categories esp numerical like height, weight, etc
+        if temp_header not in subset_per_heading_json.keys():
+            continue
+
+
         output_dict[temp_header]=dict()
 
         for temp_written_string in valid_string_neighbors[temp_header].keys():

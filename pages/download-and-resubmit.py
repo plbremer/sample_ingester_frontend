@@ -26,14 +26,14 @@ def generate_form_headers(selected_sample_archetypes):
     need to make it so that properties dont appear multiple times
     '''
     form_header_dict={
-        'tissue':['species','organ','disease','sex','height','height_unit','weight','weight_unit','age','age_unit','other_inclusion_criteria','other_exclusion_criteria'],
-        'fluid':['species','organ','disease','sex','height','height_unit','mass','mass_unit','age','age_unit','other_inclusion_criteria','other_exclusion_criteria'],
-        'cells':['species','cell_line','cell_count','other_inclusion_criteria','other_exclusion_criteria'],
-        'raw_material':['material','mass','mass_unit','volume','volume_unit','other_inclusion_criteria','other_exclusion_criteria'],
+        'tissue':['species','organ','disease','sex','height','heightUnit','weight','weightUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
+        'fluid':['species','organ','disease','sex','height','heightUnit','mass','massUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
+        'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
+        'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
         'genetic':['gene'],
-        'longitudinal':['zero_time_event','time','time_unit'],
-        'effect':['drug_name','drug_dose_volume_or_mass','drug_dose_unit','diet','exercise'],
-        #'general':[,'other_inclusion_criteria','other_exclusion_criteria']
+        'longitudinal':['zeroTimeEvent','time','timeUnit'],
+        'effect':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
+        #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
     }
 
     total_headers=[]
