@@ -1,15 +1,18 @@
+from asyncio import FIRST_COMPLETED
 from re import T
 import dash
 from dash import dcc, html,dash_table,callback, ctx,MATCH
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-
+import numpy as np
 from dash.exceptions import PreventUpdate
 
 from nltk.util import trigrams
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
+#from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 import json
 import os
 import time
@@ -84,13 +87,27 @@ for temp_file_name in model_files:
 def parse_excel_file(store_panda):
     output_dict=dict()
     for temp_header in store_panda.columns:
-        output_dict[temp_header]=store_panda[temp_header].unique().tolist()
+        output_dict[temp_header]=store_panda[temp_header].dropna().unique().tolist()
+
+    
+
+
+    print(output_dict)
+    #hold=input('output dict of parsing')
     return output_dict
     
 def find_neighbors_per_string(written_strings_per_category):
     '''
     receives
-    {0: ['human', 'Humen'], 1: ['serum'], 2: [10, 11, 12]}
+    {'species': ['human', 'Humen'], 'organ': ['serum'], 'height': [10, 11, 12]}
+
+    output form
+    {'organ': {'root': array(['Foot', 'Tooth Root', 'Root, Tooth', 'Roots, Tooth', 'Tooth'],
+        dtype=object)},
+    'species': {'arabidopsis': array(['Arabidopsis', 'Olimarabidopsis', 'Pseudoarabidopsis',
+        'Arabidopsis thaliana x Arabidopsis arenosa',
+       'Arabidopsis arenosa x Arabidopsis thaliana'], dtype=object)}}
+
     '''
     output_dict=dict()
 
@@ -110,13 +127,22 @@ def find_neighbors_per_string(written_strings_per_category):
             #vectorizer expects iterable. wrap in list to achieve
             #FIX: atm we typecase ints to strings
             print('123456789012345678901234567890')
+            print(f'{temp_header} : {temp_written_string}')
             print(tfidf_vectorizer_dict['species'])
             print(tfidf_vectorizer_dict[temp_header])
             
             #neighbors
-            
-            vectorized_string=tfidf_vectorizer_dict[temp_header].transform([str(temp_written_string)])
-            
+
+            #if the tfidft vectorizer isnt fitted
+            #the neighbors isnt fitted either
+            #this happens when the vocabulary ingester is just getting started
+            try:
+                vectorized_string=tfidf_vectorizer_dict[temp_header].transform([str(temp_written_string)])
+            except NotFittedError:
+                output_dict[temp_header][temp_written_string]=np.array(['no options available'],dtype=object)
+                
+                continue
+
             neghbors_to_retrieve=5
             if (nearest_neighbors_dict[temp_header].n_samples_fit_) < neghbors_to_retrieve:
                 neghbors_to_retrieve=nearest_neighbors_dict[temp_header].n_samples_fit_
@@ -130,6 +156,8 @@ def find_neighbors_per_string(written_strings_per_category):
             output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
             
     pprint(output_dict)
+    print('didweactuallyaddsomethingforexclusion')
+    #hold=input('hold')
     return output_dict
 
 
@@ -165,21 +193,54 @@ def generate_dropdown_options(valid_string_neighbors):
         for temp_written_string in valid_string_neighbors[temp_header].keys():
             output_dict[temp_header][temp_written_string]=list()
 
-            for temp_valid_string in valid_string_neighbors[temp_header][temp_written_string]:
+            
+            #originally we ahd a for loop, but the problem with that was taht was that we were getting a result for each 
+            #valid string that the written string mapped to. this meant that we coudl get the same main strin multiple times.
+            # for temp_valid_string in valid_string_neighbors[temp_header][temp_written_string]:
 
                 ###temp_relevant_nodes_list=valid_string_as_key_json[temp_valid_string]
-                temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
-                    conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
-                ].drop_duplicates(subset=('valid_string','main_string'))
+                #this is is where Similar Guesses reduces the set of strings that are presented
+                # temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+                    # conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
+                # ].drop_duplicates(subset=('main_string'))
+
+            temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+                conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
+            ].drop_duplicates(subset=('main_string'))
+
+
+                # print(temp_relevant_nodes_rows)
+                #hold=input('check why we have dupli9cate rows')
+
                 #we have to do this extra one because in a few cases there is more than one node for a valid string
                 #this entire appraoch is proabbly a little dated because we grew to use padnas not jsons but oh well
                 ###for temp_relevant_node in temp_relevant_nodes_list:
+
+                #we add this condition as the partner condition to the tfidf is fitted check
+                #if there are no nodes in the conglomerate panda, then just add some baloney and continue
+            if len(temp_relevant_nodes_rows.index)==0:
+                output_dict[temp_header][temp_written_string].append(
+                        {
+                            'label':'no options available',
+                            'value':'no options available'
+                        }
+                    )
+                continue
+
                 
-                for index,series in temp_relevant_nodes_rows.iterrows():
+            for index,series in temp_relevant_nodes_rows.iterrows():
+                if series['valid_string']==series['main_string']:            
                     output_dict[temp_header][temp_written_string].append(
                         {
-                            'label':temp_valid_string+' AKA '+series['main_string'],#+' NODE '+series['node_id'],
-                            'value':temp_valid_string+' AKA '+series['main_string']#+' NODE '+series['node_id']                
+                            'label':series['valid_string'],#+' NODE '+series['node_id'],
+                            'value':series['valid_string']#+' NODE '+series['node_id']                
+                        }
+                    )
+                else:
+                    output_dict[temp_header][temp_written_string].append(
+                        {
+                            'label':series['valid_string']+' AKA '+series['main_string'],#+' NODE '+series['node_id'],
+                            'value':series['valid_string']+' AKA '+series['main_string']#+' NODE '+series['node_id']                
                         }
                     )
                     # output_dict[temp_header][temp_written_string].append(
@@ -498,10 +559,13 @@ def curate_data(
 
 
 
-
+    pprint('letscheckthisout')
     
     #there is a row per (temp_header,temp_written_string)
     for temp_header in dropdown_options.keys():
+        print(temp_header)
+        pprint(dropdown_options)
+
         for temp_written_string in dropdown_options[temp_header].keys():
             output_children.append(
                 dbc.Row(
@@ -569,6 +633,9 @@ def curate_data(
 
     return [output_children]
 
+
+
+
 @callback(
     Output({'type':'dropdown_empty_options','index':MATCH},'options'),
     #Input("dropdown_bin", "search_value")
@@ -590,9 +657,14 @@ def update_options(search_value):
     # temp_valid_values=vocabulary_dict[current_index][
     #     vocabulary_dict[current_index].contains(search_value)
     # ]
+
+    # temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+    #     conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
+    # ].drop_duplicates(subset=('valid_string','main_string'))
+
     temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
         conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.contains(search_value)
-    ]['valid_string'].tolist()
+    ].drop_duplicates(subset=('main_string'))['valid_string'].tolist()
 
     #temp_valid_values=np.core.defchararray.find
 
