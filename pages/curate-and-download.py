@@ -1,7 +1,7 @@
 from asyncio import FIRST_COMPLETED
 from re import T
 import dash
-from dash import dcc, html,dash_table,callback, ctx,MATCH
+from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -18,6 +18,9 @@ import os
 import time
 import pickle
 import pandas as pd
+
+import base64
+import io
 
 from pprint import pprint
 
@@ -51,7 +54,8 @@ for temp_file_name in model_files:
         conglomerate_vocabulary_panda_dict[temp_header]=temp_panda
         #vocabulary_dict[temp_header]=temp_panda[0].values
 #print(conglomerate_vocabulary_panda_dict.keys())
-#its_ya_boy=input('key check')
+# print(conglomerate_vocabulary_panda_dict)
+# its_ya_boy=input('key check')
 
 
 
@@ -88,8 +92,6 @@ def parse_excel_file(store_panda):
     output_dict=dict()
     for temp_header in store_panda.columns:
         output_dict[temp_header]=store_panda[temp_header].dropna().unique().tolist()
-
-    
 
 
     print(output_dict)
@@ -143,7 +145,7 @@ def find_neighbors_per_string(written_strings_per_category):
                 
                 continue
 
-            neghbors_to_retrieve=5
+            neghbors_to_retrieve=20
             if (nearest_neighbors_dict[temp_header].n_samples_fit_) < neghbors_to_retrieve:
                 neghbors_to_retrieve=nearest_neighbors_dict[temp_header].n_samples_fit_
 
@@ -159,8 +161,6 @@ def find_neighbors_per_string(written_strings_per_category):
     print('didweactuallyaddsomethingforexclusion')
     #hold=input('hold')
     return output_dict
-
-
 
 def generate_dropdown_options(valid_string_neighbors):
     '''
@@ -229,7 +229,7 @@ def generate_dropdown_options(valid_string_neighbors):
 
                 
             for index,series in temp_relevant_nodes_rows.iterrows():
-                if series['valid_string']==series['main_string']:            
+                if series['valid_string']==series['main_string'].lower():            
                     output_dict[temp_header][temp_written_string].append(
                         {
                             'label':series['valid_string'],#+' NODE '+series['node_id'],
@@ -386,7 +386,7 @@ layout = html.Div(
         #     n_intervals=0, 
         #     max_intervals=0, 
         # ),
-        
+        dcc.Download(id="download_curated_form"),
         html.Br(),
         html.Br(),
         # dbc.Row(
@@ -461,6 +461,19 @@ layout = html.Div(
                 html.Div(
                     id='here_is_where_we_put_the curation_interface'
                 )
+            ]
+        ),
+        html.Br(),
+        html.Br(),
+        dbc.Row(
+            children=[
+                html.Div(
+                    dbc.Button(
+                        'Download Curated Form',
+                        id='button_download_curated',
+                    ),
+                    className="d-grid gap-2 col-6 mx-auto",
+                ),
             ]
         )
 
@@ -572,11 +585,25 @@ def curate_data(
                     children=[
                         #dbc.Col(width=1),
                         dbc.Col(
-                            html.H6(str(temp_header)+': '+str(temp_written_string))
+                            html.H6(
+                                id={
+                                    'type':'header_written_pair',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                children=[
+                                    str(temp_header)+': '+str(temp_written_string)
+                                ]
+                            )
                         ),    
                         dbc.Col(
                             html.H6(
-                                dropdown_options[temp_header][temp_written_string][0]['label']
+                                id={
+                                    'type':'H6_best_guess',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                children=[
+                                    dropdown_options[temp_header][temp_written_string][0]['label']
+                                ]
                             ),
                         ),
                         #the dropdown for strings that are close
@@ -586,7 +613,8 @@ def curate_data(
                                     'type':'dropdown_similar_strings',
                                     'index':str(temp_header)+'_'+str(temp_written_string)
                                 },
-                                options=[label_value_pair for label_value_pair in dropdown_options[temp_header][temp_written_string]]
+                                options=[label_value_pair for label_value_pair in dropdown_options[temp_header][temp_written_string]],
+                                optionHeight=60
                             )
                         ),
                         #the dropdown with completely empty boxes
@@ -598,7 +626,8 @@ def curate_data(
                                 },
                                 multi=False,
                                 placeholder='Type compound name to search',
-                                options=['Type substring to populate options.']
+                                options=['Type substring to populate options.'],
+                                optionHeight=60
                             ),  
                         ),
 
@@ -696,7 +725,7 @@ def update_options(search_value):
 # df = pd.DataFrame(OrderedDict([
 #     ('climate', ['Sunny', 'Snowy', 'Sunny', 'Rainy']),
 #     ('temperature', [13, 43, 50, 30]),
-#     ('city', ['NYC', 'Montreal', 'Miami', 'NYC'])
+#     ('city', ['NYC', 'Montreal', 'Miami', 'NYC'])AK
 # ]))
 
 
@@ -736,4 +765,203 @@ def update_options(search_value):
 #     ),
 # ])
 
+@callback(
+    [
+        Output(component_id="download_curated_form", component_property="data"),
+        #Output(component_id="table_curation", component_property="data"),
+        #Output(component_id="table_curation", component_property="dropdown_data"),
+        #Output(component_id="main_store",component_property="data")
+    ],
+    [
+        #Input(component_id="upload_form", component_property="contents"),
+        #Input(component_id="load_interval", component_property="n_intervals")
+        Input(component_id='button_download_curated', component_property="n_clicks")
+    ],
+    [
+        #State(component_id="upload_form", component_property="filename"),
+        State(component_id="main_store",component_property="data"),
+        State(component_id={'type':'header_written_pair','index':ALL},component_property="children"),
+        State(component_id={'type':'H6_best_guess','index':ALL},component_property="children"),
+        State(component_id={'type':'dropdown_similar_strings','index':ALL},component_property="value"),
+        State(component_id={'type':'dropdown_empty_options','index':ALL},component_property="value"),
+        State(component_id={'type':'input_curation','index':ALL},component_property="value"),
+    ],
+    #prevent_initial_call=True
+)
+def download_curated_forum(
+    button_download_curated_n_clicks,
+    main_store_data,
+    header_written_pair_children_ALL,
+    H6_best_guess_children_ALL,
+    dropdown_similar_strings_value_ALL,
+    dropdown_empty_options_value_ALL,
+    input_curation_value_ALL
+):
+    '''
+    for each of the rows (header-written pairs)
+        get the thing that will go into the output panda according to the priority list
 
+    '''
+    
+    #from lowest priority to highest
+    priority_list=[
+        'H6_best_guess_children_ALL',
+        'dropdown_similar_strings_value_ALL',
+        'dropdown_empty_options_value_ALL',
+        'input_curation_value_ALL'
+    ]
+
+    print('==========================================')
+    print('==========================================')
+    print('==========================================')
+
+    pprint(header_written_pair_children_ALL)
+    pprint(H6_best_guess_children_ALL)
+    pprint(dropdown_similar_strings_value_ALL)
+    pprint(dropdown_empty_options_value_ALL)
+    pprint(input_curation_value_ALL)
+
+
+    #print(main_store_data)
+
+    store_panda=pd.read_json(main_store_data,orient='records')
+    #print(store_panda)
+    #written_strings_per_category=parse_excel_file(store_panda)
+    print(store_panda)
+
+    for i,temp_header_written_pair in enumerate(header_written_pair_children_ALL):
+        #children are stored as list, so access with 0
+        temp_header=temp_header_written_pair[0].split(': ')[0]
+        temp_written_string=temp_header_written_pair[0].split(': ')[1]
+
+        #chose the element that we want to substitute using the priority list
+        #kidn of a sloppy way to do this
+        #we do j in order to skp the first element, which is guaranteed to not be None
+        for j,curation_column in enumerate(priority_list):
+            if j==0:
+                #again, children of h6 are lists, so 0
+                temp_replacement=eval(curation_column)[i]
+                continue
+            if eval(curation_column)[i] is not None:
+                print('something was not none')
+                temp_replacement=eval(curation_column)[i]
+
+        print(f'{temp_header} {temp_written_string}: {temp_replacement}')
+
+        store_panda[temp_header].replace(
+            #to_replace=temp_written_string,
+            #value=temp_replacement,
+            {temp_written_string:temp_replacement},
+            inplace=True
+        )
+
+        #########NOTE##########3
+        #need to have some sort of special case for "no options available" for things that start empty    
+
+
+    output_stream=io.BytesIO()
+    temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+
+    empty_df=pd.DataFrame()
+    empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
+    store_panda.to_excel(temp_writer,sheet_name='sample_sheet_curated',index=False)
+
+    #https://xlsxwriter.readthedocs.io/working_with_pandas.html
+    #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
+    workbook=temp_writer.book
+    worksheet=temp_writer.sheets['sample_sheet_curated']
+    worksheet.autofit()
+
+    worksheet=temp_writer.sheets['title_page']
+    worksheet.hide_gridlines()
+    worksheet.write('B2','Enjoy the curations :)')
+    #worksheet.write('B3','Please leave unused metadata blank.')
+
+    temp_writer.save()
+    temp_data=output_stream.getvalue()
+    #output_excel
+
+
+    #for right now we can leave this being right here, but really what we probably want to do is put it in some sort of extra callback
+    #or perhaps an adjacent api that will continue running after the program dies/gets closed/user gets their stuff
+    #we want to expand the vocabulary on the fly
+    #for each non null reject suggetsion
+    #first we want to compile a total list of new vocabulary so that we dont train 3x if there are 3 new species, for eample
+    new_vocab_dict=dict()
+    for i,new_vocabulary_word in enumerate(input_curation_value_ALL):
+        if new_vocabulary_word is not None:
+            try:
+                new_vocab_dict[
+                    header_written_pair_children_ALL[i][0].split(': ')[0]
+                ].append(new_vocabulary_word)
+            except KeyError:
+                new_vocab_dict[
+                    header_written_pair_children_ALL[i][0].split(': ')[0]
+                ]=[new_vocabulary_word]
+    #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
+    for temp_key in new_vocab_dict.keys():
+        appending_dict={
+            'valid_string':[],
+            'node_id':[],
+            'main_string':[],
+            'ontology':[]
+        }
+        for temp_addition in new_vocab_dict[temp_key]:
+            appending_dict['valid_string'].append(temp_addition)
+            appending_dict['node_id'].append(temp_key+'_'+temp_addition)
+            appending_dict['main_string'].append(temp_addition)
+            appending_dict['ontology'].append(temp_key)
+        appending_panda=pd.DataFrame.from_dict(appending_dict)
+
+        conglomerate_vocabulary_panda_dict[temp_key]=pd.concat(
+            [conglomerate_vocabulary_panda_dict[temp_key],appending_panda],
+            axis='index',
+            ignore_index=True,
+        )
+        #to make sure that someone doesnt put someonething that already exists
+        conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset='main_string',ignore_index=True,inplace=True)
+        conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
+        
+    #now we create a new vectorizer and nearest neighbors model
+    for temp_key in new_vocab_dict.keys():
+        temp_model_vocabulary=conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
+        # temp_model_vocabulary_dict={
+        #     'nearest_neighbors_training_index':[i for i in range(len(temp_model_vocabulary))],
+        #     'valid_strings_unique':temp_model_vocabulary
+        # }
+        temp_TfidfVectorizer=TfidfVectorizer(
+            analyzer=trigrams,
+            #max_df=1,
+            #min_df=0.001
+        )
+
+        temp_tfidf_matrix=temp_TfidfVectorizer.fit_transform(temp_model_vocabulary)
+        
+        with open(f'additional_files/tfidfVectorizer_{temp_key}.bin','wb') as fp:
+            pickle.dump(temp_TfidfVectorizer,fp)
+        
+        temp_NN_model=NearestNeighbors(
+            n_neighbors=50,
+            n_jobs=5,
+            metric='cosine'
+        )
+        temp_NN_model.fit(temp_tfidf_matrix)
+        with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
+            pickle.dump(temp_NN_model,fp)        
+
+
+    #print(new_vocab_dict)
+
+    # for i,new_vocabulary_word in enumerate(input_curation_value_ALL):
+    #     if new_vocabulary_word is None:
+    #         continue
+
+        
+
+        # append to conglomerate panda
+        # retrain models
+
+
+    return [
+        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
+    ]
