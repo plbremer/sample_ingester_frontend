@@ -949,6 +949,24 @@ def download_curated_forum(
         with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
             pickle.dump(temp_NN_model,fp)        
 
+    #update the unique strings list
+
+    for temp_key in new_vocab_dict.keys():
+        vocabulary_dict[temp_header]=pd.DataFrame.from_dict(
+            conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
+        )
+
+        vocabulary_dict[temp_header].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
+
+
+        # #vocabulary_dict=dict()
+        # for temp_file_name in model_files:
+        #     temp_header=temp_file_name.split('.')[0].split('_')[-1]
+        #     if 'unique_valid_strings' in temp_file_name:
+        #         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
+        #         #temp panda has header 0 not "valid string unique" for some reason
+        #         vocabulary_dict[temp_header]=temp_panda[0].values
+
 
     #print(new_vocab_dict)
 
