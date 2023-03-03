@@ -155,8 +155,19 @@ def find_neighbors_per_string(written_strings_per_category):
                 neghbors_to_retrieve
             )
             #[0] because the shape of the array is array([[842652, 842654, 842651, 842649, 842653]]
+            #sorting here doesnt accomplish anything because of the way that the dropdown options are generated.
+            #unordered_vocabulary=vocabulary_dict[temp_header][kn_ind[0]]
+            # ordered_vocabulary=conglomerate_vocabulary_panda_dict[temp_header].loc[
+            #     conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(unordered_vocabulary)
+            # ].sort_values('use_count',ascending=False)['valid_string'].unique()
+            # print(conglomerate_vocabulary_panda_dict[temp_header].loc[
+            #     conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(unordered_vocabulary)
+            # ].sort_values('use_count',ascending=False)['valid_string'].unique())
+            # hold=input('hold')
+
+            #output_dict[temp_header][temp_written_string]=ordered_vocabulary
             output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
-            
+                        
     pprint(output_dict)
     print('didweactuallyaddsomethingforexclusion')
     #hold=input('hold')
@@ -166,7 +177,7 @@ def generate_dropdown_options(valid_string_neighbors):
     '''
     receives 
 
-    {0: {'Humen': array(['Humerus', 'Humerana', 'ume', 'Rumen', 'Cerumen'], dtype=object),
+    {species: {'Humen': array(['Humerus', 'Humerana', 'ume', 'Rumen', 'Cerumen'], dtype=object),
         'human': array(['human', 'humans', 'Schumannia', 'human lice', 'Schumannella'],
         dtype=object)},
     1: {'serum': array(['Serum', 'Verum', 'Noserus', 'Cerumen', 'Sclerum'], dtype=object)},
@@ -205,8 +216,17 @@ def generate_dropdown_options(valid_string_neighbors):
                 # ].drop_duplicates(subset=('main_string'))
 
             temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+                #i think isin is the wrong choice here? i think it should be equal?
+                #is in is fine... just ahve to reorder
+                #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
                 conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-            ].drop_duplicates(subset=('main_string'))
+            ].drop_duplicates(subset=('main_string')).sort_values('use_count',ascending=False)
+
+
+            # ordered_vocabulary=conglomerate_vocabulary_panda_dict[temp_header].loc[
+            #     conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(unordered_vocabulary)
+            # ].sort_values('use_count',ascending=False)['valid_string'].unique()
+
 
 
                 # print(temp_relevant_nodes_rows)
@@ -249,7 +269,9 @@ def generate_dropdown_options(valid_string_neighbors):
                     #         'value':temp_valid_string+' AKA '+temp_relevant_node['main_string']+' NODE '+temp_relevant_node['node_id']
                     #     }
                     # )
-                    
+
+        pprint(output_dict)
+        #hold=input('outputdict')            
     return output_dict
 
 # def generate_input_to_dropdown_column_for_datatable(dropdown_options):
@@ -529,10 +551,11 @@ def curate_data(
 
     valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
     pprint(valid_string_neighbors)
+    #hold=input('valid neighbors')
 
     dropdown_options=generate_dropdown_options(valid_string_neighbors)
-    pprint(dropdown_options)
-
+    #pprint(dropdown_options)
+    #hold=input('hold')
 
     output_children=list()
 
@@ -693,7 +716,12 @@ def update_options(search_value):
 
     temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
         conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(search_value)
-    ].drop_duplicates(subset=('main_string'))['valid_string'].tolist()
+    ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])['valid_string'].tolist()
+
+    # print(conglomerate_vocabulary_panda_dict[current_index].loc[
+    #     conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(search_value)
+    # ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True]))
+    # hold=input('hold')
 
     #temp_valid_values=np.core.defchararray.find
 
