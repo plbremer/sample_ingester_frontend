@@ -692,7 +692,7 @@ def update_options(search_value):
     # ].drop_duplicates(subset=('valid_string','main_string'))
 
     temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
-        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.contains(search_value)
+        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(search_value)
     ].drop_duplicates(subset=('main_string'))['valid_string'].tolist()
 
     #temp_valid_values=np.core.defchararray.find
@@ -829,6 +829,16 @@ def download_curated_forum(
     #written_strings_per_category=parse_excel_file(store_panda)
     print(store_panda)
 
+    #this is used in the counter update
+    #the logic is 
+    #during the next for loop we create 
+    #[(header,replacement)] which will become
+    #main_string
+    #because the headers are synonyms with vocabulary pandas we can then just
+    #increment main string's corresponding 'use_count' column
+    header_replacement_list=list()
+
+    #temp_header_written_pair is the thing on the far left, eg "species: arabidopsis"
     for i,temp_header_written_pair in enumerate(header_written_pair_children_ALL):
         #children are stored as list, so access with 0
         temp_header=temp_header_written_pair[0].split(': ')[0]
@@ -840,13 +850,23 @@ def download_curated_forum(
         for j,curation_column in enumerate(priority_list):
             if j==0:
                 #again, children of h6 are lists, so 0
-                temp_replacement=eval(curation_column)[i]
+                temp_replacement=eval(curation_column)[i][0]
                 continue
             if eval(curation_column)[i] is not None:
                 print('something was not none')
                 temp_replacement=eval(curation_column)[i]
 
+        #we put " AKA " in some strings as a way to unite formal/informal vocabulary
+        #so we aim to remove that here
+        #
+        if ' AKA ' in temp_replacement:
+            temp_replacement=temp_replacement.split(' AKA ')[0]
+
         print(f'{temp_header} {temp_written_string}: {temp_replacement}')
+
+        #we skip the very early forms of empty lists
+        if temp_replacement!='no options available':
+            header_replacement_list.append((temp_header,temp_replacement))
 
         store_panda[temp_header].replace(
             #to_replace=temp_written_string,
@@ -857,6 +877,10 @@ def download_curated_forum(
 
         #########NOTE##########3
         #need to have some sort of special case for "no options available" for things that start empty    
+
+
+
+
 
 
     output_stream=io.BytesIO()
@@ -881,7 +905,7 @@ def download_curated_forum(
     temp_data=output_stream.getvalue()
     #output_excel
 
-
+    #THIS (1/4)
     #for right now we can leave this being right here, but really what we probably want to do is put it in some sort of extra callback
     #or perhaps an adjacent api that will continue running after the program dies/gets closed/user gets their stuff
     #we want to expand the vocabulary on the fly
@@ -898,6 +922,8 @@ def download_curated_forum(
                 new_vocab_dict[
                     header_written_pair_children_ALL[i][0].split(': ')[0]
                 ]=[new_vocabulary_word]
+    #and THIS (2/4)
+    #occur only for each new vocabulary work
     #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
     for temp_key in new_vocab_dict.keys():
         appending_dict={
@@ -920,8 +946,48 @@ def download_curated_forum(
         )
         #to make sure that someone doesnt put someonething that already exists
         conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset='main_string',ignore_index=True,inplace=True)
+
+    #but THIS (3/4) occurs for every single row in the curation
+
+    #need to update the count on the files
+    #here we turn 
+    #[(header,replacement)] to
+    #main_string then
+    print(header_replacement_list)
+    for temp_tuple in header_replacement_list:
+        print(temp_tuple)
+        print(temp_tuple[0])
+        #for each thing to replace 
+        #get the corresponding panda
+        #from that, get the corresponding main string
+        #if there is more thjan one unique main string, raise an exception
+        #otherwise, 
+        corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_tuple[0]].loc[
+            conglomerate_vocabulary_panda_dict[temp_tuple[0]]['valid_string']==temp_tuple[1]
+        ]['main_string'].unique()
+        if len(corresponding_main_string_list)>1:
+            raise Exception('there should only be one main string for a valid string, found multiple')
+        corresponding_main_string=corresponding_main_string_list[0]
+        print(corresponding_main_string)
+        #print()
+        print('8888888888888888888888888888888888888888888888888')
+        #where value is true, keep original
+        conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count']=conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count'].where(
+            conglomerate_vocabulary_panda_dict[temp_tuple[0]]['main_string']!=corresponding_main_string,
+            other=conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count']+1
+        )
+
+    #print
+
+    #and THIS (4/4)
+    #occur for every taxonomy that is referenced by a row
+    #we need something not 
+    #for temp_key in new_vocab_dict.keys():
+    taxonomies_referenced={element[0] for element in header_replacement_list}
+    for temp_key in taxonomies_referenced:
         conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
-        
+    print(new_vocab_dict)
+    print('we got to this point!')
     #now we create a new vectorizer and nearest neighbors model
     for temp_key in new_vocab_dict.keys():
         temp_model_vocabulary=conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
@@ -950,7 +1016,6 @@ def download_curated_forum(
             pickle.dump(temp_NN_model,fp)        
 
     #update the unique strings list
-
     for temp_key in new_vocab_dict.keys():
         vocabulary_dict[temp_header]=pd.DataFrame.from_dict(
             conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
@@ -959,6 +1024,8 @@ def download_curated_forum(
         vocabulary_dict[temp_header].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
 
 
+    
+
         # #vocabulary_dict=dict()
         # for temp_file_name in model_files:
         #     temp_header=temp_file_name.split('.')[0].split('_')[-1]
@@ -966,6 +1033,7 @@ def download_curated_forum(
         #         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
         #         #temp panda has header 0 not "valid string unique" for some reason
         #         vocabulary_dict[temp_header]=temp_panda[0].values
+
 
 
     #print(new_vocab_dict)

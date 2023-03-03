@@ -116,14 +116,14 @@ layout = html.Div(
         html.Br(),
         dbc.Row(
             children=[
-                dbc.Col(width=5),
+                dbc.Col(width=4),
                 dbc.Col(
                     children=[
                         dcc.Upload(
                             id='upload_form',
                             children=html.Div([
-                                'Drag and Drop or ',
-                                html.A('Select Files')
+                                'Drag and Drop or Select Files',
+                                #html.A('Select Files')
                             ]),
                             style={
                                 'width': '100%',
@@ -137,9 +137,9 @@ layout = html.Div(
                             },
                         ),
                     ],
-                    width=2
+                    width=4
                 ),
-                dbc.Col(width=5)
+                dbc.Col(width=4)
             ]
         ),
         dbc.Row(
@@ -260,7 +260,9 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
 @callback(
     [
         #Output(component_id="here_is_where_we_put_the curation_interface", component_property="children"),
-        Output(component_id="div_filename", component_property="children"),
+        #we used to ahve the div_filename as the output property, now we change the children of the upload
+        #Output(component_id="div_filename", component_property="children"),
+        Output(component_id="upload_form",component_property="children"),
         Output(component_id="main_store",component_property="data")
     ],
     [
@@ -307,5 +309,12 @@ def upload_form(
     temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
     print(temp_dataframe_as_json)
-    displayed_name=[html.H5(upload_form_filename,className='text-center')]
+    displayed_name=html.Div([upload_form_filename],className='text-center')
     return [displayed_name,temp_dataframe_as_json]
+
+
+                        # upload_form',
+                        #     children=html.Div([
+                        #         'Drag and Drop or Select Files',
+                        #         #html.A('Select Files')
+                        #     ]),
