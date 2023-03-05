@@ -12,33 +12,55 @@ from dash.exceptions import PreventUpdate
 import pandas as pd
 
 import xlsxwriter
+from xlsxwriter.utility import xl_rowcol_to_cell
 
 import base64
 import io
+from pprint import pprint
 
 dash.register_page(__name__, path='/download-and-resubmit')
 
+FORM_HEADER_DICT={
+    'tissue':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','mass','massUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    'fluid':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
+    'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    'genetic':['gene'],
+    'longitudinal':['zeroTimeEvent','time','timeUnit'],
+    'intervention':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
+    'effect':['disease'],
+    #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
+}
 
-def generate_form_headers(selected_sample_archetypes):
+#FORM_HEADER_DICT_REVERSE={}
+FORM_HEADER_DICT_REVERSE={element:set() for element in sum(FORM_HEADER_DICT.values(),[])}
+for temp_archetype in FORM_HEADER_DICT.keys():
+    for temp_header in FORM_HEADER_DICT[temp_archetype]:
+        FORM_HEADER_DICT_REVERSE[temp_header].add(temp_archetype)
+#print(FORM_HEADER_DICT_REVERSE)
+#hold=input('reverse dict')
+
+def generate_form_headers(selected_archetypes):
     '''
     a more sophisticated approach needs to be implemented.
     should probably read from a support file.
     need to make it so that properties dont appear multiple times
     '''
-    form_header_dict={
-        'tissue':['species','organ','disease','sex','height','heightUnit','weight','weightUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
-        'fluid':['species','organ','disease','sex','height','heightUnit','mass','massUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
-        'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
-        'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
-        'genetic':['gene'],
-        'longitudinal':['zeroTimeEvent','time','timeUnit'],
-        'effect':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
-        #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
-    }
+    # form_header_dict={
+    #     'tissue':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    #     'fluid':['species','organ','sex','height','heightUnit','mass','massUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    #     'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
+    #     'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
+    #     'genetic':['gene'],
+    #     'longitudinal':['zeroTimeEvent','time','timeUnit'],
+    #     'intervention':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
+    #     'effect':['disease'],
+    #     #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
+    # }
 
     total_headers=[]
-    for temp_header in selected_sample_archetypes:
-        for temp_element in form_header_dict[temp_header]:
+    for temp_header in selected_archetypes:
+        for temp_element in FORM_HEADER_DICT[temp_header]:
             if temp_element not in total_headers:
                 total_headers.append(temp_element)
     
@@ -60,9 +82,9 @@ layout = html.Div(
                         html.Br(),
                         dbc.Checklist(
                             options=[
-                                {"label": "Tissue, Organs (lung, heart, etc.)", "value": 'tissue'},
+                                {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
                                 {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
-                                {"label": "Cells", "value": 'cells'},
+                                {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
                                 {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
                             ],
                             #value=[1],
@@ -77,9 +99,10 @@ layout = html.Div(
                         html.Br(),
                         dbc.Checklist(
                             options=[
-                                {"label": "Genetic", "value": 'genetic'},
-                                {"label": "Time Series (Longitudinal)", "value": 'longitudinal'},
-                                {"label": "Intervention/Effect", "value": 'effect'},
+                                {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
+                                {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
+                                {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
+                                {"label": "Effect (disease, etc.)", "value": 'effect'},
                             ],
                             #value=[1],
                             id="study_checklist",
@@ -193,6 +216,67 @@ layout = html.Div(
     ],
 )
 
+
+def generate_header_colors(selected_archetypes,total_headers):
+    '''
+    the goal of this method is to generate the header colors :)
+    '''
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    
+    #selected_archetypes=set(selected_archetypes)
+    #total_headers=set(total_headers)
+    print(total_headers)
+    print('')
+    #hold=input('here')
+    header_to_archetype_dict=dict()
+    for header in total_headers:
+        print(header)
+        print(FORM_HEADER_DICT_REVERSE[header].intersection(selected_archetypes))
+        header_to_archetype_dict[header]=FORM_HEADER_DICT_REVERSE[header].intersection(set(selected_archetypes))
+    #now we have {header:{archetypes}} over headers
+    #we want to group these sets (we want the reverse of this {{archetypes}:header})
+    #but we cannot use sets as keys
+    #so we settle for a scheme
+    #{group_number:[headers]}
+    #combined with
+    #{group_number:[archetypes]}
+    #first we get the group number keys
+    #this is a list of archtypes [archetypes]
+    print(FORM_HEADER_DICT_REVERSE)
+    print('')
+    print(header_to_archetype_dict)
+    print('')
+    unique_groups=[]
+    for header in header_to_archetype_dict.keys():
+        #if the archetype set is not in unique groups
+        if header_to_archetype_dict[header] not in unique_groups:
+            unique_groups.append(header_to_archetype_dict[header])
+    #now for each unique group, get the list of headers associated
+    group_to_header_dict={i:list() for i in range(len(unique_groups))}
+    for temp_header in header_to_archetype_dict:
+        temp_group_number=unique_groups.index(header_to_archetype_dict[temp_header])
+        group_to_header_dict[temp_group_number].append(temp_header)
+    #{group_number:[archetypes]} is the same thing as the unique groups list
+    group_to_archetype_dict={i:element for i,element in enumerate(unique_groups)}
+
+    # print(group_to_header_dict)
+    # print('')
+    # print(group_to_archetype_dict)
+    # hold=input('both dictionaries')
+    return group_to_header_dict,group_to_archetype_dict
+
+
+
+    
+        
+
+
+    
+
+
+
+
+
 @callback(
     [
         Output(component_id="download_form", component_property="data"),
@@ -219,22 +303,75 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
     print(total_headers)
 
+    group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
+    pprint(group_to_header_dict)
+    pprint(group_to_archetype_dict)
+    #need to rearrange columns to match group order
+    #then put dataframe one level lower
+    column_order_list=sum(group_to_header_dict.values(),[])
+
+
     temp_dataframe=pd.DataFrame.from_dict(
-        {element:[] for element in total_headers}
+        {element:[] for element in column_order_list}
     )
     print(temp_dataframe)
+    
 
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
 
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
-    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False)
+    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False,startrow=1)
 
     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
     workbook=temp_writer.book
     worksheet=temp_writer.sheets['sample_sheet']
+    #for each group in group_to_header_dict,group_to_archetype_dict
+    #ascertain the number of involved columns in the group
+    #ascertain the number of already seen columns
+    #merge ((number of involved columns) offset by (number of already seen columns))
+    #write text and color ((number of involved columns) offset by (number of already seen columns))
+    #for each group, make a format
+    color_list=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
+    merge_format_dict=dict()
+    for group_id in group_to_header_dict.keys():
+        merge_format_dict[group_id]=workbook.add_format(
+            {
+                #'bold': 1,
+                #'border': 1,
+                'align': 'center',
+                'valign': 'vcenter',
+                'fg_color': color_list[group_id]
+            }
+        )
+    start_cell=0
+    for group_id in merge_format_dict.keys():
+        #start_cell=lhs
+        
+        end_cell=start_cell+len(group_to_header_dict[group_id])-1
+        if (end_cell-start_cell)>=1:
+            start_cell_xl=xl_rowcol_to_cell(0,start_cell)
+            end_cell_xl=xl_rowcol_to_cell(0,end_cell)
+            start_cell=start_cell+len(group_to_header_dict[group_id])
+            merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
+            worksheet.merge_range(
+                start_cell_xl+':'+end_cell_xl,
+                merge_string,
+                merge_format_dict[group_id]
+            )
+        elif (end_cell-start_cell)==0:
+            start_cell_xl=xl_rowcol_to_cell(0,start_cell)
+            end_cell_xl=xl_rowcol_to_cell(0,end_cell)
+            start_cell=start_cell+len(group_to_header_dict[group_id])
+            non_merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
+            worksheet.write(start_cell_xl,non_merge_string,merge_format_dict[group_id])
+            # worksheet.add_format(
+            #     merge_format_dict[group_id]
+            # )
+
+
     worksheet.autofit()
 
     worksheet=temp_writer.sheets['title_page']
@@ -301,6 +438,7 @@ def upload_form(
 
     temp_dataframe=pd.read_excel(
         io.BytesIO(decoded),
+        sheet_name='sample_sheet_curated'
         #index_col=False
     )
 

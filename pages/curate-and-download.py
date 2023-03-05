@@ -30,6 +30,11 @@ from pprint import pprint
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
 
+#get the headers and their n gram limits
+with open('additional_files/ngram_limits_per_heading.json', 'r') as fp:
+    ngram_limits_per_heading_json=json.load(fp)
+
+
 #get all of the models
 nearest_neighbors_dict=dict()
 tfidf_vectorizer_dict=dict()
@@ -167,6 +172,8 @@ def find_neighbors_per_string(written_strings_per_category):
 
             #output_dict[temp_header][temp_written_string]=ordered_vocabulary
             output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
+            print(output_dict[temp_header][temp_written_string])
+            #hold=input('hold')
                         
     pprint(output_dict)
     print('didweactuallyaddsomethingforexclusion')
@@ -193,7 +200,8 @@ def generate_dropdown_options(valid_string_neighbors):
     '''
     output_dict=dict()
     for temp_header in valid_string_neighbors.keys():
-
+        print(temp_header)
+        print('-----------temp_header--------------')
         #we dont curate certain categories esp numerical like height, weight, etc
         if temp_header not in subset_per_heading_json.keys():
             continue
@@ -220,8 +228,17 @@ def generate_dropdown_options(valid_string_neighbors):
                 #is in is fine... just ahve to reorder
                 #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
                 conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-            ].drop_duplicates(subset=('main_string')).sort_values('use_count',ascending=False)
-
+            ].drop_duplicates(subset=('main_string'))#.sort_values('use_count',ascending=False)
+            #this is where things are getting rearranged. 
+            #just checking if it is in a list is obliterating the order of the list that we are using to check
+            #instead what we want to do is then for each value, sort
+            #eventually we might want some kind of hybrid function that takes a balance of cosine similarity and use_count
+            #ok so, for the moment, we do not sort by use_count, instead only by cosine score
+            temp_relevant_nodes_rows['valid_string']=pd.Categorical(
+                temp_relevant_nodes_rows['valid_string'],
+                categories=valid_string_neighbors[temp_header][temp_written_string]
+            )
+            temp_relevant_nodes_rows=temp_relevant_nodes_rows.sort_values('valid_string')
 
             # ordered_vocabulary=conglomerate_vocabulary_panda_dict[temp_header].loc[
             #     conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(unordered_vocabulary)
@@ -270,7 +287,7 @@ def generate_dropdown_options(valid_string_neighbors):
                     #     }
                     # )
 
-        pprint(output_dict)
+        pprint(output_dict[temp_header])
         #hold=input('outputdict')            
     return output_dict
 
@@ -1024,7 +1041,8 @@ def download_curated_forum(
         #     'valid_strings_unique':temp_model_vocabulary
         # }
         temp_TfidfVectorizer=TfidfVectorizer(
-            analyzer=trigrams,
+            analyzer='char',
+            ngram_range=ngram_limits_per_heading_json[temp_header]
             #max_df=1,
             #min_df=0.001
         )
