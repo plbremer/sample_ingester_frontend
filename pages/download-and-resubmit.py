@@ -438,7 +438,8 @@ def upload_form(
 
     temp_dataframe=pd.read_excel(
         io.BytesIO(decoded),
-        sheet_name='sample_sheet_curated'
+        sheet_name='sample_sheet',
+        skiprows=1
         #index_col=False
     )
 

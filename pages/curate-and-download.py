@@ -125,8 +125,10 @@ def find_neighbors_per_string(written_strings_per_category):
     #we can upgrade the vectorization to a, no pun intended, vectorized way, later
     for temp_header in written_strings_per_category.keys():
         
+        temp_header_core_vocabulary=temp_header.split('.')[0]
+
         #we dont curate certain categories esp numerical like height, weight, etc
-        if temp_header not in subset_per_heading_json.keys():
+        if temp_header_core_vocabulary not in subset_per_heading_json.keys():
             continue
         
         output_dict[temp_header]=dict()
@@ -134,9 +136,9 @@ def find_neighbors_per_string(written_strings_per_category):
             #vectorizer expects iterable. wrap in list to achieve
             #FIX: atm we typecase ints to strings
             print('123456789012345678901234567890')
-            print(f'{temp_header} : {temp_written_string}')
+            print(f'{temp_header_core_vocabulary} : {temp_written_string}')
             print(tfidf_vectorizer_dict['species'])
-            print(tfidf_vectorizer_dict[temp_header])
+            print(tfidf_vectorizer_dict[temp_header_core_vocabulary])
             
             #neighbors
 
@@ -144,18 +146,18 @@ def find_neighbors_per_string(written_strings_per_category):
             #the neighbors isnt fitted either
             #this happens when the vocabulary ingester is just getting started
             try:
-                vectorized_string=tfidf_vectorizer_dict[temp_header].transform([str(temp_written_string)])
+                vectorized_string=tfidf_vectorizer_dict[temp_header_core_vocabulary].transform([str(temp_written_string)])
             except NotFittedError:
-                output_dict[temp_header][temp_written_string]=np.array(['no options available'],dtype=object)
+                output_dict[temp_header_core_vocabulary][temp_written_string]=np.array(['no options available'],dtype=object)
                 
                 continue
 
             neghbors_to_retrieve=20
-            if (nearest_neighbors_dict[temp_header].n_samples_fit_) < neghbors_to_retrieve:
-                neghbors_to_retrieve=nearest_neighbors_dict[temp_header].n_samples_fit_
+            if (nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_) < neghbors_to_retrieve:
+                neghbors_to_retrieve=nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_
 
             #kn_ind is an array of indices of the nieghbors in the training matrix
-            _,kn_ind=nearest_neighbors_dict[temp_header].kneighbors(
+            _,kn_ind=nearest_neighbors_dict[temp_header_core_vocabulary].kneighbors(
                 vectorized_string,
                 neghbors_to_retrieve
             )
@@ -171,7 +173,8 @@ def find_neighbors_per_string(written_strings_per_category):
             # hold=input('hold')
 
             #output_dict[temp_header][temp_written_string]=ordered_vocabulary
-            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header][kn_ind[0]]
+            
+            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][kn_ind[0]]
             print(output_dict[temp_header][temp_written_string])
             #hold=input('hold')
                         
@@ -203,7 +206,10 @@ def generate_dropdown_options(valid_string_neighbors):
         print(temp_header)
         print('-----------temp_header--------------')
         #we dont curate certain categories esp numerical like height, weight, etc
-        if temp_header not in subset_per_heading_json.keys():
+        temp_header_core_vocabulary=temp_header.split('.')[0]
+        
+        
+        if temp_header_core_vocabulary not in subset_per_heading_json.keys():
             continue
 
 
@@ -223,11 +229,11 @@ def generate_dropdown_options(valid_string_neighbors):
                     # conglomerate_vocabulary_panda_dict[temp_header]['valid_string']==temp_valid_string
                 # ].drop_duplicates(subset=('main_string'))
 
-            temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header].loc[
+            temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
                 #i think isin is the wrong choice here? i think it should be equal?
                 #is in is fine... just ahve to reorder
                 #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-                conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
+                conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
             ].drop_duplicates(subset=('main_string'))#.sort_values('use_count',ascending=False)
             #this is where things are getting rearranged. 
             #just checking if it is in a list is obliterating the order of the list that we are using to check
@@ -563,12 +569,14 @@ def curate_data(
 
     written_strings_per_category=parse_excel_file(store_panda)
     print(written_strings_per_category)
+    #hold=input('hold - written_strings_per_category')
 
     print('`````````````````````````````````````````````````')
 
     valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
     pprint(valid_string_neighbors)
     #hold=input('valid neighbors')
+    #hold=input('hold - valid_string_neighbors')
 
     dropdown_options=generate_dropdown_options(valid_string_neighbors)
     #pprint(dropdown_options)
@@ -883,10 +891,13 @@ def download_curated_forum(
     #increment main string's corresponding 'use_count' column
     header_replacement_list=list()
 
+    #this loop seems to update the store values for output
     #temp_header_written_pair is the thing on the far left, eg "species: arabidopsis"
     for i,temp_header_written_pair in enumerate(header_written_pair_children_ALL):
         #children are stored as list, so access with 0
         temp_header=temp_header_written_pair[0].split(': ')[0]
+        #temp_header_core_vocabulary=temp_header.split('.')[0]
+
         temp_written_string=temp_header_written_pair[0].split(': ')[1]
 
         #chose the element that we want to substitute using the priority list
@@ -961,27 +972,30 @@ def download_curated_forum(
         if new_vocabulary_word is not None:
             try:
                 new_vocab_dict[
-                    header_written_pair_children_ALL[i][0].split(': ')[0]
+                    #notice that here we use the temp_header core vocabulary pattern because .split('.')[0]
+                    header_written_pair_children_ALL[i][0].split(': ')[0].split('.')[0]
                 ].append(new_vocabulary_word)
             except KeyError:
                 new_vocab_dict[
-                    header_written_pair_children_ALL[i][0].split(': ')[0]
+                    header_written_pair_children_ALL[i][0].split(': ')[0].split('.')[0]
                 ]=[new_vocabulary_word]
     #and THIS (2/4)
-    #occur only for each new vocabulary work
+    #occur only for each new vocabulary word
     #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
     for temp_key in new_vocab_dict.keys():
         appending_dict={
             'valid_string':[],
             'node_id':[],
             'main_string':[],
-            'ontology':[]
+            'ontology':[],
+            'use_count':[]
         }
         for temp_addition in new_vocab_dict[temp_key]:
             appending_dict['valid_string'].append(temp_addition)
-            appending_dict['node_id'].append(temp_key+'_'+temp_addition)
+            appending_dict['node_id'].append('userAdded_'+temp_addition)
             appending_dict['main_string'].append(temp_addition)
-            appending_dict['ontology'].append(temp_key)
+            appending_dict['ontology'].append('userAdded')
+            appending_dict['use_count'].append(1)
         appending_panda=pd.DataFrame.from_dict(appending_dict)
 
         conglomerate_vocabulary_panda_dict[temp_key]=pd.concat(
@@ -1002,13 +1016,14 @@ def download_curated_forum(
     for temp_tuple in header_replacement_list:
         print(temp_tuple)
         print(temp_tuple[0])
+        temp_header_core_vocabulary=temp_tuple[0].split('.')[0]
         #for each thing to replace 
         #get the corresponding panda
         #from that, get the corresponding main string
         #if there is more thjan one unique main string, raise an exception
         #otherwise, 
-        corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_tuple[0]].loc[
-            conglomerate_vocabulary_panda_dict[temp_tuple[0]]['valid_string']==temp_tuple[1]
+        corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
+            conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string']==temp_tuple[1]
         ]['main_string'].unique()
         if len(corresponding_main_string_list)>1:
             raise Exception('there should only be one main string for a valid string, found multiple')
@@ -1017,9 +1032,9 @@ def download_curated_forum(
         #print()
         print('8888888888888888888888888888888888888888888888888')
         #where value is true, keep original
-        conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count']=conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count'].where(
-            conglomerate_vocabulary_panda_dict[temp_tuple[0]]['main_string']!=corresponding_main_string,
-            other=conglomerate_vocabulary_panda_dict[temp_tuple[0]]['use_count']+1
+        conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count'].where(
+            conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']!=corresponding_main_string,
+            other=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']+1
         )
 
     #print
@@ -1028,7 +1043,7 @@ def download_curated_forum(
     #occur for every taxonomy that is referenced by a row
     #we need something not 
     #for temp_key in new_vocab_dict.keys():
-    taxonomies_referenced={element[0] for element in header_replacement_list}
+    taxonomies_referenced={element[0].split('.')[0] for element in header_replacement_list}
     for temp_key in taxonomies_referenced:
         conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
     print(new_vocab_dict)
@@ -1042,7 +1057,7 @@ def download_curated_forum(
         # }
         temp_TfidfVectorizer=TfidfVectorizer(
             analyzer='char',
-            ngram_range=ngram_limits_per_heading_json[temp_header]
+            ngram_range=ngram_limits_per_heading_json[temp_key]
             #max_df=1,
             #min_df=0.001
         )
@@ -1063,11 +1078,11 @@ def download_curated_forum(
 
     #update the unique strings list
     for temp_key in new_vocab_dict.keys():
-        vocabulary_dict[temp_header]=pd.DataFrame.from_dict(
+        vocabulary_dict[temp_key]=pd.DataFrame.from_dict(
             conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
         )
 
-        vocabulary_dict[temp_header].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
+        vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
 
 
     
