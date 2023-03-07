@@ -20,44 +20,30 @@ from pprint import pprint
 
 dash.register_page(__name__, path='/download-and-resubmit')
 
+#we call the keys here "archetypes"
 FORM_HEADER_DICT={
     'tissue':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','mass','massUnit','otherInclusionCriteria','otherExclusionCriteria'],
     'fluid':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
+    'cells':['species','cellLine','cellCount','otherInclusionCriteria','otherExclusionCriteria'],
     'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
     'genetic':['gene'],
     'longitudinal':['zeroTimeEvent','time','timeUnit'],
     'intervention':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
     'effect':['disease'],
-    #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
 }
 
-#FORM_HEADER_DICT_REVERSE={}
+#obtain the reverse of the FORM_HEADER_DICT, eg {'species:['tissue','fluid','cells']}
 FORM_HEADER_DICT_REVERSE={element:set() for element in sum(FORM_HEADER_DICT.values(),[])}
 for temp_archetype in FORM_HEADER_DICT.keys():
     for temp_header in FORM_HEADER_DICT[temp_archetype]:
         FORM_HEADER_DICT_REVERSE[temp_header].add(temp_archetype)
-#print(FORM_HEADER_DICT_REVERSE)
-#hold=input('reverse dict')
+
 
 def generate_form_headers(selected_archetypes):
     '''
-    a more sophisticated approach needs to be implemented.
-    should probably read from a support file.
-    need to make it so that properties dont appear multiple times
+    from the selected archetypes ('tissue', 'genetic', etc.)
+    create the total set of metadata headers. order matters 
     '''
-    # form_header_dict={
-    #     'tissue':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    #     'fluid':['species','organ','sex','height','heightUnit','mass','massUnit','age','ageUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    #     'cells':['species','cell_line','cell_count','otherInclusionCriteria','otherExclusionCriteria'],
-    #     'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    #     'genetic':['gene'],
-    #     'longitudinal':['zeroTimeEvent','time','timeUnit'],
-    #     'intervention':['drugName','drugDoseVolumeOrMass','drugDoseUnit','diet','exercise'],
-    #     'effect':['disease'],
-    #     #'general':[,'otherInclusionCriteria','otherExclusionCriteria']
-    # }
-
     total_headers=[]
     for temp_header in selected_archetypes:
         for temp_element in FORM_HEADER_DICT[temp_header]:
@@ -87,7 +73,6 @@ layout = html.Div(
                                 {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
                                 {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
                             ],
-                            #value=[1],
                             id="sample_checklist",
                         ),
                     ],
@@ -104,7 +89,6 @@ layout = html.Div(
                                 {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
                                 {"label": "Effect (disease, etc.)", "value": 'effect'},
                             ],
-                            #value=[1],
                             id="study_checklist",
                         ),
                     ],
@@ -146,7 +130,6 @@ layout = html.Div(
                             id='upload_form',
                             children=html.Div([
                                 'Drag and Drop or Select Files',
-                                #html.A('Select Files')
                             ]),
                             style={
                                 'width': '100%',
@@ -196,7 +179,6 @@ layout = html.Div(
                                 ),
                             ],
                             href='/curate-and-download',
-                            #refresh=True
                         )
                     ],
                     width=2
@@ -204,36 +186,22 @@ layout = html.Div(
                 dbc.Col(width=5)
             ]
         ),
-
-
-
-
-
-
-
-
-
     ],
 )
 
 
 def generate_header_colors(selected_archetypes,total_headers):
     '''
-    the goal of this method is to generate the header colors :)
+    this generates the dictionaries that are used to color the top row in the excel file
+    we use "groups" as the keys for these because sets of headers arent valid as keys in python
     '''
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    
-    #selected_archetypes=set(selected_archetypes)
-    #total_headers=set(total_headers)
-    print(total_headers)
-    print('')
-    #hold=input('here')
+
     header_to_archetype_dict=dict()
     for header in total_headers:
-        print(header)
-        print(FORM_HEADER_DICT_REVERSE[header].intersection(selected_archetypes))
+        #we make sets in each iteration to preserve the order of the list
         header_to_archetype_dict[header]=FORM_HEADER_DICT_REVERSE[header].intersection(set(selected_archetypes))
-    #now we have {header:{archetypes}} over headers
+    
+    #now we have {header:{archetypes}} for each header
     #we want to group these sets (we want the reverse of this {{archetypes}:header})
     #but we cannot use sets as keys
     #so we settle for a scheme
@@ -242,15 +210,12 @@ def generate_header_colors(selected_archetypes,total_headers):
     #{group_number:[archetypes]}
     #first we get the group number keys
     #this is a list of archtypes [archetypes]
-    print(FORM_HEADER_DICT_REVERSE)
-    print('')
-    print(header_to_archetype_dict)
-    print('')
     unique_groups=[]
     for header in header_to_archetype_dict.keys():
         #if the archetype set is not in unique groups
         if header_to_archetype_dict[header] not in unique_groups:
             unique_groups.append(header_to_archetype_dict[header])
+
     #now for each unique group, get the list of headers associated
     group_to_header_dict={i:list() for i in range(len(unique_groups))}
     for temp_header in header_to_archetype_dict:
@@ -259,23 +224,7 @@ def generate_header_colors(selected_archetypes,total_headers):
     #{group_number:[archetypes]} is the same thing as the unique groups list
     group_to_archetype_dict={i:element for i,element in enumerate(unique_groups)}
 
-    # print(group_to_header_dict)
-    # print('')
-    # print(group_to_archetype_dict)
-    # hold=input('both dictionaries')
     return group_to_header_dict,group_to_archetype_dict
-
-
-
-    
-        
-
-
-    
-
-
-
-
 
 @callback(
     [
@@ -291,32 +240,34 @@ def generate_header_colors(selected_archetypes,total_headers):
 )
 def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
     '''
+    creates the form that is downloaded by users
     '''
+
+    #a potential improvement would be to generate a visible error if nothing is checked
     if sample_checklist_options==None and study_checklist_options==None:
         raise PreventUpdate
     
-    print(sample_checklist_options)
     if sample_checklist_options==None:
         sample_checklist_options=[]
     if study_checklist_options==None:
         study_checklist_options=[]
+    
+    #multipele archetypes can have the same headers (eg tissue, cells both have species)
+    #we want a non-repeating, ordered list of those headers
     total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
-    print(total_headers)
 
+    #get the dicts that define the colors for the excel file
     group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
-    pprint(group_to_header_dict)
-    pprint(group_to_archetype_dict)
+
     #need to rearrange columns to match group order
-    #then put dataframe one level lower
     column_order_list=sum(group_to_header_dict.values(),[])
 
-
+    #empty df for excel file
     temp_dataframe=pd.DataFrame.from_dict(
         {element:[] for element in column_order_list}
     )
-    print(temp_dataframe)
-    
 
+    #we write to bytes because it is much more versatile
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
 
@@ -328,19 +279,19 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
     workbook=temp_writer.book
     worksheet=temp_writer.sheets['sample_sheet']
+
     #for each group in group_to_header_dict,group_to_archetype_dict
     #ascertain the number of involved columns in the group
     #ascertain the number of already seen columns
     #merge ((number of involved columns) offset by (number of already seen columns))
     #write text and color ((number of involved columns) offset by (number of already seen columns))
     #for each group, make a format
+    #write and color the curation sheet
     color_list=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
     merge_format_dict=dict()
     for group_id in group_to_header_dict.keys():
         merge_format_dict[group_id]=workbook.add_format(
             {
-                #'bold': 1,
-                #'border': 1,
                 'align': 'center',
                 'valign': 'vcenter',
                 'fg_color': color_list[group_id]
@@ -348,8 +299,6 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
         )
     start_cell=0
     for group_id in merge_format_dict.keys():
-        #start_cell=lhs
-        
         end_cell=start_cell+len(group_to_header_dict[group_id])-1
         if (end_cell-start_cell)>=1:
             start_cell_xl=xl_rowcol_to_cell(0,start_cell)
@@ -367,38 +316,42 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
             start_cell=start_cell+len(group_to_header_dict[group_id])
             non_merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
             worksheet.write(start_cell_xl,non_merge_string,merge_format_dict[group_id])
-            # worksheet.add_format(
-            #     merge_format_dict[group_id]
-            # )
-
 
     worksheet.autofit()
 
     worksheet=temp_writer.sheets['title_page']
     worksheet.hide_gridlines()
-    worksheet.write('B2','Hello. Please write one sample per row.')
-    worksheet.write('B3','Please leave unused metadata blank.')
+    top_format=workbook.add_format({
+        'bold': 1,
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
+    rule_format=workbook.add_format({
+        #'bold': 1,
+        #'border': 1,
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
+        
+    #write the #first sheet
+    worksheet.merge_range('B2:L2','Guidelines',top_format)
+    worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
+    worksheet.merge_range('C6:S6','Use fragments/phrases not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc."',rule_format)
+    worksheet.merge_range('C8:S8','Leave unused columns empty',rule_format)         
+    worksheet.merge_range('C10:S10','Insert a column for multiple values of the same time. e.g., multiple drugs',rule_format)    
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
-    #output_excel
 
     return [
         dcc.send_bytes(temp_data,"binbase_sample_ingestion_form.xlsx")
     ]
 
-    # return [
-    #     dcc.send_data_frame(
-    #         temp_dataframe.to_excel, "binbase_sample_ingestion_form.xlsx", sheet_name="sample_information", index=False
-    #     )
-    # ]
-
 
 @callback(
     [
-        #Output(component_id="here_is_where_we_put_the curation_interface", component_property="children"),
-        #we used to ahve the div_filename as the output property, now we change the children of the upload
-        #Output(component_id="div_filename", component_property="children"),
         Output(component_id="upload_form",component_property="children"),
         Output(component_id="main_store",component_property="data")
     ],
@@ -407,32 +360,27 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     ],
     [
         State(component_id="upload_form", component_property="filename"),
-        State(component_id="upload_form", component_property="last_modified"),
-        #this state component is not necessary
-        State(component_id="main_store",component_property="data"),
+        #State(component_id="upload_form", component_property="last_modified"),
+        #State(component_id="main_store",component_property="data"),
     ],
     prevent_initial_call=True
 )
 def upload_form(
     upload_form_contents,
     upload_form_filename,
-    upload_form_last_modified,
-    main_store_data
+    #upload_form_last_modified,
+    #main_store_data
 ):
     if upload_form_contents==None:
         raise PreventUpdate
     
     '''
-    need to have things like prevent update if its not an excel file
-    '''
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`')
-    print(main_store_data)
-    #print(upload_form_contents)
+    accept the form back from the user
 
+    need to have a more fully fledged format-checking and error throwing suite
+    '''
 
     content_type, content_string = upload_form_contents.split(',')
-    # decoded = base64.b64decode(content_string)
-    # df = pd.read_excel(io.BytesIO(decoded))
 
     decoded=base64.b64decode(content_string)
 
@@ -443,17 +391,7 @@ def upload_form(
         #index_col=False
     )
 
-    print(temp_dataframe)
-
     temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
-    print(temp_dataframe_as_json)
     displayed_name=html.Div([upload_form_filename],className='text-center')
     return [displayed_name,temp_dataframe_as_json]
-
-
-                        # upload_form',
-                        #     children=html.Div([
-                        #         'Drag and Drop or Select Files',
-                        #         #html.A('Select Files')
-                        #     ]),

@@ -686,7 +686,7 @@ def curate_data(
                                     'type':'input_curation',
                                     'index':str(temp_header)+'_'+str(temp_written_string)
                                 },
-                                placeholder="hate all the proposals? enter your own here!"
+                                placeholder="Nothing matches - Enter New"
                             )
                         )
 
@@ -839,7 +839,7 @@ def update_options(search_value):
         State(component_id={'type':'dropdown_empty_options','index':ALL},component_property="value"),
         State(component_id={'type':'input_curation','index':ALL},component_property="value"),
     ],
-    #prevent_initial_call=True
+    prevent_initial_call=True
 )
 def download_curated_forum(
     button_download_curated_n_clicks,
@@ -1026,6 +1026,7 @@ def download_curated_forum(
             conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string']==temp_tuple[1]
         ]['main_string'].unique()
         if len(corresponding_main_string_list)>1:
+            print(corresponding_main_string_list)
             raise Exception('there should only be one main string for a valid string, found multiple')
         corresponding_main_string=corresponding_main_string_list[0]
         print(corresponding_main_string)

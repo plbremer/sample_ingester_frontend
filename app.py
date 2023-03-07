@@ -27,7 +27,7 @@ app.layout = html.Div(
                 # )
             # the earlier viersion that was alphabetized
             ]+my_page_link_list,
-            brand='hello',
+            brand='Sample Ingester Prototype',
             color='#1A3E68',
             brand_style = {'color': '#FFCD00'},
             #links_left=True,
