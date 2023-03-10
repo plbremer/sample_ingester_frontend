@@ -21,12 +21,7 @@ app.layout = html.Div(
         dcc.Store('main_store'),
         dcc.Location('url'),
         dbc.NavbarSimple(
-            #dbc.Container(
-            children=[
-                # html.A(
-                # )
-            # the earlier viersion that was alphabetized
-            ]+my_page_link_list,
+            children=[]+my_page_link_list,
             brand='Sample Ingester Prototype',
             color='#1A3E68',
             brand_style = {'color': '#FFCD00'},
@@ -34,7 +29,6 @@ app.layout = html.Div(
             #style={"height": "100px"}, 
             # ), 
         ),
-        #html.Hr(style={'color':'red','height':'50px'}),
         # content of each page
         dash.page_container
     ]

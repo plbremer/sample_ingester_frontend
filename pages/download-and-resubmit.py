@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 
 from dash.exceptions import PreventUpdate
 
+import numpy as np
 import pandas as pd
 
 import xlsxwriter
@@ -38,6 +39,7 @@ for temp_archetype in FORM_HEADER_DICT.keys():
     for temp_header in FORM_HEADER_DICT[temp_archetype]:
         FORM_HEADER_DICT_REVERSE[temp_header].add(temp_archetype)
 
+SPLIT_CHAR='~'
 
 def generate_form_headers(selected_archetypes):
     '''
@@ -52,7 +54,26 @@ def generate_form_headers(selected_archetypes):
     
     return total_headers
 
+def split_columns_if_delimited(temp_dataframe):
 
+    #for each column
+    #split it
+    #delete the orignal
+    #append the new ones
+    #much easier to conserve the order than to reorder
+    new_dataframe_list=list()
+    for temp_column in temp_dataframe.columns:
+        if temp_dataframe[temp_column].dtype==object:
+            temp_expanded_columns=temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
+        else:
+            temp_expanded_columns=temp_dataframe[temp_column]
+        new_dataframe_list.append(temp_expanded_columns)
+
+    output_dataframe=pd.concat(new_dataframe_list,axis='columns')
+
+    output_dataframe.fillna(value=np.nan,inplace=True)
+
+    return output_dataframe
 
 layout = html.Div(
     children=[
@@ -390,6 +411,8 @@ def upload_form(
         skiprows=1
         #index_col=False
     )
+
+    temp_dataframe=split_columns_if_delimited(temp_dataframe)
 
     temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
