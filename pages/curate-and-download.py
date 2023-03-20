@@ -190,12 +190,13 @@ def generate_dropdown_options(valid_string_neighbors):
                 #is in is fine... just ahve to reorder
                 #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
                 conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-            ].drop_duplicates(subset=('main_string'))#.sort_values('use_count',ascending=False)
+            ].drop_duplicates(subset=('main_string')).sort_values('use_count',ascending=False)
             #this is where things are getting rearranged. 
             #just checking if it is in a list is obliterating the order of the list that we are using to check
             #instead what we want to do is then for each value, sort
             #eventually we might want some kind of hybrid function that takes a balance of cosine similarity and use_count
             #ok so, for the moment, we do not sort by use_count, instead only by cosine score
+            #
             temp_relevant_nodes_rows['valid_string']=pd.Categorical(
                 temp_relevant_nodes_rows['valid_string'],
                 categories=valid_string_neighbors[temp_header][temp_written_string]
@@ -434,7 +435,7 @@ def update_options(
     header_written_pair_children
 ):
     '''
-    generates the labels in the dropdown
+    generates the labels in the substring dropdown
     ISSUE 36
     ISSUE 37
     '''
