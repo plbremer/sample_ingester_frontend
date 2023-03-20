@@ -128,7 +128,7 @@ def find_neighbors_per_string(written_strings_per_category):
                 output_dict[temp_header][temp_written_string]=np.array(['no options available'],dtype=object)
                 continue
 
-            neighbors_to_retrieve=20
+            neighbors_to_retrieve=100
             #if there are fewer neighbors to retrieve than we want, set the neighbors to the max available
             if (nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_) < neighbors_to_retrieve:
                 neighbors_to_retrieve=nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_
@@ -201,7 +201,7 @@ def generate_dropdown_options(valid_string_neighbors):
                 temp_relevant_nodes_rows['valid_string'],
                 categories=valid_string_neighbors[temp_header][temp_written_string]
             )
-            temp_relevant_nodes_rows=temp_relevant_nodes_rows.sort_values('valid_string')
+            #temp_relevant_nodes_rows=temp_relevant_nodes_rows.sort_values('valid_string')
 
             #ISSUE 24
             #we add this condition as the partner condition to the tfidf is fitted check
@@ -801,7 +801,10 @@ def download_curated_forum(
         temp_model_vocabulary=conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
         temp_TfidfVectorizer=TfidfVectorizer(
             analyzer='char',
-            ngram_range=ngram_limits_per_heading_json[temp_key]
+            ngram_range=ngram_limits_per_heading_json[temp_key],
+            use_idf=False,
+            norm=None
+            #max_df=1,
             #max_df=1,
             #min_df=0.001
         )
