@@ -1,4 +1,5 @@
 from asyncio import FIRST_COMPLETED
+from email import header
 from re import T
 import dash
 from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL
@@ -20,6 +21,8 @@ import pandas as pd
 
 import base64
 import io
+
+from xlsxwriter.utility import xl_rowcol_to_cell
 
 from pprint import pprint
 
@@ -67,6 +70,10 @@ priority_list=[
     'input_curation_value_ALL'
 ]
 
+HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
+COLOR_LIST=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
+
+print(tfidf_vectorizer_dict)
 
 
 def parse_stored_excel_file(store_panda):
@@ -114,7 +121,11 @@ def find_neighbors_per_string(written_strings_per_category):
             try:
                 vectorized_string=tfidf_vectorizer_dict[temp_header_core_vocabulary].transform([str(temp_written_string)])
             except NotFittedError:
-                output_dict[temp_header_core_vocabulary][temp_written_string]=np.array(['no options available'],dtype=object)
+                # print(output_dict)
+                # print('')
+                # print(output_dict[temp_header])
+                
+                output_dict[temp_header][temp_written_string]=np.array(['no options available'],dtype=object)
                 continue
 
             neighbors_to_retrieve=20
@@ -279,30 +290,31 @@ def curate_data(
 ):
     '''
     '''
-    print('================================')
-    print('top of curate_data')
+    # print('================================')
+    # print('top of curate_data')
 
     url_href_page_location=url_href.split('/')[-1]
     if url_href_page_location!='curate-and-download':
         raise PreventUpdate
 
-    store_panda=pd.read_json(main_store_data,orient='records')
-    print(store_panda)
-    print('================================')
+    store_panda=pd.read_json(main_store_data['input_dataframe'],orient='records')
+    # print(store_panda)
+    # print('================================')
+    store_panda=store_panda.iloc[:-1,:]
 
     written_strings_per_category=parse_stored_excel_file(store_panda)
-    print(written_strings_per_category)
-    print('================================')
+    # print(written_strings_per_category)
+    # print('================================')
 
     #the values come from here sorted by nearest neighbors similarity
     valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
-    print(valid_string_neighbors)
-    print('================================')
+    # print(valid_string_neighbors)
+    # print('================================')
 
     #if we wanted to implement some sort of use_count + cosine hybrid, this might be the place to do it?
     #we would probably have to pass the cosine scores
     dropdown_options=generate_dropdown_options(valid_string_neighbors)
-    print(dropdown_options)
+    # print(dropdown_options)
 
 
     output_children=list()
@@ -348,7 +360,8 @@ def curate_data(
                                     'index':str(temp_header)+'_'+str(temp_written_string)
                                 },
                                 children=[
-                                    str(temp_header)+': '+str(temp_written_string)
+                                    str(temp_header).split('.')[0]+': '+str(temp_written_string)
+                                    #str(temp_header)+': '+str(temp_written_string)
                                 ]
                             )
                         ),    
@@ -406,39 +419,143 @@ def curate_data(
 
 
 @callback(
-    Output({'type':'dropdown_empty_options','index':MATCH},'options'),
-    Input({'type':'dropdown_empty_options','index':MATCH},'search_value')
+    [
+        Output(component_id={'type':'dropdown_empty_options','index':MATCH},component_property='options'),
+    ],
+    [
+        Input(component_id={'type':'dropdown_empty_options','index':MATCH},component_property='search_value'),
+    ],
+    [
+        State(component_id={'type':'header_written_pair','index':MATCH},component_property="children"),
+    ],
 )
-def update_options(search_value):
+def update_options(
+    dropdown_empty_options_search_value,
+    header_written_pair_children
+):
     '''
     generates the labels in the dropdown
     ISSUE 36
     ISSUE 37
     '''
-    
-    if not search_value:
+
+
+    if not dropdown_empty_options_search_value:
         raise PreventUpdate
 
-    if len(search_value)<3:
-        raise PreventUpdate
+    # print(dropdown_empty_options_search_value)
+    # print(header_written_pair_children)
 
-    current_index=ctx.triggered_id['index'].split('_')[0]
+    this_header_type=header_written_pair_children[0].split(':')[0].split('.')[0]
+    if this_header_type not in HEADERS_WITH_SHORT_NGRAMS:
+        if len(dropdown_empty_options_search_value)<3:
+            raise PreventUpdate
+
+    current_index=ctx.triggered_id['index'].split('_')[0].split('.')[0]
     #need to access the index
-    print(ctx.triggered_id)
-    print('y halo thar')
+    # print(ctx.triggered_id)
+    # print(current_index)
+    # print('y halo thar')
 
-    temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
-        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(search_value)
-    ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])['valid_string'].tolist()
+    # temp_valid_values=conglomerate_vocabulary_panda_dict[current_index].loc[
+    #     conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
+    # ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])['valid_string'].tolist()
 
-    return [
+    # temp_main_values=conglomerate_vocabulary_panda_dict[current_index].loc[
+    #     conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
+    # ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])['main_string'].tolist()
+
+    temp_values=conglomerate_vocabulary_panda_dict[current_index].loc[
+        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
+    ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])[['valid_string','main_string']].agg(' AKA '.join, axis=1).tolist()
+
+    # print(temp_values)
+    return [[
         {   #this form does not match the others. the others take the valid string and plug it into the json. "this is an oldier comment? plb after json to pandas"
             'label': temp_string,
             'value': temp_string
-        } for temp_string in temp_valid_values
-    ]
+        } for temp_string in temp_values
+    ]]
 
 
+
+def update_excel_sheet_curated_sample_formatting(workbook,worksheet,store_panda):
+    '''
+    i think that we should rewrite "current_none_null_cell_phrase" to be "previous"
+    whereas current non null cell can stay
+    '''
+
+
+
+    #take care of teh top row, merged cells
+    last_index=store_panda.index[-1]
+    current_cell=0
+    color_list_counter=0
+    columns_to_merge=0
+    for temp_col in store_panda.columns:
+        
+        if pd.isna(store_panda.at[last_index,temp_col])==True:
+            columns_to_merge+=1
+        elif pd.isna(store_panda.at[last_index,temp_col])==False and current_cell!=0:
+            temp_format=workbook.add_format(
+                {
+                    'align': 'center',
+                    'valign': 'vcenter',
+                    'fg_color': COLOR_LIST[color_list_counter]
+                }
+            )            
+            color_list_counter+=1
+            start_cell_xl=xl_rowcol_to_cell(0,current_non_null_cell)
+
+            if columns_to_merge==0:
+                current_non_null_cell=current_cell
+                worksheet.write(start_cell_xl,current_non_null_cell_phrase,temp_format)
+                current_non_null_cell_phrase=store_panda.at[last_index,temp_col]
+
+            elif columns_to_merge>0:
+                
+                end_cell_xl=xl_rowcol_to_cell(0,current_non_null_cell+columns_to_merge)
+                current_non_null_cell=current_cell
+                
+                worksheet.merge_range(
+                    start_cell_xl+':'+end_cell_xl,
+                    current_non_null_cell_phrase,
+                    temp_format
+                )   
+            current_non_null_cell_phrase=store_panda.at[last_index,temp_col]
+            columns_to_merge=0
+
+        elif pd.isna(store_panda.at[last_index,temp_col])==False and current_cell==0:
+            current_non_null_cell=0
+            current_non_null_cell_phrase=store_panda.at[last_index,temp_col]
+
+        current_cell+=1
+    #once we reach the end, perform the merge operation
+    temp_format=workbook.add_format(
+        {
+            'align': 'center',
+            'valign': 'vcenter',
+            'fg_color': COLOR_LIST[color_list_counter]
+        }
+    )            
+    color_list_counter+=1
+    start_cell_xl=xl_rowcol_to_cell(0,current_non_null_cell)
+    if columns_to_merge==0:
+        worksheet.write(start_cell_xl,current_non_null_cell_phrase,temp_format)
+    elif columns_to_merge>0:
+        
+        end_cell_xl=xl_rowcol_to_cell(0,current_non_null_cell+columns_to_merge)
+        current_non_null_cell=current_cell
+        #current_non_null_cell_phrase=store_panda.at[last_index,temp_col]
+        worksheet.merge_range(
+            start_cell_xl+':'+end_cell_xl,
+            current_non_null_cell_phrase,
+            temp_format
+        )   
+
+
+
+    return workbook,worksheet
 
 @callback(
     [
@@ -467,7 +584,7 @@ def download_curated_forum(
     dropdown_similar_strings_value_ALL,
     dropdown_empty_options_value_ALL,
     input_curation_value_ALL,
-    dropdown_similar_strings_ALL
+    dropdown_similar_strings_options_ALL
 ):
     '''
     downloading the curated data does several things
@@ -481,7 +598,17 @@ def download_curated_forum(
 
     '''
 
-    store_panda=pd.read_json(main_store_data,orient='records')
+    store_panda=pd.read_json(main_store_data['input_dataframe'],orient='records')
+
+    # print('')
+    # print(dropdown_similar_strings_options_ALL)
+    print('store_panda')
+    print(store_panda)
+    print('')
+    # print(main_store_data['group_to_header_dict_curated'])
+    # print('')
+    # print(main_store_data['group_to_text_dict_curated'])
+
 
     #this is used in the use_count update
     #the logic is 
@@ -495,6 +622,7 @@ def download_curated_forum(
     #this loop updates the stored dictr that becomes the user output excel file
     #temp_header_written_pair is the thing on the far left, eg "species: arabidopsis"
     for i,temp_header_written_pair in enumerate(header_written_pair_children_ALL):
+    #for i,temp_header_written_pair in enumerate(dropdown_empty_options_value_ALL):
         #children are stored as list, so access with 0
         temp_header=temp_header_written_pair[0].split(': ')[0]
         #temp_header_core_vocabulary=temp_header.split('.')[0]
@@ -511,7 +639,7 @@ def download_curated_forum(
                 #because we want it to include the "AKA"
                 #the old approach is this, below. the [0] is because children are lists
                 #temp_replacement=eval(curation_column)[i][0]
-                temp_replacement=dropdown_similar_strings_ALL[i][0]['value']
+                temp_replacement=dropdown_similar_strings_options_ALL[i][0]['value']
                 continue
             if eval(curation_column)[i] is not None:
                 temp_replacement=eval(curation_column)[i]
@@ -524,44 +652,66 @@ def download_curated_forum(
         #if ' AKA ' in temp_replacement:
         #    temp_replacement=temp_replacement.split(' AKA ')[0]
 
-        print(f'{temp_header} {temp_written_string}: {temp_replacement}')
+        # print(f'{temp_header} {temp_written_string}: {temp_replacement}')
 
         #ISSUE 24
         #we skip the very early forms of empty lists
         if temp_replacement!='no options available':
             header_replacement_list.append((temp_header,temp_replacement))
 
-        store_panda[temp_header].replace(
-            #to_replace=temp_written_string,
-            #value=temp_replacement,
-            {temp_written_string:temp_replacement},
-            inplace=True
-        )
+        
+        #basically, we had a problem where the panda headers were something like species.1.0
+        #and the tempheaders were just 'species' which is ambiguous
+        #so we just opted to do the lazy, not perfect thing and try to replace all. slightly dangerous
+        for temp_column in store_panda.columns:
+            if temp_header in temp_column:
+                store_panda[temp_column].replace(
+                    #to_replace=temp_written_string,
+                    #value=temp_replacement,
+                    {temp_written_string:temp_replacement},
+                    inplace=True
+                )
 
         #########NOTE##########3
         #need to have some sort of special case for "no options available" for things that start empty    
 
-    print('===========================')
-    print('===========================')
-    print(store_panda)
+    # print('===========================')
+    # print('===========================')
+    # print(store_panda)
 
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
 
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
-    store_panda.to_excel(temp_writer,sheet_name='sample_sheet_curated',index=False)
+    #skip the last row which has the merger archetype info
+    store_panda.iloc[:-1,:].to_excel(
+        temp_writer,
+        sheet_name='sample_sheet_curated',
+        index=False,
+        startrow=1,
+        #take off the weird .0.1 etc
+        header=[element.split('.')[0] for element in store_panda.columns]
+    )
+    #empty_df.to_excel(temp_writer,sheet_name='sample_sheet_curated',index=False)
+
 
     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
     workbook=temp_writer.book
     worksheet=temp_writer.sheets['sample_sheet_curated']
+    workbook,worksheet=update_excel_sheet_curated_sample_formatting(workbook,worksheet,store_panda)
+
     worksheet.autofit()
 
     worksheet=temp_writer.sheets['title_page']
     worksheet.hide_gridlines()
     worksheet.write('B2','Enjoy the curations :)')
     #worksheet.write('B3','Please leave unused metadata blank.')
+
+    
+    
+    
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
@@ -612,7 +762,7 @@ def download_curated_forum(
         conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset='main_string',ignore_index=True,inplace=True)
 
 
-    print('===========================')
+    # print('===========================')
     #this loop apply for every row in the curation table
     #the purpose of this loop is to increment the use_count
     for temp_tuple in header_replacement_list:
@@ -629,7 +779,7 @@ def download_curated_forum(
             (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']==temp_main_string)
         ]['main_string'].unique()
         if len(corresponding_main_string_list)>1:
-            print(corresponding_main_string_list)
+            # print(corresponding_main_string_list)
             raise Exception('there should only be one main string for a valid string, found multiple')
         corresponding_main_string=corresponding_main_string_list[0]
         #where value is true, keep original
