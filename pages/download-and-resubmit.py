@@ -16,6 +16,8 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 import openpyxl
 
+import json
+
 import base64
 import io
 from pprint import pprint
@@ -23,16 +25,8 @@ from pprint import pprint
 dash.register_page(__name__, path='/download-and-resubmit')
 
 #we call the keys here "archetypes"
-FORM_HEADER_DICT={
-    'tissue':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','mass','massUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    'fluid':['species','organ','sex','height','heightUnit','weight','weightUnit','age','ageUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    'cells':['species','cellLine','cellCount','otherInclusionCriteria','otherExclusionCriteria'],
-    'raw_material':['material','mass','massUnit','volume','volumeUnit','otherInclusionCriteria','otherExclusionCriteria'],
-    'genetic':['gene'],
-    'longitudinal':['zeroTimeEvent','time','timeUnit'],
-    'intervention':['drugName','drugDoseMagnitude','drugDoseUnit','diet','exercise'],
-    'effect':['disease'],
-}
+with open('assets/form_header_dict.json','r') as f:
+    FORM_HEADER_DICT=json.load(f)
 
 #obtain the reverse of the FORM_HEADER_DICT, eg {'species:['tissue','fluid','cells']}
 FORM_HEADER_DICT_REVERSE={element:set() for element in sum(FORM_HEADER_DICT.values(),[])}
@@ -158,7 +152,7 @@ layout = html.Div(
                         dcc.Upload(
                             id='upload_form',
                             children=html.Div([
-                                'Drag and Drop or Select Files',
+                                'Upload Completed Form',
                             ]),
                             style={
                                 'width': '100%',
@@ -191,30 +185,8 @@ layout = html.Div(
         ),
         html.Br(),
         html.Br(),
-        dbc.Row(
-            children=[
-                dbc.Col(width=5),
-                dbc.Col(
-                    children=[
-                        
-                        dcc.Link(
-                            children=[                        
-                                html.Div(
-                                    dbc.Button(
-                                        'Process Form',
-                                        id='button_form',
-                                    ),
-                                    className="d-grid gap-2 col-6 mx-auto",
-                                ),
-                            ],
-                            href='/curate-and-download',
-                        )
-                    ],
-                    width=2
-                ),
-                dbc.Col(width=5)
-            ]
-        ),
+        html.Div(id='Div_curate_button_or_error_messages'),
+
     ],
 )
 
@@ -447,7 +419,8 @@ def generate_curated_colors(worksheet,dataframe):
 @callback(
     [
         Output(component_id="upload_form",component_property="children"),
-        Output(component_id="main_store",component_property="data")
+        Output(component_id="main_store",component_property="data"),
+        Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
     ],
     [
         Input(component_id="upload_form", component_property="contents"),
@@ -475,57 +448,68 @@ def upload_form(
     '''
 
     content_type, content_string = upload_form_contents.split(',')
-
-    decoded=base64.b64decode(content_string)
-
-    workbook=openpyxl.load_workbook(io.BytesIO(decoded))
-    worksheet=workbook['sample_sheet']
     
 
-    temp_dataframe=pd.read_excel(
-        io.BytesIO(decoded),
-        sheet_name='sample_sheet',
-        skiprows=1
-        #index_col=False
-    )
-    print(temp_dataframe)
-    print('what if we dont skip first row')
+    #declare instance of upload error tester here
+    #run through error tests. excel tests first
+    #if any tests fail, return a nullish store (None?) and something, maybe html.H6 with error messages
+    if any tests fail:
+        curate_button_children=html.H6('enumerate failures here')
+        store_dict=None
+    #if all tests pass, then run business as usual
+    if all tests pass:
+        curate_button_children=dbc.Row(
+            children=[
+                dbc.Col(width=5),
+                dbc.Col(
+                    children=[
+                        
+                        dcc.Link(
+                            children=[                        
+                                html.Div(
+                                    dbc.Button(
+                                        'Process Form',
+                                        id='button_form',
+                                    ),
+                                    className="d-grid gap-2 col-6 mx-auto",
+                                ),
+                            ],
+                            href='/curate-and-download',
+                        )
+                    ],
+                    width=2
+                ),
+                dbc.Col(width=5)
+            ]
+        )
 
-    temp_dataframe_2=pd.read_excel(
-        io.BytesIO(decoded),
-        sheet_name='sample_sheet',
-        header=None,
-        nrows=1
-    )
-    print(temp_dataframe_2)
-    #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
-    temp_dataframe_2.columns=temp_dataframe.columns
+        decoded=base64.b64decode(content_string)
+        temp_dataframe=pd.read_excel(
+            io.BytesIO(decoded),
+            sheet_name='sample_sheet',
+            skiprows=1
+            #index_col=False
+        )
+        temp_dataframe_2=pd.read_excel(
+            io.BytesIO(decoded),
+            sheet_name='sample_sheet',
+            header=None,
+            nrows=1
+        )
+        #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
+        temp_dataframe_2.columns=temp_dataframe.columns
+        temp_dataframe=pd.concat(
+            [temp_dataframe,temp_dataframe_2],
+            axis='index',
+            ignore_index=True
+        )
+        temp_dataframe=split_columns_if_delimited(temp_dataframe)
+        temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
-    temp_dataframe=pd.concat(
-        [temp_dataframe,temp_dataframe_2],
-        axis='index',
-        ignore_index=True
-    )
-    print(temp_dataframe)
+        store_dict={
+            'input_dataframe':temp_dataframe_as_json,
+        }
 
-    temp_dataframe=split_columns_if_delimited(temp_dataframe)#,temp_dataframe_2)
-
-    #group_to_header_dict_curated,group_to_text_dict_curated=generate_curated_colors(worksheet,temp_dataframe)
-
-
-    temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
-
+        
     displayed_name=html.Div([upload_form_filename],className='text-center')
-
-    
-    print(temp_dataframe)
-
-    store_dict={
-        'input_dataframe':temp_dataframe_as_json,
-        #'group_to_header_dict_curated':group_to_header_dict_curated,
-        #'group_to_text_dict_curated':group_to_text_dict_curated
-    }
-
-    #pprint(store_dict)
-
-    return [displayed_name,store_dict]
+    return [displayed_name,store_dict,curate_button_children]

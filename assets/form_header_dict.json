@@ -1,0 +1,10 @@
+{
+    "tissue":["species","organ","sex","height","heightUnit","weight","weightUnit","age","ageUnit","mass","massUnit","otherInclusionCriteria","otherExclusionCriteria"],
+    "fluid":["species","organ","sex","height","heightUnit","weight","weightUnit","age","ageUnit","volume","volumeUnit","otherInclusionCriteria","otherExclusionCriteria"],
+    "cells":["species","cellLine","cellCount","otherInclusionCriteria","otherExclusionCriteria"],
+    "raw_material":["material","mass","massUnit","volume","volumeUnit","otherInclusionCriteria","otherExclusionCriteria"],
+    "genetic":["gene"],
+    "longitudinal":["zeroTimeEvent","time","timeUnit"],
+    "intervention":["drugName","drugDoseMagnitude","drugDoseUnit","diet","exercise"],
+    "effect":["disease"]
+}
