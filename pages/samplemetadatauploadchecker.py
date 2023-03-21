@@ -10,17 +10,19 @@ class SampleMetadataUploadChecker:
     for all of these, if they return true, there is a problem
     '''
 
-    def __init__(self,content_string,header_address):
+    def __init__(self,content_string,header_json):
         self.content_string=content_string
-        with open(header_address,'r') as f:
-            self.header_json=json.load(f)
+        self.header_json=header_json
         
     def create_workbook(self):
         decoded=base64.b64decode(self.content_string)
         self.workbook=openpyxl.load_workbook(io.BytesIO(decoded))
 
     def lacks_sheetname(self):
-        return ('sample_sheet' not in self.workbook.sheetnames)
+        if ('sample_sheet' not in self.workbook.sheetnames):
+            return 'sheet named \"sample_sheet\" not found'
+        else:
+            return False
 
     def create_dataframe(self):
         decoded=base64.b64decode(self.content_string)
@@ -34,21 +36,22 @@ class SampleMetadataUploadChecker:
         total_header_set=set()
         for temp_archetype in self.header_json.keys():
             total_header_set=total_header_set.union(self.header_json[temp_archetype])
-        presented_columns=set(self.dataframe.columns)
+        presented_columns={temp_col.split('.')[0] for temp_col in self.dataframe.columns}
         malformed_columns=presented_columns.difference(total_header_set)
         if len(malformed_columns)>0:
-            return malformed_columns
+            return 'The following illegal columns were found: '+', '.join(malformed_columns)
         else:
             return False
 
     def contains_underscore(self):
-        return np.any(
-            self.sample_df.stack().astype(str).str.contains('_').values
-        )
+        if np.any(self.dataframe.stack().astype(str).str.contains('_').values):
+            return 'Metadata cannot contain the character \"_\"'
+        else:
+            return False
 
     def contains_no_sample_rows(self):
-        if len(self.sample_df.index)==0:
-            return True
+        if len(self.dataframe.index)==0:
+            return 'Form must contain at least one sample row'
         else:
             return False
 

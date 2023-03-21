@@ -1,4 +1,4 @@
-
+from . import samplemetadatauploadchecker
 
 import dash
 from dash import dcc, html,callback
@@ -452,64 +452,80 @@ def upload_form(
 
     #declare instance of upload error tester here
     #run through error tests. excel tests first
-    #if any tests fail, return a nullish store (None?) and something, maybe html.H6 with error messages
-    if any tests fail:
-        curate_button_children=html.H6('enumerate failures here')
+    #the error checker returns False for each condition that doesnt have a problem
+    #so we check for each problem, and if they are all false, move on to the next situation
+    my_SampleMetadataUploadChecker=samplemetadatauploadchecker.SampleMetadataUploadChecker(
+        content_string,
+        FORM_HEADER_DICT
+    )
+    excel_sheet_checks=list()
+    my_SampleMetadataUploadChecker.create_workbook()
+    excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
+    if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
+        curate_button_children=[html.H6(element) for element in excel_sheet_checks if element!=False]
         store_dict=None
-    #if all tests pass, then run business as usual
-    if all tests pass:
-        curate_button_children=dbc.Row(
-            children=[
-                dbc.Col(width=5),
-                dbc.Col(
-                    children=[
-                        
-                        dcc.Link(
-                            children=[                        
-                                html.Div(
-                                    dbc.Button(
-                                        'Process Form',
-                                        id='button_form',
+    else:
+        dataframe_checks=list()
+        my_SampleMetadataUploadChecker.create_dataframe()
+        dataframe_checks.append(my_SampleMetadataUploadChecker.headers_malformed())
+        dataframe_checks.append(my_SampleMetadataUploadChecker.contains_underscore())
+        dataframe_checks.append(my_SampleMetadataUploadChecker.contains_no_sample_rows())
+        if any(map(lambda x: isinstance(x,str),dataframe_checks)):
+            curate_button_children=[html.H6(element) for element in dataframe_checks if element!=False]
+            store_dict=None
+        #if there are no problems with the excel file or dataframe
+        else:
+            curate_button_children=dbc.Row(
+                children=[
+                    dbc.Col(width=5),
+                    dbc.Col(
+                        children=[
+                            
+                            dcc.Link(
+                                children=[                        
+                                    html.Div(
+                                        dbc.Button(
+                                            'Process Form',
+                                            id='button_form',
+                                        ),
+                                        className="d-grid gap-2 col-6 mx-auto",
                                     ),
-                                    className="d-grid gap-2 col-6 mx-auto",
-                                ),
-                            ],
-                            href='/curate-and-download',
-                        )
-                    ],
-                    width=2
-                ),
-                dbc.Col(width=5)
-            ]
-        )
+                                ],
+                                href='/curate-and-download',
+                            )
+                        ],
+                        width=2
+                    ),
+                    dbc.Col(width=5)
+                ]
+            )
 
-        decoded=base64.b64decode(content_string)
-        temp_dataframe=pd.read_excel(
-            io.BytesIO(decoded),
-            sheet_name='sample_sheet',
-            skiprows=1
-            #index_col=False
-        )
-        temp_dataframe_2=pd.read_excel(
-            io.BytesIO(decoded),
-            sheet_name='sample_sheet',
-            header=None,
-            nrows=1
-        )
-        #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
-        temp_dataframe_2.columns=temp_dataframe.columns
-        temp_dataframe=pd.concat(
-            [temp_dataframe,temp_dataframe_2],
-            axis='index',
-            ignore_index=True
-        )
-        temp_dataframe=split_columns_if_delimited(temp_dataframe)
-        temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
+            decoded=base64.b64decode(content_string)
+            temp_dataframe=pd.read_excel(
+                io.BytesIO(decoded),
+                sheet_name='sample_sheet',
+                skiprows=1
+                #index_col=False
+            )
+            temp_dataframe_2=pd.read_excel(
+                io.BytesIO(decoded),
+                sheet_name='sample_sheet',
+                header=None,
+                nrows=1
+            )
+            #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
+            temp_dataframe_2.columns=temp_dataframe.columns
+            temp_dataframe=pd.concat(
+                [temp_dataframe,temp_dataframe_2],
+                axis='index',
+                ignore_index=True
+            )
+            temp_dataframe=split_columns_if_delimited(temp_dataframe)
+            temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
-        store_dict={
-            'input_dataframe':temp_dataframe_as_json,
-        }
+            store_dict={
+                'input_dataframe':temp_dataframe_as_json,
+            }
 
-        
     displayed_name=html.Div([upload_form_filename],className='text-center')
     return [displayed_name,store_dict,curate_button_children]
