@@ -2,6 +2,8 @@ import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
+
+
 local_stylesheet = {
     "href": "https://fonts.googleapis.com/css2?"
             "family=Lato:wght@400;700&display=swap",

@@ -17,6 +17,7 @@ import os
 import time
 import pickle
 import pandas as pd
+pd.set_option('display.max_rows', 500)
 
 import base64
 import io
@@ -130,7 +131,7 @@ def find_neighbors_per_string(written_strings_per_category):
                         'guessed_valid_string_distances':[None]
                     }
                 )
-                
+                #print(output_dict)
                 
                 # (
                 #     np.array([None],dtype=object),
@@ -224,11 +225,11 @@ def generate_dropdown_options(valid_string_neighbors):
                 how='left',
                 left_on='guessed_valid_strings',
                 right_on='valid_string'
-            ).drop_duplicates(subset=('main_string')).sort_values(by=['use_count','guessed_valid_string_distances'],ascending=False)
+            ).drop_duplicates(subset=('main_string')).sort_values(by=['use_count','guessed_valid_string_distances'],ascending=[False,True])
 
             # temp_concatenated=pd.concat(
 
-            # )
+            print(temp_relevant_nodes_rows)
             
             
             # #this is where things are getting rearranged. 
