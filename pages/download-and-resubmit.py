@@ -368,15 +368,15 @@ def generate_curated_colors(worksheet,dataframe):
 
     '''
 
-    print('inside_curated_colors')
-    print(dataframe)
+      #print('inside_curated_colors')
+      #print(dataframe)
 
     max_col=worksheet.max_column
 
     #find the furthest left archetype that has text
     for temp_col in worksheet.iter_cols(min_row=1,max_row=1,max_col=max_col):
-        #print(temp_col[0].fill)
-        #print('')
+        #  #print(temp_col[0].fill)
+        #  #print('')
         if temp_col[0].internal_value != None:
             current_internal_text=temp_col[0].internal_value
             break
@@ -388,7 +388,7 @@ def generate_curated_colors(worksheet,dataframe):
     group_to_text_dict[current_group]=current_internal_text
 
     #merged_cells=worksheet.merged_cells.ranges
-    #print(merged_cells)
+    #  #print(merged_cells)
     for temp_col in worksheet.iter_cols(min_row=1,max_row=2,max_col=max_col):
     #     if (temp_col[0].coordinate in merged_cells):
     #         group_to_header_dict[current_group].append(
@@ -449,8 +449,8 @@ def upload_form(
     '''
 
     content_type, content_string = upload_form_contents.split(',')
-    print(content_type)
-    print('000000000000000000000000000000000000000000000000000000')
+      #print(content_type)
+      #print('000000000000000000000000000000000000000000000000000000')
 
     #declare instance of upload error tester here
     #run through error tests. excel tests first
@@ -462,7 +462,7 @@ def upload_form(
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
-    print(excel_sheet_checks)
+      #print(excel_sheet_checks)
     if excel_sheet_checks[0]==False:
         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):

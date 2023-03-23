@@ -18,7 +18,7 @@ my_page_link_list=[
 
 app.layout = html.Div(
     [
-        dcc.Store('main_store',storage_type='session'),
+        dcc.Store('main_store'),#,storage_type='session'),
         dcc.Location('url'),
         dbc.NavbarSimple(
             children=[]+my_page_link_list,

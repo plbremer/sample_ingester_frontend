@@ -59,8 +59,8 @@ for temp_file_name in model_files:
     if 'unique_valid_strings' in temp_file_name:
         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
         #temp panda has header 0 not "valid string unique" for some reason
-        #vocabulary_dict[temp_header]=temp_panda[0].values
-        vocabulary_dict[temp_header]=temp_panda
+        vocabulary_dict[temp_header]=temp_panda[0].values
+        #vocabulary_dict[temp_header]=temp_panda
 #from lowest priority to highest
 #priority list associated with which column takes priority in curation
 priority_list=[
@@ -91,19 +91,17 @@ def find_neighbors_per_string(written_strings_per_category):
     {'species': ['human', 'Humen'], 'organ': ['serum'], 'height': [10, 11, 12]}
 
     output form
-    {'organ': {'root': array(['Foot', 'Tooth Root', 'Root, Tooth', 'Roots, Tooth', 'Tooth'],
+    {'organ': {'root': a dataframe with two columns ([similarity_score_0,similarity_score_1,etc],array(['Foot', 'Tooth Root', 'Root, Tooth', 'Roots, Tooth', 'Tooth']),
         dtype=object)},
-    'species': {'arabidopsis': array(['Arabidopsis', 'Olimarabidopsis', 'Pseudoarabidopsis',
-        'Arabidopsis thaliana x Arabidopsis arenosa',
-       'Arabidopsis arenosa x Arabidopsis thaliana'], dtype=object)}}
+
 
     where the list contains *valid_strings*
     '''
     output_dict=dict()
-    print(written_strings_per_category)
+    #print(written_strings_per_category)
 
     for temp_header in written_strings_per_category.keys():
-        print(temp_header)
+        #print(temp_header)
         #temp_core_vocabulary allows for the processing of multiple of the same header type, like species, species.1, species.2 etc
         #if for example someone had a chimera.
         temp_header_core_vocabulary=temp_header.split('.')[0]
@@ -115,7 +113,7 @@ def find_neighbors_per_string(written_strings_per_category):
         
         output_dict[temp_header]=dict()
         for temp_written_string in written_strings_per_category[temp_header]:
-            print('\t'+temp_written_string)
+            #print('\t'+temp_written_string)
             #if the tfidft vectorizer isnt fitted
             #the neighbors isnt fitted either
             #this happens when the vocabulary ingester is just getting started
@@ -126,7 +124,18 @@ def find_neighbors_per_string(written_strings_per_category):
                 # print('')
                 # print(output_dict[temp_header])
                 
-                output_dict[temp_header][temp_written_string]=np.array(['no options available'],dtype=object)
+                output_dict[temp_header][temp_written_string]=pd.DataFrame.from_dict(
+                    {
+                        'guessed_valid_strings':[None],
+                        'guessed_valid_string_distances':[None]
+                    }
+                )
+                
+                
+                # (
+                #     np.array([None],dtype=object),
+                #     np.array(['no options available'],dtype=object)
+                # )
                 continue
 
             neighbors_to_retrieve=100
@@ -135,16 +144,27 @@ def find_neighbors_per_string(written_strings_per_category):
                 neighbors_to_retrieve=nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_
 
             #kn_ind is an array of indices of the nieghbors in the training matrix
-            _,kn_ind=nearest_neighbors_dict[temp_header_core_vocabulary].kneighbors(
+            similarities,kn_ind=nearest_neighbors_dict[temp_header_core_vocabulary].kneighbors(
                 vectorized_string,
                 neighbors_to_retrieve
             )
-            print(kn_ind[0])
-            print(vocabulary_dict[temp_header_core_vocabulary])
+            #print(similarities)
+            #print(kn_ind[0])
+            #print(vocabulary_dict[temp_header_core_vocabulary])
+            #print('2345678982345678904356789034567890-4567890-34567892345678982345678904356789034567890-4567890-3456789')
             #ISSUE 33
             # vocabulary_dict[temp_header]=temp_panda[0].values
             # output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][kn_ind[0]]
-            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][0].values[kn_ind[0]]
+            # output_dict[temp_header][temp_written_string]=(
+            #     similarities[0],
+            #     vocabulary_dict[temp_header_core_vocabulary][0].values[kn_ind[0]]
+            # )
+            output_dict[temp_header][temp_written_string]=pd.DataFrame.from_dict(
+                {
+                    'guessed_valid_strings':vocabulary_dict[temp_header_core_vocabulary][kn_ind[0]],
+                    'guessed_valid_string_distances':similarities[0]
+                }
+            )
 
     return output_dict
 
@@ -152,8 +172,7 @@ def generate_dropdown_options(valid_string_neighbors):
     '''
     receives 
 
-    {species: {'Humen': array(['Humerus', 'Humerana', 'ume', 'Rumen', 'Cerumen'], dtype=object),
-        'human': array(['human', 'humans', 'Schumannia', 'human lice', 'Schumannella'],
+    {'organ': {'root': a dataframe with two columns ([similarity_score_0,similarity_score_1,etc],array(['Foot', 'Tooth Root', 'Root, Tooth', 'Roots, Tooth', 'Tooth']),
         dtype=object)},
  
     outputs
@@ -187,30 +206,47 @@ def generate_dropdown_options(valid_string_neighbors):
         for temp_written_string in valid_string_neighbors[temp_header].keys():
             output_dict[temp_header][temp_written_string]=list()
             
+
+
+
             #originally we had a for loop, but the problem with that was taht was that we were getting a result for each 
             #valid string that the written string mapped to. this meant that we coudl get the same main strin multiple times.
-            temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
-                #i think isin is the wrong choice here? i think it should be equal?
-                #is in is fine... just ahve to reorder
-                #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-                conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
-            ].drop_duplicates(subset=('main_string')).sort_values('use_count',ascending=False)
-            #this is where things are getting rearranged. 
-            #just checking if it is in a list is obliterating the order of the list that we are using to check
-            #instead what we want to do is then for each value, sort
-            #eventually we might want some kind of hybrid function that takes a balance of cosine similarity and use_count
-            #ok so, for the moment, we do not sort by use_count, instead only by cosine score
-            #
-            temp_relevant_nodes_rows['valid_string']=pd.Categorical(
-                temp_relevant_nodes_rows['valid_string'],
-                categories=valid_string_neighbors[temp_header][temp_written_string]
-            )
+            # temp_relevant_nodes_rows=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
+            #     #i think isin is the wrong choice here? i think it should be equal?
+            #     #is in is fine... just ahve to reorder
+            #     #conglomerate_vocabulary_panda_dict[temp_header]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
+            #     conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string'].isin(valid_string_neighbors[temp_header][temp_written_string])
+            # ]
+            #print(conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary])
+
+            temp_relevant_nodes_rows=valid_string_neighbors[temp_header][temp_written_string].merge(
+                conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary],
+                how='left',
+                left_on='guessed_valid_strings',
+                right_on='valid_string'
+            ).drop_duplicates(subset=('main_string')).sort_values(by=['use_count','guessed_valid_string_distances'],ascending=False)
+
+            # temp_concatenated=pd.concat(
+
+            # )
+            
+            
+            # #this is where things are getting rearranged. 
+            # #just checking if it is in a list is obliterating the order of the list that we are using to check
+            # #instead what we want to do is then for each value, sort
+            # #eventually we might want some kind of hybrid function that takes a balance of cosine similarity and use_count
+            # #ok so, for the moment, we do not sort by use_count, instead only by cosine score
+            # #
+            # temp_relevant_nodes_rows['valid_string']=pd.Categorical(
+            #     temp_relevant_nodes_rows['valid_string'],
+            #     categories=valid_string_neighbors[temp_header][temp_written_string]
+            # )
             #temp_relevant_nodes_rows=temp_relevant_nodes_rows.sort_values('valid_string')
 
             #ISSUE 24
             #we add this condition as the partner condition to the tfidf is fitted check
             #if there are no nodes in the conglomerate panda, then provide these options as a null
-            if len(temp_relevant_nodes_rows.index)==0:
+            if (len(temp_relevant_nodes_rows.index)==0) or (temp_relevant_nodes_rows.applymap(pd.isnull).all().all() == True):
                 output_dict[temp_header][temp_written_string].append(
                         {
                             'label':'no options available',
@@ -221,6 +257,7 @@ def generate_dropdown_options(valid_string_neighbors):
                 
             for index,series in temp_relevant_nodes_rows.iterrows():
                 #in each of the options, having "thing AKA thing" is 
+                #print(series)
                 if series['valid_string']==series['main_string'].lower():            
                     output_dict[temp_header][temp_written_string].append(
                         {
@@ -301,7 +338,7 @@ def curate_data(
     # print('================================')
     # print('top of curate_data')
 
-    print('in curate_data')
+    #print('in curate_data')
     url_href_page_location=url_href.split('/')[-1]
     if url_href_page_location!='curate-and-download':
         raise PreventUpdate
@@ -613,9 +650,9 @@ def download_curated_forum(
     # print('')
     # print(dropdown_similar_strings_options_ALL)
     #[None, None, 'oooga', 'booga', 'muhkidney', None, None, None, None, None, None, None]
-    print(input_curation_value_ALL)
-    print('store_panda')
-    print(store_panda)
+    #print(input_curation_value_ALL)
+    #print('store_panda')
+    #print(store_panda)
 
     #if someone dtypes something into the new suggestions, then removes them, the value becomes '' not None
     #need to set '' to none
@@ -623,7 +660,7 @@ def download_curated_forum(
         if input_curation_value_ALL[i]=='':
             input_curation_value_ALL[i]=None
 
-    print('')
+    #print('')
     # print(main_store_data['group_to_header_dict_curated'])
     # print('')
     # print(main_store_data['group_to_text_dict_curated'])
@@ -631,8 +668,8 @@ def download_curated_forum(
     my_NewVocabularyUploadChecker=newvocabularyuploadchecker.NewVocabularyUploadChecker(input_curation_value_ALL)
     my_NewVocabularyUploadChecker.check_char_length()
     my_NewVocabularyUploadChecker.verify_string_absence()
-    print(my_NewVocabularyUploadChecker.error_list)
-    print('error list')
+    #print(my_NewVocabularyUploadChecker.error_list)
+    #print('error list')
     if len(my_NewVocabularyUploadChecker.error_list)>0:
         output_div_children=dbc.Row(
             children=[
@@ -721,17 +758,17 @@ def download_curated_forum(
 
     empty_columns=[temp_col for temp_col in store_panda if len([element for element in store_panda[temp_col][:-1].unique() if pd.isnull(element)==False])==0]
     store_panda.drop(empty_columns,axis='columns',inplace=True)
-    print(store_panda)
+    #print(store_panda)
         # #remove the left hand side of AKA
         # for temp_column in store_panda.columns:
         #     if temp_header in temp_column:
         #temp_remove_aka_dict=dict()
-        # #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        # #         print(store_panda[temp_column].unique())
+        # #         #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        # #         #print(store_panda[temp_column].unique())
         #for temp_string_with_aka in store_panda[temp_column].unique():
-        # #             print(temp_string_with_aka)
+        # #             #print(temp_string_with_aka)
          #   if (((' AKA ') in temp_string_with_aka) and (temp_string_with_aka is not None) and (pd.isnull(temp_string_with_aka)==False)):
-        # #                 print(temp_string_with_aka.split(' AKA ')[1])
+        # #                 #print(temp_string_with_aka.split(' AKA ')[1])
          #       temp_remove_aka_dict[temp_string_with_aka]=temp_string_with_aka.split(' AKA ')
          #   if len(temp_remove_aka_dict.keys())>0:        
          #       store_panda[temp_column].replace(
@@ -754,8 +791,8 @@ def download_curated_forum(
     # print('===========================')
     # print(store_panda)
 
-    print(store_panda)
-    print('the output??')
+    #print(store_panda)
+    #print('the output??')
 
 
     output_stream=io.BytesIO()
@@ -813,9 +850,9 @@ def download_curated_forum(
                 new_vocab_dict[
                     header_written_pair_children_ALL[i][0].split(': ')[0].split('.')[0]
                 ]=[new_vocabulary_word]
-    print('new vocabulary dict')
+    #print('new vocabulary dict')
     #print(new_vocab_dict)
-    print('')
+    #print('')
     #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
     for temp_key in new_vocab_dict.keys():
         appending_dict={
@@ -844,7 +881,7 @@ def download_curated_forum(
         #print(conglomerate_vocabulary_panda_dict[temp_key])
     #print(con)
 
-    print('===========================')
+    #print('===========================')
     #print(conglomerate_vocabulary_panda_dict)
     #print(conglomerate_vocabulary_panda_dict['species'].loc[conglomerate_vocabulary_panda_dict['species'].main_string.str.contains('musculus')])
     #this loop apply for every row in the curation table
@@ -868,10 +905,10 @@ def download_curated_forum(
             (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']==temp_main_string)
         ]['main_string'].unique()
         #print(conglomerate_vocabulary_panda_dict)
-        print(temp_tuple)
-        print(temp_valid_string)
-        print(temp_main_string)
-        print(corresponding_main_string_list)
+        #print(temp_tuple)
+        #print(temp_valid_string)
+        #print(temp_main_string)
+        #print(corresponding_main_string_list)
         if len(corresponding_main_string_list)>1:
             # print(corresponding_main_string_list)
             raise Exception('there should only be one main string for a valid string, found multiple')
