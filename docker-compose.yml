@@ -1,8 +1,9 @@
-version: "3.5.5"
+version: "3.5"
 
 services:
   sampleingester:
     image: rictuar/sample-ingester:latest
+    container_name: sampleingester
     ports:
       - 80:8050
     restart: on-failure      
