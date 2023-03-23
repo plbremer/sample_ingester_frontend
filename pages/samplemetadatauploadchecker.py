@@ -16,7 +16,11 @@ class SampleMetadataUploadChecker:
         
     def create_workbook(self):
         decoded=base64.b64decode(self.content_string)
-        self.workbook=openpyxl.load_workbook(io.BytesIO(decoded))
+        try:
+            self.workbook=openpyxl.load_workbook(io.BytesIO(decoded))
+            return False
+        except:
+            return 'Not a valid Excel File'
 
     def lacks_sheetname(self):
         if ('sample_sheet' not in self.workbook.sheetnames):

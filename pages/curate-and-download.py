@@ -1,6 +1,3 @@
-from asyncio import FIRST_COMPLETED
-from email import header
-from re import T
 import dash
 from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL
 import plotly.express as px
@@ -8,6 +5,8 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import numpy as np
 from dash.exceptions import PreventUpdate
+
+from . import newvocabularyuploadchecker
 
 from nltk.util import trigrams
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -60,7 +59,8 @@ for temp_file_name in model_files:
     if 'unique_valid_strings' in temp_file_name:
         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
         #temp panda has header 0 not "valid string unique" for some reason
-        vocabulary_dict[temp_header]=temp_panda[0].values
+        #vocabulary_dict[temp_header]=temp_panda[0].values
+        vocabulary_dict[temp_header]=temp_panda
 #from lowest priority to highest
 #priority list associated with which column takes priority in curation
 priority_list=[
@@ -73,7 +73,7 @@ priority_list=[
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
 COLOR_LIST=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
 
-print(tfidf_vectorizer_dict)
+#print(tfidf_vectorizer_dict)
 
 
 def parse_stored_excel_file(store_panda):
@@ -100,9 +100,10 @@ def find_neighbors_per_string(written_strings_per_category):
     where the list contains *valid_strings*
     '''
     output_dict=dict()
+    print(written_strings_per_category)
 
     for temp_header in written_strings_per_category.keys():
-        
+        print(temp_header)
         #temp_core_vocabulary allows for the processing of multiple of the same header type, like species, species.1, species.2 etc
         #if for example someone had a chimera.
         temp_header_core_vocabulary=temp_header.split('.')[0]
@@ -114,7 +115,7 @@ def find_neighbors_per_string(written_strings_per_category):
         
         output_dict[temp_header]=dict()
         for temp_written_string in written_strings_per_category[temp_header]:
-
+            print('\t'+temp_written_string)
             #if the tfidft vectorizer isnt fitted
             #the neighbors isnt fitted either
             #this happens when the vocabulary ingester is just getting started
@@ -138,9 +139,12 @@ def find_neighbors_per_string(written_strings_per_category):
                 vectorized_string,
                 neighbors_to_retrieve
             )
-
+            print(kn_ind[0])
+            print(vocabulary_dict[temp_header_core_vocabulary])
             #ISSUE 33
-            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][kn_ind[0]]
+            # vocabulary_dict[temp_header]=temp_panda[0].values
+            # output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][kn_ind[0]]
+            output_dict[temp_header][temp_written_string]=vocabulary_dict[temp_header_core_vocabulary][0].values[kn_ind[0]]
 
     return output_dict
 
@@ -261,7 +265,10 @@ layout = html.Div(
                     className="d-grid gap-2 col-6 mx-auto",
                 ),
             ]
-        )
+        ),
+        html.Br(),
+        html.Br(),
+        html.Div(id='Div_new_vocab_error_messages'),
     ],
 )
 
@@ -294,6 +301,7 @@ def curate_data(
     # print('================================')
     # print('top of curate_data')
 
+    print('in curate_data')
     url_href_page_location=url_href.split('/')[-1]
     if url_href_page_location!='curate-and-download':
         raise PreventUpdate
@@ -560,7 +568,8 @@ def update_excel_sheet_curated_sample_formatting(workbook,worksheet,store_panda)
 
 @callback(
     [
-        Output(component_id="download_curated_form", component_property="data"),
+        Output(component_id="Div_new_vocab_error_messages", component_property="children"),
+        Output(component_id="download_curated_form", component_property="data")
     ],
     [
         Input(component_id='button_download_curated', component_property="n_clicks")
@@ -603,14 +612,41 @@ def download_curated_forum(
 
     # print('')
     # print(dropdown_similar_strings_options_ALL)
+    #[None, None, 'oooga', 'booga', 'muhkidney', None, None, None, None, None, None, None]
+    print(input_curation_value_ALL)
     print('store_panda')
     print(store_panda)
+
+    #if someone dtypes something into the new suggestions, then removes them, the value becomes '' not None
+    #need to set '' to none
+    for i in range(len(input_curation_value_ALL)):
+        if input_curation_value_ALL[i]=='':
+            input_curation_value_ALL[i]=None
+
     print('')
     # print(main_store_data['group_to_header_dict_curated'])
     # print('')
     # print(main_store_data['group_to_text_dict_curated'])
 
-
+    my_NewVocabularyUploadChecker=newvocabularyuploadchecker.NewVocabularyUploadChecker(input_curation_value_ALL)
+    my_NewVocabularyUploadChecker.check_char_length()
+    my_NewVocabularyUploadChecker.verify_string_absence()
+    print(my_NewVocabularyUploadChecker.error_list)
+    print('error list')
+    if len(my_NewVocabularyUploadChecker.error_list)>0:
+        output_div_children=dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in my_NewVocabularyUploadChecker.error_list],
+                    width=4,
+                    #align='center'
+                ),
+                dbc.Col(width=4)
+            ]
+        )   
+        download_data=None
+        return [output_div_children,download_data]
     #this is used in the use_count update
     #the logic is 
     #during the next for loop we create 
@@ -645,6 +681,7 @@ def download_curated_forum(
             if eval(curation_column)[i] is not None:
                 temp_replacement=eval(curation_column)[i]
 
+            
         #ISSUE 37
         #it will becomes the case that nothing does *not* have aka as its value
         #i dont think that we want to keep just the valid string that we map to, however
@@ -673,12 +710,53 @@ def download_curated_forum(
                     inplace=True
                 )
 
+    #remove things left of ' AKA '
+    for temp_column in store_panda.columns:
+        # print(store_panda[temp_column].astype(str).str.contains(' AKA '))
+        store_panda[temp_column].mask(
+            cond=store_panda[temp_column].astype(str).str.contains(' AKA '),
+            other=store_panda[temp_column].astype(str).str.split(' AKA ').str[1],
+            inplace=True
+        )
+
+    empty_columns=[temp_col for temp_col in store_panda if len([element for element in store_panda[temp_col][:-1].unique() if pd.isnull(element)==False])==0]
+    store_panda.drop(empty_columns,axis='columns',inplace=True)
+    print(store_panda)
+        # #remove the left hand side of AKA
+        # for temp_column in store_panda.columns:
+        #     if temp_header in temp_column:
+        #temp_remove_aka_dict=dict()
+        # #         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        # #         print(store_panda[temp_column].unique())
+        #for temp_string_with_aka in store_panda[temp_column].unique():
+        # #             print(temp_string_with_aka)
+         #   if (((' AKA ') in temp_string_with_aka) and (temp_string_with_aka is not None) and (pd.isnull(temp_string_with_aka)==False)):
+        # #                 print(temp_string_with_aka.split(' AKA ')[1])
+         #       temp_remove_aka_dict[temp_string_with_aka]=temp_string_with_aka.split(' AKA ')
+         #   if len(temp_remove_aka_dict.keys())>0:        
+         #       store_panda[temp_column].replace(
+        #             #to_replace=temp_written_string,
+        #             #value=temp_replacement,
+        #             #{temp_string_with_aka:temp_string_with_aka.split(' AKA ')[1] for temp_string_with_aka in store_panda[temp_column].tolist() if (((' AKA ') in temp_string_with_aka) and (temp_string_with_aka is not None))},
+         #           temp_remove_aka_dict,
+         #           inplace=True
+          #      )
+        
+        # try:
+        #     temp_replacement=temp_replacement.split(' AKA ')[1]
+        # except:
+        #     pass
+
         #########NOTE##########3
         #need to have some sort of special case for "no options available" for things that start empty    
 
     # print('===========================')
     # print('===========================')
     # print(store_panda)
+
+    print(store_panda)
+    print('the output??')
+
 
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
@@ -735,7 +813,9 @@ def download_curated_forum(
                 new_vocab_dict[
                     header_written_pair_children_ALL[i][0].split(': ')[0].split('.')[0]
                 ]=[new_vocabulary_word]
-    
+    print('new vocabulary dict')
+    #print(new_vocab_dict)
+    print('')
     #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
     for temp_key in new_vocab_dict.keys():
         appending_dict={
@@ -747,7 +827,7 @@ def download_curated_forum(
         }
         for temp_addition in new_vocab_dict[temp_key]:
             appending_dict['valid_string'].append(temp_addition)
-            appending_dict['node_id'].append('userAdded_'+temp_addition)
+            appending_dict['node_id'].append(temp_addition)
             appending_dict['main_string'].append(temp_addition)
             appending_dict['ontology'].append('userAdded')
             appending_dict['use_count'].append(1)
@@ -760,12 +840,16 @@ def download_curated_forum(
         )
         #the pattern for new suggestions is that the given string becomes the valid_string, main_string, and node_id (something like that)
         #to make sure that a user doesnt put someonething that already exists
-        conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset='main_string',ignore_index=True,inplace=True)
+        conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset=('valid_string','main_string'),ignore_index=True,inplace=True)
+        #print(conglomerate_vocabulary_panda_dict[temp_key])
+    #print(con)
 
-
-    # print('===========================')
+    print('===========================')
+    #print(conglomerate_vocabulary_panda_dict)
+    #print(conglomerate_vocabulary_panda_dict['species'].loc[conglomerate_vocabulary_panda_dict['species'].main_string.str.contains('musculus')])
     #this loop apply for every row in the curation table
     #the purpose of this loop is to increment the use_count
+    #print(header_replacement_list)
     for temp_tuple in header_replacement_list:
         temp_header_core_vocabulary=temp_tuple[0].split('.')[0]
         #for each thing to replace 
@@ -774,11 +858,20 @@ def download_curated_forum(
         #if there is more thjan one unique main string, raise an exception
         #otherwise, 
         temp_valid_string=temp_tuple[1].split(' AKA ')[0]
-        temp_main_string=temp_tuple[1].split(' AKA ')[1]
+        #AKA wont be in there if new vocabulary is added
+        if ' AKA ' in temp_tuple[1]:
+            temp_main_string=temp_tuple[1].split(' AKA ')[1]
+        else:
+            temp_main_string=temp_tuple[1].split(' AKA ')[0]
         corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
             (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string']==temp_valid_string) &
             (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']==temp_main_string)
         ]['main_string'].unique()
+        #print(conglomerate_vocabulary_panda_dict)
+        print(temp_tuple)
+        print(temp_valid_string)
+        print(temp_main_string)
+        print(corresponding_main_string_list)
         if len(corresponding_main_string_list)>1:
             # print(corresponding_main_string_list)
             raise Exception('there should only be one main string for a valid string, found multiple')
@@ -786,7 +879,8 @@ def download_curated_forum(
         #where value is true, keep original
         conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count'].where(
             conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']!=corresponding_main_string,
-            other=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']+1
+            #other=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']+1
+            other=1
         )
 
     #this set of instructions occurs for every vocabulary that is referenced by at least one row
@@ -828,5 +922,5 @@ def download_curated_forum(
         vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
 
     return [
-        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
+        None,dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
     ]

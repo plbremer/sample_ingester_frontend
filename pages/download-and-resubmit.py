@@ -1,3 +1,4 @@
+from csv import excel
 from . import samplemetadatauploadchecker
 
 import dash
@@ -281,9 +282,9 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
     #write the #first sheet
     worksheet.merge_range('B2:L2','Guidelines',top_format)
     worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
-    worksheet.merge_range('C6:S6','Use fragments/phrases not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc."',rule_format)
+    worksheet.merge_range('C6:S6','Use fragments/phrases not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
     worksheet.merge_range('C8:S8','Leave unused columns empty',rule_format)         
-    worksheet.merge_range('C10:S10','Insert a column for multiple values of the same time. e.g., multiple drugs',rule_format)    
+    worksheet.merge_range('C10:S10','For multiples (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
 
     return workbook, worksheet
 
@@ -448,7 +449,8 @@ def upload_form(
     '''
 
     content_type, content_string = upload_form_contents.split(',')
-    
+    print(content_type)
+    print('000000000000000000000000000000000000000000000000000000')
 
     #declare instance of upload error tester here
     #run through error tests. excel tests first
@@ -459,10 +461,22 @@ def upload_form(
         FORM_HEADER_DICT
     )
     excel_sheet_checks=list()
-    my_SampleMetadataUploadChecker.create_workbook()
-    excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
+    excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
+    print(excel_sheet_checks)
+    if excel_sheet_checks[0]==False:
+        excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
-        curate_button_children=[html.H6(element) for element in excel_sheet_checks if element!=False]
+        curate_button_children=dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
+                    width=4,
+                    #align='center'
+                ),
+                dbc.Col(width=4)
+            ]
+        )
         store_dict=None
     else:
         dataframe_checks=list()
@@ -471,7 +485,18 @@ def upload_form(
         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_underscore())
         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_no_sample_rows())
         if any(map(lambda x: isinstance(x,str),dataframe_checks)):
-            curate_button_children=[html.H6(element) for element in dataframe_checks if element!=False]
+            curate_button_children=dbc.Row(
+                children=[
+                    dbc.Col(width=4),
+                    dbc.Col(
+                        children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
+                        width=4,
+                        #align='center'
+                    ),
+                    dbc.Col(width=4)
+                ]
+            )
+            
             store_dict=None
         #if there are no problems with the excel file or dataframe
         else:
