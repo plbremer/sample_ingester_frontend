@@ -1,0 +1,9 @@
+version: "3.5.5"
+
+services:
+  sampleingester:
+    image: rictuar/sample-ingester:latest
+    ports:
+      - 80:8050
+    restart: on-failure      
+    

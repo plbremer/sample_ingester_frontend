@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 
 from . import newvocabularyuploadchecker
 
-from nltk.util import trigrams
+#from nltk.util import trigrams
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.exceptions import NotFittedError
@@ -229,7 +229,7 @@ def generate_dropdown_options(valid_string_neighbors):
 
             # temp_concatenated=pd.concat(
 
-            print(temp_relevant_nodes_rows)
+            #print(temp_relevant_nodes_rows)
             
             
             # #this is where things are getting rearranged. 
@@ -923,8 +923,8 @@ def download_curated_forum(
 
     #this set of instructions occurs for every vocabulary that is referenced by at least one row
     taxonomies_referenced={element[0].split('.')[0] for element in header_replacement_list}
-    for temp_key in taxonomies_referenced:
-        conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
+    # for temp_key in taxonomies_referenced:
+    #     conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
 
     #this set of instructions occurs for vocabularies which are incremented at least once.
     #this set of instructions should probably go up above 
@@ -941,8 +941,8 @@ def download_curated_forum(
             #min_df=0.001
         )
         temp_tfidf_matrix=temp_TfidfVectorizer.fit_transform(temp_model_vocabulary)
-        with open(f'additional_files/tfidfVectorizer_{temp_key}.bin','wb') as fp:
-            pickle.dump(temp_TfidfVectorizer,fp)
+        # with open(f'additional_files/tfidfVectorizer_{temp_key}.bin','wb') as fp:
+        #     pickle.dump(temp_TfidfVectorizer,fp)
         
         temp_NN_model=NearestNeighbors(
             n_neighbors=50,
@@ -950,14 +950,14 @@ def download_curated_forum(
             metric='cosine'
         )
         temp_NN_model.fit(temp_tfidf_matrix)
-        with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
-            pickle.dump(temp_NN_model,fp)        
+        # with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
+        #     pickle.dump(temp_NN_model,fp)        
     #update the unique strings list
     for temp_key in new_vocab_dict.keys():
         vocabulary_dict[temp_key]=pd.DataFrame.from_dict(
             conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
         )
-        vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
+        # vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
 
     return [
         None,dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
