@@ -73,7 +73,7 @@ priority_list=[
 
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
 COLOR_LIST=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
-
+NEIGHBORS_TO_RETRIEVE=100
 #print(tfidf_vectorizer_dict)
 
 
@@ -139,7 +139,7 @@ def find_neighbors_per_string(written_strings_per_category):
                 # )
                 continue
 
-            neighbors_to_retrieve=100
+            neighbors_to_retrieve=NEIGHBORS_TO_RETRIEVE
             #if there are fewer neighbors to retrieve than we want, set the neighbors to the max available
             if (nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_) < neighbors_to_retrieve:
                 neighbors_to_retrieve=nearest_neighbors_dict[temp_header_core_vocabulary].n_samples_fit_
