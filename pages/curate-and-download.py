@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output, State
 import numpy as np
 from dash.exceptions import PreventUpdate
 
-from . import newvocabularyuploadchecker
+# from . import newvocabularyuploadchecker
 
 #from nltk.util import trigrams
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -25,45 +25,49 @@ import io
 from xlsxwriter.utility import xl_rowcol_to_cell
 
 from pprint import pprint
+import requests
 
+base_url_api = "http://127.0.0.1:4999/"
+
+dash.register_page(__name__, path='/curate-and-download')
 #get the headers and their subset definitions
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
-#get the headers and their n gram limits
-with open('additional_files/ngram_limits_per_heading.json', 'r') as fp:
-    ngram_limits_per_heading_json=json.load(fp)
-#get all of the models
-nearest_neighbors_dict=dict()
-tfidf_vectorizer_dict=dict()
-model_files=os.listdir('additional_files/')
-for temp_file_name in model_files:
-    temp_header=temp_file_name.split('.')[0].split('_')[-1]
-    if 'NearestNeighbors' in temp_file_name:
-        with open(f'additional_files/{temp_file_name}', 'rb') as f:
-            nearest_neighbors_dict[temp_header]=pickle.load(f)
-    elif 'tfidfVectorizer' in temp_file_name:
-        with open(f'additional_files/{temp_file_name}', 'rb') as f:
-            tfidf_vectorizer_dict[temp_header]=pickle.load(f)
-#get all of the vocabulary dicts
-conglomerate_vocabulary_panda_dict=dict()
-for temp_file_name in model_files:
-    temp_header=temp_file_name.split('.')[0].split('_')[-1]
-    if 'conglomerate_vocabulary_panda' in temp_file_name:
-        temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
-        #temp panda has header 0 not "valid string unique" for some reason
-        conglomerate_vocabulary_panda_dict[temp_header]=temp_panda
-#get the vocaulary for each header. used to infer the valid_string from locattion.
-#nearest neighbors model outputs location of match on list.
-vocabulary_dict=dict()
-for temp_file_name in model_files:
-    temp_header=temp_file_name.split('.')[0].split('_')[-1]
-    if 'unique_valid_strings' in temp_file_name:
-        temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
-        #temp panda has header 0 not "valid string unique" for some reason
-        vocabulary_dict[temp_header]=temp_panda[0].values
-        #vocabulary_dict[temp_header]=temp_panda
-#from lowest priority to highest
-#priority list associated with which column takes priority in curation
+# #get the headers and their n gram limits
+# with open('additional_files/ngram_limits_per_heading.json', 'r') as fp:
+#     ngram_limits_per_heading_json=json.load(fp)
+# #get all of the models
+# nearest_neighbors_dict=dict()
+# tfidf_vectorizer_dict=dict()
+# model_files=os.listdir('additional_files/')
+# for temp_file_name in model_files:
+#     temp_header=temp_file_name.split('.')[0].split('_')[-1]
+#     if 'NearestNeighbors' in temp_file_name:
+#         with open(f'additional_files/{temp_file_name}', 'rb') as f:
+#             nearest_neighbors_dict[temp_header]=pickle.load(f)
+#     elif 'tfidfVectorizer' in temp_file_name:
+#         with open(f'additional_files/{temp_file_name}', 'rb') as f:
+#             tfidf_vectorizer_dict[temp_header]=pickle.load(f)
+# #get all of the vocabulary dicts
+# conglomerate_vocabulary_panda_dict=dict()
+# for temp_file_name in model_files:
+#     temp_header=temp_file_name.split('.')[0].split('_')[-1]
+#     if 'conglomerate_vocabulary_panda' in temp_file_name:
+#         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
+#         #temp panda has header 0 not "valid string unique" for some reason
+#         conglomerate_vocabulary_panda_dict[temp_header]=temp_panda
+# #get the vocaulary for each header. used to infer the valid_string from locattion.
+# #nearest neighbors model outputs location of match on list.
+# vocabulary_dict=dict()
+# for temp_file_name in model_files:
+#     temp_header=temp_file_name.split('.')[0].split('_')[-1]
+#     if 'unique_valid_strings' in temp_file_name:
+#         temp_panda=pd.read_pickle(f'additional_files/{temp_file_name}')
+#         #temp panda has header 0 not "valid string unique" for some reason
+#         vocabulary_dict[temp_header]=temp_panda[0].values
+#         #vocabulary_dict[temp_header]=temp_panda
+# #from lowest priority to highest
+# #priority list associated with which column takes priority in curation
 priority_list=[
     'H6_best_guess_children_ALL',
     'dropdown_similar_strings_value_ALL',
@@ -277,7 +281,71 @@ def generate_dropdown_options(valid_string_neighbors):
     return output_dict
 
 
-dash.register_page(__name__, path='/curate-and-download')
+def generate_dropdown_options_api(written_strings_per_category):
+    
+    output_dict=dict()
+    for temp_header in written_strings_per_category.keys():
+        #print(temp_header)
+        #temp_core_vocabulary allows for the processing of multiple of the same header type, like species, species.1, species.2 etc
+        #if for example someone had a chimera.
+        temp_header_core_vocabulary=temp_header.split('.')[0]
+
+        #we dont curate certain categories esp numerical like height, weight, etc
+        #we recombine those at the end of the curate function
+        if temp_header_core_vocabulary not in subset_per_heading_json.keys():
+            continue
+        
+        output_dict[temp_header]=dict()
+        for temp_written_string in written_strings_per_category[temp_header]:
+            output_dict[temp_header][temp_written_string]=list()
+            
+            #print('\t'+temp_written_string)
+            #if the tfidft vectorizer isnt fitted
+            #the neighbors isnt fitted either
+            #this happens when the vocabulary ingester is just getting started
+            #http://127.0.0.1:4999/predictvocabularytermsresource/
+            
+            predict_request={
+                "header":temp_header_core_vocabulary,
+                "written_strings":[temp_written_string],
+                "neighbors_to_retrieve":NEIGHBORS_TO_RETRIEVE
+            }
+            
+            response = requests.post(base_url_api + "/predictvocabularytermsresource/", json=predict_request)
+            this_strings_neighbors = pd.read_json(response.json(), orient="records")    
+
+
+
+            if (len(this_strings_neighbors.index)==0) or (this_strings_neighbors.applymap(pd.isnull).all().all() == True):
+                output_dict[temp_header][temp_written_string].append(
+                        {
+                            'label':'no options available',
+                            'value':'no options available'
+                        }
+                    )
+                continue
+                
+            for index,series in this_strings_neighbors.iterrows():
+                #in each of the options, having "thing AKA thing" is 
+                #print(series)
+                if series['valid_string']==series['main_string'].lower():            
+                    output_dict[temp_header][temp_written_string].append(
+                        {
+                            'label':series['valid_string'],#+' NODE '+series['node_id'],
+                            'value':series['valid_string']+' AKA '+series['main_string']                
+                        }
+                    )
+                else:
+                    output_dict[temp_header][temp_written_string].append(
+                        {
+                            'label':series['valid_string']+' AKA '+series['main_string'],#+' NODE '+series['node_id'],
+                            'value':series['valid_string']+' AKA '+series['main_string']#+' NODE '+series['node_id']                
+                        }
+                    )
+
+    return output_dict
+
+
 
 layout = html.Div(
     children=[
@@ -353,16 +421,17 @@ def curate_data(
     # print(written_strings_per_category)
     # print('================================')
 
-    #the values come from here sorted by nearest neighbors similarity
-    valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
-    # print(valid_string_neighbors)
-    # print('================================')
+    # #the values come from here sorted by nearest neighbors similarity
+    # valid_string_neighbors=find_neighbors_per_string(written_strings_per_category)
+    # # print(valid_string_neighbors)
+    # # print('================================')
 
-    #if we wanted to implement some sort of use_count + cosine hybrid, this might be the place to do it?
-    #we would probably have to pass the cosine scores
-    dropdown_options=generate_dropdown_options(valid_string_neighbors)
-    # print(dropdown_options)
+    # #if we wanted to implement some sort of use_count + cosine hybrid, this might be the place to do it?
+    # #we would probably have to pass the cosine scores
+    # dropdown_options=generate_dropdown_options(valid_string_neighbors)
+    # # print(dropdown_options)
 
+    dropdown_options=generate_dropdown_options_api(written_strings_per_category)
 
     output_children=list()
 
@@ -512,11 +581,19 @@ def update_options(
     #     conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
     # ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])['main_string'].tolist()
 
-    temp_values=conglomerate_vocabulary_panda_dict[current_index].loc[
-        conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
-    ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])[['valid_string','main_string']].agg(' AKA '.join, axis=1).tolist()
+    outbound_json={
+        'header':current_index,
+        'substring':dropdown_empty_options_search_value
+    }
 
-    # print(temp_values)
+    # temp_values=conglomerate_vocabulary_panda_dict[current_index].loc[
+    #     conglomerate_vocabulary_panda_dict[current_index]['valid_string'].str.startswith(dropdown_empty_options_search_value)
+    # ].drop_duplicates(subset=('main_string')).sort_values(['use_count','valid_string'],ascending=[False,True])[['valid_string','main_string']].agg(' AKA '.join, axis=1).tolist()
+
+    temp_values=requests.post(base_url_api+'/generatesubstringmatches/',json=outbound_json).json()
+
+
+    print(temp_values)
     return [[
         {   #this form does not match the others. the others take the valid string and plug it into the json. "this is an oldier comment? plb after json to pandas"
             'label': temp_string,
@@ -654,7 +731,7 @@ def download_curated_forum(
     #print(input_curation_value_ALL)
     #print('store_panda')
     #print(store_panda)
-
+    print(input_curation_value_ALL)
     #if someone dtypes something into the new suggestions, then removes them, the value becomes '' not None
     #need to set '' to none
     for i in range(len(input_curation_value_ALL)):
@@ -666,17 +743,24 @@ def download_curated_forum(
     # print('')
     # print(main_store_data['group_to_text_dict_curated'])
 
-    my_NewVocabularyUploadChecker=newvocabularyuploadchecker.NewVocabularyUploadChecker(input_curation_value_ALL)
-    my_NewVocabularyUploadChecker.check_char_length()
-    my_NewVocabularyUploadChecker.verify_string_absence()
+    # my_NewVocabularyUploadChecker=newvocabularyuploadchecker.NewVocabularyUploadChecker(input_curation_value_ALL)
+    # my_NewVocabularyUploadChecker.check_char_length()
+    # my_NewVocabularyUploadChecker.verify_string_absence()
     #print(my_NewVocabularyUploadChecker.error_list)
+    new_vocabulary_error_list=requests.post(base_url_api+'/validatetermsfortraining/',json={'new_vocabulary':input_curation_value_ALL}).json()['errors']
+    #print(new_vocabulary_errors)
+    #new_vocabulary_error_list=new_vocabulary_errors.json()
+    # response = requests.post(base_url_api + "/predictvocabularytermsresource/", json=predict_request)
+    #         this_strings_neighbors = pd.read_json(response.json(), orient="records")    
+    #print(new_vocabulary_error_list)
+    #print(new_vocabulary_error_list.json())
     #print('error list')
-    if len(my_NewVocabularyUploadChecker.error_list)>0:
+    if len(new_vocabulary_error_list)>0:
         output_div_children=dbc.Row(
             children=[
                 dbc.Col(width=4),
                 dbc.Col(
-                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in my_NewVocabularyUploadChecker.error_list],
+                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in new_vocabulary_error_list],
                     width=4,
                     #align='center'
                 ),
@@ -834,6 +918,9 @@ def download_curated_forum(
     temp_data=output_stream.getvalue()
     #output_excel
 
+
+
+
     #ISSUE 38
     #we want to expand the vocabulary on the fly. 
     #this  forloop and the one below apply only to the "reject suggestions, create new" column
@@ -851,43 +938,57 @@ def download_curated_forum(
                 new_vocab_dict[
                     header_written_pair_children_ALL[i][0].split(': ')[0].split('.')[0]
                 ]=[new_vocabulary_word]
+
+    print(new_vocab_dict)
+    print('------------------------')
     #print('new vocabulary dict')
     #print(new_vocab_dict)
     #print('')
     #now, for each key in this dict, append to the corresponding panda in the conglomerate dict, then output it again
     for temp_key in new_vocab_dict.keys():
-        appending_dict={
-            'valid_string':[],
-            'node_id':[],
-            'main_string':[],
-            'ontology':[],
-            'use_count':[]
-        }
-        for temp_addition in new_vocab_dict[temp_key]:
-            appending_dict['valid_string'].append(temp_addition)
-            appending_dict['node_id'].append(temp_addition)
-            appending_dict['main_string'].append(temp_addition)
-            appending_dict['ontology'].append('userAdded')
-            appending_dict['use_count'].append(1)
-        appending_panda=pd.DataFrame.from_dict(appending_dict)
-
-        conglomerate_vocabulary_panda_dict[temp_key]=pd.concat(
-            [conglomerate_vocabulary_panda_dict[temp_key],appending_panda],
-            axis='index',
-            ignore_index=True,
+        
+        training_success=requests.post(
+            base_url_api+'/trainvocabularyterms/',json={
+                'header':temp_key,
+                'new_vocabulary':new_vocab_dict[temp_key]
+            }
         )
-        #the pattern for new suggestions is that the given string becomes the valid_string, main_string, and node_id (something like that)
-        #to make sure that a user doesnt put someonething that already exists
-        conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset=('valid_string','main_string'),ignore_index=True,inplace=True)
-        #print(conglomerate_vocabulary_panda_dict[temp_key])
-    #print(con)
+        
+        #NEED AN ERROR THINGY HERE? NOT REALLY, ALREADY CHECKED
+
+    
+        
+    #     appending_dict={
+    #         'valid_string':[],
+    #         'node_id':[],
+    #         'main_string':[],
+    #         'ontology':[],
+    #         'use_count':[]
+    #     }
+    #     for temp_addition in new_vocab_dict[temp_key]:
+    #         appending_dict['valid_string'].append(temp_addition)
+    #         appending_dict['node_id'].append(temp_addition)
+    #         appending_dict['main_string'].append(temp_addition)
+    #         appending_dict['ontology'].append('userAdded')
+    #         appending_dict['use_count'].append(1)
+    #     appending_panda=pd.DataFrame.from_dict(appending_dict)
+
+    #     conglomerate_vocabulary_panda_dict[temp_key]=pd.concat(
+    #         [conglomerate_vocabulary_panda_dict[temp_key],appending_panda],
+    #         axis='index',
+    #         ignore_index=True,
+    #     )
+    #     #the pattern for new suggestions is that the given string becomes the valid_string, main_string, and node_id (something like that)
+    #     #to make sure that a user doesnt put someonething that already exists
+    #     conglomerate_vocabulary_panda_dict[temp_key].drop_duplicates(subset=('valid_string','main_string'),ignore_index=True,inplace=True)
+    #     #print(conglomerate_vocabulary_panda_dict[temp_key])
+    # #print(con)
 
     #print('===========================')
     #print(conglomerate_vocabulary_panda_dict)
     #print(conglomerate_vocabulary_panda_dict['species'].loc[conglomerate_vocabulary_panda_dict['species'].main_string.str.contains('musculus')])
     #this loop apply for every row in the curation table
     #the purpose of this loop is to increment the use_count
-    #print(header_replacement_list)
     for temp_tuple in header_replacement_list:
         temp_header_core_vocabulary=temp_tuple[0].split('.')[0]
         #for each thing to replace 
@@ -901,63 +1002,71 @@ def download_curated_forum(
             temp_main_string=temp_tuple[1].split(' AKA ')[1]
         else:
             temp_main_string=temp_tuple[1].split(' AKA ')[0]
-        corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
-            (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string']==temp_valid_string) &
-            (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']==temp_main_string)
-        ]['main_string'].unique()
-        #print(conglomerate_vocabulary_panda_dict)
-        #print(temp_tuple)
-        #print(temp_valid_string)
-        #print(temp_main_string)
-        #print(corresponding_main_string_list)
-        if len(corresponding_main_string_list)>1:
-            # print(corresponding_main_string_list)
-            raise Exception('there should only be one main string for a valid string, found multiple')
-        corresponding_main_string=corresponding_main_string_list[0]
-        #where value is true, keep original
-        conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count'].where(
-            conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']!=corresponding_main_string,
-            #other=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']+1
-            other=1
+
+        usecount_success=requests.post(
+            base_url_api+'/updateusecount/',json={
+                'header':temp_header_core_vocabulary,
+                'main_strings':temp_main_string
+            }
         )
 
+        # corresponding_main_string_list=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary].loc[
+        #     (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['valid_string']==temp_valid_string) &
+        #     (conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']==temp_main_string)
+        # ]['main_string'].unique()
+        # #print(conglomerate_vocabulary_panda_dict)
+        # #print(temp_tuple)
+        # #print(temp_valid_string)
+        # #print(temp_main_string)
+        # #print(corresponding_main_string_list)
+        # if len(corresponding_main_string_list)>1:
+        #     # print(corresponding_main_string_list)
+        #     raise Exception('there should only be one main string for a valid string, found multiple')
+        # corresponding_main_string=corresponding_main_string_list[0]
+        # #where value is true, keep original
+        # conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count'].where(
+        #     conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['main_string']!=corresponding_main_string,
+        #     #other=conglomerate_vocabulary_panda_dict[temp_header_core_vocabulary]['use_count']+1
+        #     other=1
+        # )
+
     #this set of instructions occurs for every vocabulary that is referenced by at least one row
-    taxonomies_referenced={element[0].split('.')[0] for element in header_replacement_list}
+    # taxonomies_referenced={element[0].split('.')[0] for element in header_replacement_list}
     # for temp_key in taxonomies_referenced:
     #     conglomerate_vocabulary_panda_dict[temp_key].to_pickle(f'additional_files/conglomerate_vocabulary_panda_{temp_key}.bin')
 
-    #this set of instructions occurs for vocabularies which are incremented at least once.
-    #this set of instructions should probably go up above 
-    #now we create a new vectorizer and nearest neighbors model
-    for temp_key in new_vocab_dict.keys():
-        temp_model_vocabulary=conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
-        temp_TfidfVectorizer=TfidfVectorizer(
-            analyzer='char',
-            ngram_range=ngram_limits_per_heading_json[temp_key],
-            use_idf=False,
-            norm=None
-            #max_df=1,
-            #max_df=1,
-            #min_df=0.001
-        )
-        temp_tfidf_matrix=temp_TfidfVectorizer.fit_transform(temp_model_vocabulary)
-        # with open(f'additional_files/tfidfVectorizer_{temp_key}.bin','wb') as fp:
-        #     pickle.dump(temp_TfidfVectorizer,fp)
+    # #this set of instructions occurs for vocabularies which are incremented at least once.
+    # #this set of instructions should probably go up above 
+    # #now we create a new vectorizer and nearest neighbors model
+    # for temp_key in new_vocab_dict.keys():
+    #     temp_model_vocabulary=conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
+    #     temp_TfidfVectorizer=TfidfVectorizer(
+    #         analyzer='char',
+    #         ngram_range=ngram_limits_per_heading_json[temp_key],
+    #         use_idf=False,
+    #         norm=None
+    #         #max_df=1,
+    #         #max_df=1,
+    #         #min_df=0.001
+    #     )
+    #     temp_tfidf_matrix=temp_TfidfVectorizer.fit_transform(temp_model_vocabulary)
+    #     # with open(f'additional_files/tfidfVectorizer_{temp_key}.bin','wb') as fp:
+    #     #     pickle.dump(temp_TfidfVectorizer,fp)
         
-        temp_NN_model=NearestNeighbors(
-            n_neighbors=50,
-            n_jobs=5,
-            metric='cosine'
-        )
-        temp_NN_model.fit(temp_tfidf_matrix)
-        # with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
-        #     pickle.dump(temp_NN_model,fp)        
-    #update the unique strings list
-    for temp_key in new_vocab_dict.keys():
-        vocabulary_dict[temp_key]=pd.DataFrame.from_dict(
-            conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
-        )
-        # vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
+    #     temp_NN_model=NearestNeighbors(
+    #         n_neighbors=50,
+    #         n_jobs=5,
+    #         metric='cosine'
+    #     )
+    #     temp_NN_model.fit(temp_tfidf_matrix)
+    #     # with open(f'additional_files/NearestNeighbors_{temp_key}.bin','wb') as fp:
+    #     #     pickle.dump(temp_NN_model,fp)        
+    # #update the unique strings list
+    # for temp_key in new_vocab_dict.keys():
+    #     vocabulary_dict[temp_key]=pd.DataFrame.from_dict(
+    #         conglomerate_vocabulary_panda_dict[temp_key]['valid_string'].unique()
+    #     )
+    #     # vocabulary_dict[temp_key].to_pickle(f'additional_files/unique_valid_strings_{temp_key}.bin')
 
     return [
         None,dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
