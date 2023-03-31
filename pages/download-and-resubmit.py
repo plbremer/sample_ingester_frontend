@@ -269,9 +269,9 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
     #write the #first sheet
     worksheet.merge_range('B2:L2','Guidelines',top_format)
     worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
-    worksheet.merge_range('C6:S6','Use fragments/phrases not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
-    worksheet.merge_range('C8:S8','Leave unused columns empty',rule_format)         
-    worksheet.merge_range('C10:S10','For multiples (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
+    worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
+    worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
+    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
 
     return workbook, worksheet
 
