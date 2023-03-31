@@ -27,9 +27,6 @@ app.layout = html.Div(
             brand='Sample Ingester Prototype',
             color='#1A3E68',
             brand_style = {'color': '#FFCD00'},
-            #links_left=True,
-            #style={"height": "100px"}, 
-            # ), 
         ),
         # content of each page
         dash.page_container

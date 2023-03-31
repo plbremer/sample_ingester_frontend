@@ -4,24 +4,16 @@ from . import samplemetadatauploadchecker
 import dash
 from dash import dcc, html,callback
 from dash.dependencies import Input, Output, State
-
 import plotly.express as px
 import dash_bootstrap_components as dbc
-
 from dash.exceptions import PreventUpdate
 
 import numpy as np
 import pandas as pd
-
-import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
-import openpyxl
-
 import json
-
 import base64
 import io
-from pprint import pprint
 
 dash.register_page(__name__, path='/download-and-resubmit')
 
@@ -39,7 +31,6 @@ SPLIT_CHAR='~'
 
 COLOR_LIST=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
     
-
 def generate_form_headers(selected_archetypes):
     '''
     from the selected archetypes ('tissue', 'genetic', etc.)
@@ -54,7 +45,6 @@ def generate_form_headers(selected_archetypes):
     return total_headers
 
 def split_columns_if_delimited(temp_dataframe):
-
     #for each column
     #split it
     #delete the orignal
@@ -73,7 +63,6 @@ def split_columns_if_delimited(temp_dataframe):
         new_dataframe_list.append(temp_expanded_columns)
 
     output_dataframe=pd.concat(new_dataframe_list,axis='columns')
-
     output_dataframe.fillna(value=np.nan,inplace=True)
 
     return output_dataframe
@@ -272,8 +261,6 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
         'font_size':16
     })
     rule_format=workbook.add_format({
-        #'bold': 1,
-        #'border': 1,
         'align': 'left',
         'valign': 'vcenter',
         'font_size':16
@@ -351,9 +338,7 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     #write and color the curation sheet
     
     workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,group_to_header_dict,group_to_archetype_dict)
-
     workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
-
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
@@ -368,15 +353,10 @@ def generate_curated_colors(worksheet,dataframe):
 
     '''
 
-      #print('inside_curated_colors')
-      #print(dataframe)
-
     max_col=worksheet.max_column
 
     #find the furthest left archetype that has text
     for temp_col in worksheet.iter_cols(min_row=1,max_row=1,max_col=max_col):
-        #  #print(temp_col[0].fill)
-        #  #print('')
         if temp_col[0].internal_value != None:
             current_internal_text=temp_col[0].internal_value
             break
@@ -387,13 +367,7 @@ def generate_curated_colors(worksheet,dataframe):
     group_to_header_dict[current_group]=set()
     group_to_text_dict[current_group]=current_internal_text
 
-    #merged_cells=worksheet.merged_cells.ranges
-    #  #print(merged_cells)
     for temp_col in worksheet.iter_cols(min_row=1,max_row=2,max_col=max_col):
-    #     if (temp_col[0].coordinate in merged_cells):
-    #         group_to_header_dict[current_group].append(
-    #             temp_col[1].internal_value
-    #         )    
         try:
             if (temp_col[0].internal_value == current_internal_text) or (temp_col[0].internal_value is None):
                 group_to_header_dict[current_group].add(
@@ -409,7 +383,6 @@ def generate_curated_colors(worksheet,dataframe):
                 temp_col[1].internal_value
             )
 
-    #[group_to_header_dict[item]:=list(group_to_header_dict[item]) for item in group_to_header_dict.keys()]
     #convert to list so that we can use the dash object store, which has json rules
     for item in group_to_header_dict.keys():
         group_to_header_dict[item]=list(group_to_header_dict[item])
@@ -428,16 +401,12 @@ def generate_curated_colors(worksheet,dataframe):
     ],
     [
         State(component_id="upload_form", component_property="filename"),
-        #State(component_id="upload_form", component_property="last_modified"),
-        #State(component_id="main_store",component_property="data"),
     ],
     prevent_initial_call=True
 )
 def upload_form(
     upload_form_contents,
     upload_form_filename,
-    #upload_form_last_modified,
-    #main_store_data
 ):
     if upload_form_contents==None:
         raise PreventUpdate
@@ -449,8 +418,6 @@ def upload_form(
     '''
 
     content_type, content_string = upload_form_contents.split(',')
-      #print(content_type)
-      #print('000000000000000000000000000000000000000000000000000000')
 
     #declare instance of upload error tester here
     #run through error tests. excel tests first
@@ -462,7 +429,6 @@ def upload_form(
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
-      #print(excel_sheet_checks)
     if excel_sheet_checks[0]==False:
         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
@@ -472,7 +438,6 @@ def upload_form(
                 dbc.Col(
                     children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
                     width=4,
-                    #align='center'
                 ),
                 dbc.Col(width=4)
             ]
@@ -491,13 +456,13 @@ def upload_form(
                     dbc.Col(
                         children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
                         width=4,
-                        #align='center'
                     ),
                     dbc.Col(width=4)
                 ]
             )
             
             store_dict=None
+
         #if there are no problems with the excel file or dataframe
         else:
             curate_button_children=dbc.Row(
@@ -530,7 +495,6 @@ def upload_form(
                 io.BytesIO(decoded),
                 sheet_name='sample_sheet',
                 skiprows=1
-                #index_col=False
             )
             temp_dataframe_2=pd.read_excel(
                 io.BytesIO(decoded),
