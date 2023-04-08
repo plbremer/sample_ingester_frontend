@@ -61,7 +61,8 @@ for level_1 in FORM_HEADER_DICT.keys():
             # header_buttons[level_2+'_'+level_3]=html.Div(dbc.Button(level_3,id={'type':'header_button','index':level_2+'_'+level_3}))
             header_buttons[level_2+'_'+level_3]=dbc.Button(level_3,id={'type':'header_button','index':level_2+'_'+level_3})
 
-
+print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+print(header_button_column_relationships)
 
 # def generate_form_headers(selected_archetypes):
 #     '''
@@ -745,7 +746,8 @@ def upload_form(
     #so we check for each problem, and if they are all false, move on to the next situation
     my_SampleMetadataUploadChecker=samplemetadatauploadchecker.SampleMetadataUploadChecker(
         content_string,
-        FORM_HEADER_DICT
+        # FORM_HEADER_DICT
+        header_button_column_relationships
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
