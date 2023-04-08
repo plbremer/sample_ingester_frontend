@@ -16,6 +16,8 @@ import base64
 import io
 from random import randint
 
+import xlsxwriter
+
 from pprint import pprint
 
 dash.register_page(__name__, path='/download-and-resubmit')
@@ -30,7 +32,7 @@ dash.register_page(__name__, path='/download-and-resubmit')
 #     for temp_header in FORM_HEADER_DICT[temp_archetype]:
 #         FORM_HEADER_DICT_REVERSE[temp_header].add(temp_archetype)
 
-# SPLIT_CHAR='~'
+SPLIT_CHAR='~'
 
 # COLOR_LIST=['red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki','red','orange','yellow','green','lime','sky','khaki']
     
@@ -75,28 +77,28 @@ for level_1 in FORM_HEADER_DICT.keys():
 #     return total_headers
 
 
-# def split_columns_if_delimited(temp_dataframe):
-#     #for each column
-#     #split it
-#     #delete the orignal
-#     #append the new ones
-#     #much easier to conserve the order than to reorder
-#     #do in parallel with temp_dataframe_2
-#     new_dataframe_list=list()
-#     #new_dataframe_list_2=list()
-#     for temp_column in temp_dataframe.columns:
-#         if temp_dataframe[temp_column].dtype==object:
-#             #num_cols_after_split=len(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True))
-#             temp_expanded_columns=temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
-#             #temp_expanded_columns_2=temp_dataframe_2
-#         else:
-#             temp_expanded_columns=temp_dataframe[temp_column]
-#         new_dataframe_list.append(temp_expanded_columns)
+def split_columns_if_delimited(temp_dataframe):
+    #for each column
+    #split it
+    #delete the orignal
+    #append the new ones
+    #much easier to conserve the order than to reorder
+    #do in parallel with temp_dataframe_2
+    new_dataframe_list=list()
+    #new_dataframe_list_2=list()
+    for temp_column in temp_dataframe.columns:
+        if temp_dataframe[temp_column].dtype==object:
+            #num_cols_after_split=len(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True))
+            temp_expanded_columns=temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
+            #temp_expanded_columns_2=temp_dataframe_2
+        else:
+            temp_expanded_columns=temp_dataframe[temp_column]
+        new_dataframe_list.append(temp_expanded_columns)
 
-#     output_dataframe=pd.concat(new_dataframe_list,axis='columns')
-#     output_dataframe.fillna(value=np.nan,inplace=True)
+    output_dataframe=pd.concat(new_dataframe_list,axis='columns')
+    output_dataframe.fillna(value=np.nan,inplace=True)
 
-#     return output_dataframe
+    return output_dataframe
 
 layout = html.Div(
     children=[
@@ -366,11 +368,11 @@ def add_column_to_dt(
         total_columns=[
                 {'name':temp_element['name'], 'id':temp_element['id']} for temp_element in dt_for_preview_columns
             ]+[
-                {'name':temp_element, 'id':temp_element+str(randint(0,2000000000))} for temp_element in columns_to_append
+                {'name':temp_element, 'id':temp_element+'-'+str(randint(0,2000000000))} for temp_element in columns_to_append
             ]
     else:
         total_columns=[
-                {'name':temp_element, 'id':temp_element+str(randint(0,2000000000))} for temp_element in columns_to_append
+                {'name':temp_element, 'id':temp_element+'-'+str(randint(0,2000000000))} for temp_element in columns_to_append
             ]
 
     print(total_columns)
@@ -489,63 +491,103 @@ def add_column_to_dt(
 
 #     return group_to_header_dict,group_to_archetype_dict
 
-# def update_excel_sheet_sample_formatting(workbook,worksheet,group_to_header_dict,group_to_archetype_dict):
+def update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe):#,group_to_header_dict,group_to_archetype_dict):
 
-#     merge_format_dict=dict()
-#     for group_id in group_to_header_dict.keys():
-#         merge_format_dict[group_id]=workbook.add_format(
-#             {
-#                 'align': 'center',
-#                 'valign': 'vcenter',
-#                 'fg_color': COLOR_LIST[group_id]
-#             }
-#         )
-#     start_cell=0
-#     for group_id in merge_format_dict.keys():
-#         end_cell=start_cell+len(group_to_header_dict[group_id])-1
-#         if (end_cell-start_cell)>=1:
-#             start_cell_xl=xl_rowcol_to_cell(0,start_cell)
-#             end_cell_xl=xl_rowcol_to_cell(0,end_cell)
-#             start_cell=start_cell+len(group_to_header_dict[group_id])
-#             merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
-#             worksheet.merge_range(
-#                 start_cell_xl+':'+end_cell_xl,
-#                 merge_string,
-#                 merge_format_dict[group_id]
-#             )
-#         elif (end_cell-start_cell)==0:
-#             start_cell_xl=xl_rowcol_to_cell(0,start_cell)
-#             end_cell_xl=xl_rowcol_to_cell(0,end_cell)
-#             start_cell=start_cell+len(group_to_header_dict[group_id])
-#             non_merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
-#             worksheet.write(start_cell_xl,non_merge_string,merge_format_dict[group_id])
-#     worksheet.autofit()
+    merge_format_dict=dict()
 
-#     return workbook, worksheet
+    # #not exactly correct. goal is to strip number from column name
+    # #worksheet.max_column
+    # for col_num in range(worksheet.dim_colmax + 1):
+    #     column = worksheet.col(col_num)
+    #     for cell in column:
+    #         cell.value = ''.join(filter(str.isalpha, str(cell.value)))
+    my_format=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':8
+    })
+    print(worksheet)
 
-# def fill_title_sheet(temp_writer,workbook,worksheet):
-#     worksheet=temp_writer.sheets['title_page']
-#     worksheet.hide_gridlines()
-#     top_format=workbook.add_format({
-#         'bold': 1,
-#         'align': 'left',
-#         'valign': 'vcenter',
-#         'font_size':16
-#     })
-#     rule_format=workbook.add_format({
-#         'align': 'left',
-#         'valign': 'vcenter',
-#         'font_size':16
-#     })
+    for i,temp_col in enumerate(temp_dataframe.columns):
+        proper_text=temp_col.split('-')[0]
+        worksheet.write(0,i,proper_text,my_format)
+
+
+    worksheet.autofit()
+    #for temp_col in worksheet.iter_cols(min_row=0,max_row=0,max_col=worksheet.max_column):
+    #for col_num in range(worksheet.dim_colmax+1):
+        #if temp_col[0].internal_value != None:
+        #print('-------------')
+        #print(temp_col)
+        # proper_text=worksheet.cell_value(0, col_num).split('-')[0]
+        # worksheet.write(0,col_num,proper_text,my_format)
+        #print(proper_text)
+        #cell_location=xl_rowcol_to_cell(temp_col[0])
+        # print(cell_location)
+        # print(current_internal_text)   
+        # c
+        # start_cell_xl=xl_rowcol_to_cell(0,start_cell)
+        #     end_cell_xl=xl_rowcol_to_cell(0,end_cell)
+        #     start_cell=start_cell+len(group_to_header_dict[group_id])
+        #     non_merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
+        #     worksheet.write(start_cell_xl,non_merge_string,merge_format_dict[group_id])
+
+
+    # for group_id in group_to_header_dict.keys():
+    #     merge_format_dict[group_id]=workbook.add_format(
+    #         {
+    #             'align': 'center',
+    #             'valign': 'vcenter',
+    #             'fg_color': COLOR_LIST[group_id]
+    #         }
+    #     )
+    # start_cell=0
+    # for group_id in merge_format_dict.keys():
+    #     end_cell=start_cell+len(group_to_header_dict[group_id])-1
+    #     if (end_cell-start_cell)>=1:
+    #         start_cell_xl=xl_rowcol_to_cell(0,start_cell)
+    #         end_cell_xl=xl_rowcol_to_cell(0,end_cell)
+    #         start_cell=start_cell+len(group_to_header_dict[group_id])
+    #         merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
+    #         worksheet.merge_range(
+    #             start_cell_xl+':'+end_cell_xl,
+    #             merge_string,
+    #             merge_format_dict[group_id]
+    #         )
+    #     elif (end_cell-start_cell)==0:
+    #         start_cell_xl=xl_rowcol_to_cell(0,start_cell)
+    #         end_cell_xl=xl_rowcol_to_cell(0,end_cell)
+    #         start_cell=start_cell+len(group_to_header_dict[group_id])
+    #         non_merge_string='Associated with: '+(', '.join(group_to_archetype_dict[group_id]))
+    #         worksheet.write(start_cell_xl,non_merge_string,merge_format_dict[group_id])
+    worksheet.autofit()
+
+    return workbook, worksheet
+
+def fill_title_sheet(temp_writer,workbook,worksheet):
+    worksheet=temp_writer.sheets['title_page']
+    worksheet.hide_gridlines()
+    top_format=workbook.add_format({
+        'bold': 1,
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
+    rule_format=workbook.add_format({
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
         
-#     #write the #first sheet
-#     worksheet.merge_range('B2:L2','Guidelines',top_format)
-#     worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
-#     worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
-#     worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
-#     worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
+    #write the #first sheet
+    worksheet.merge_range('B2:L2','Guidelines',top_format)
+    worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
+    worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
+    worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
+    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
 
-#     return workbook, worksheet
+    return workbook, worksheet
 
 @callback(
     [
@@ -554,47 +596,53 @@ def add_column_to_dt(
     [
         Input(component_id='button_form', component_property='n_clicks'),
     ],
+    # [
+    #     State(component_id='sample_checklist', component_property='value'),
+    #     State(component_id='study_checklist',component_property='value'),
+    # ],
     [
-        State(component_id='sample_checklist', component_property='value'),
-        State(component_id='study_checklist',component_property='value'),
+        #State(component_id="column_store", component_property="data"),
+        State(component_id="dt_for_preview",component_property="columns")
     ],
 )
-def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
+# def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
+def generate_form(button_form_n_clicks,dt_for_preview_columns):
     '''
     creates the form that is downloaded by users
     '''
 
     #a potential improvement would be to generate a visible error if nothing is checked
-    if sample_checklist_options==None and study_checklist_options==None:
+    if dt_for_preview_columns==None:# and study_checklist_options==None:
         raise PreventUpdate
     
-    if sample_checklist_options==None:
-        sample_checklist_options=[]
-    if study_checklist_options==None:
-        study_checklist_options=[]
+    # if sample_checklist_options==None:
+    #     sample_checklist_options=[]
+    # if study_checklist_options==None:
+    #     study_checklist_options=[]
     
     #multipele archetypes can have the same headers (eg tissue, cells both have species)
     #we want a non-repeating, ordered list of those headers
-    total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
+    # total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
 
     #get the dicts that define the colors for the excel file
-    group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
+    # group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
 
     #need to rearrange columns to match group order
-    column_order_list=sum(group_to_header_dict.values(),[])
+    # column_order_list=sum(group_to_header_dict.values(),[])
 
     #empty df for excel file
     temp_dataframe=pd.DataFrame.from_dict(
-        {element:[] for element in column_order_list}
+        {element['id']:[] for element in dt_for_preview_columns}
     )
 
     #we write to bytes because it is much more versatile
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+    #temp_writer=pd.ExcelWriter(output_stream,engine='openpyxl')
 
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
-    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False,startrow=1)
+    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False)#,startrow=1)
 
     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
@@ -609,7 +657,7 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
     #for each group, make a format
     #write and color the curation sheet
     
-    workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,group_to_header_dict,group_to_archetype_dict)
+    workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
     workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
 
     temp_writer.save()
@@ -662,134 +710,134 @@ def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_
 #     return group_to_header_dict,group_to_text_dict
 
 
-# @callback(
-#     [
-#         Output(component_id="upload_form",component_property="children"),
-#         Output(component_id="main_store",component_property="data"),
-#         Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
-#     ],
-#     [
-#         Input(component_id="upload_form", component_property="contents"),
-#     ],
-#     [
-#         State(component_id="upload_form", component_property="filename"),
-#     ],
-#     prevent_initial_call=True
-# )
-# def upload_form(
-#     upload_form_contents,
-#     upload_form_filename,
-# ):
-#     if upload_form_contents==None:
-#         raise PreventUpdate
+@callback(
+    [
+        Output(component_id="upload_form",component_property="children"),
+        Output(component_id="main_store",component_property="data"),
+        Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
+    ],
+    [
+        Input(component_id="upload_form", component_property="contents"),
+    ],
+    [
+        State(component_id="upload_form", component_property="filename"),
+    ],
+    prevent_initial_call=True
+)
+def upload_form(
+    upload_form_contents,
+    upload_form_filename,
+):
+    if upload_form_contents==None:
+        raise PreventUpdate
     
-#     '''
-#     accept the form back from the user
+    '''
+    accept the form back from the user
 
-#     need to have a more fully fledged format-checking and error throwing suite
-#     '''
+    need to have a more fully fledged format-checking and error throwing suite
+    '''
 
-#     content_type, content_string = upload_form_contents.split(',')
+    content_type, content_string = upload_form_contents.split(',')
 
-#     #declare instance of upload error tester here
-#     #run through error tests. excel tests first
-#     #the error checker returns False for each condition that doesnt have a problem
-#     #so we check for each problem, and if they are all false, move on to the next situation
-#     my_SampleMetadataUploadChecker=samplemetadatauploadchecker.SampleMetadataUploadChecker(
-#         content_string,
-#         FORM_HEADER_DICT
-#     )
-#     excel_sheet_checks=list()
-#     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
-#     if excel_sheet_checks[0]==False:
-#         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
-#     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
-#         curate_button_children=dbc.Row(
-#             children=[
-#                 dbc.Col(width=4),
-#                 dbc.Col(
-#                     children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
-#                     width=4,
-#                 ),
-#                 dbc.Col(width=4)
-#             ]
-#         )
-#         store_dict=None
-#     else:
-#         dataframe_checks=list()
-#         my_SampleMetadataUploadChecker.create_dataframe()
-#         dataframe_checks.append(my_SampleMetadataUploadChecker.headers_malformed())
-#         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_underscore())
-#         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_no_sample_rows())
-#         if any(map(lambda x: isinstance(x,str),dataframe_checks)):
-#             curate_button_children=dbc.Row(
-#                 children=[
-#                     dbc.Col(width=4),
-#                     dbc.Col(
-#                         children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
-#                         width=4,
-#                     ),
-#                     dbc.Col(width=4)
-#                 ]
-#             )
+    #declare instance of upload error tester here
+    #run through error tests. excel tests first
+    #the error checker returns False for each condition that doesnt have a problem
+    #so we check for each problem, and if they are all false, move on to the next situation
+    my_SampleMetadataUploadChecker=samplemetadatauploadchecker.SampleMetadataUploadChecker(
+        content_string,
+        FORM_HEADER_DICT
+    )
+    excel_sheet_checks=list()
+    excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
+    if excel_sheet_checks[0]==False:
+        excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
+    if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
+        curate_button_children=dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
+                    width=4,
+                ),
+                dbc.Col(width=4)
+            ]
+        )
+        store_dict=None
+    else:
+        dataframe_checks=list()
+        my_SampleMetadataUploadChecker.create_dataframe()
+        dataframe_checks.append(my_SampleMetadataUploadChecker.headers_malformed())
+        dataframe_checks.append(my_SampleMetadataUploadChecker.contains_underscore())
+        dataframe_checks.append(my_SampleMetadataUploadChecker.contains_no_sample_rows())
+        if any(map(lambda x: isinstance(x,str),dataframe_checks)):
+            curate_button_children=dbc.Row(
+                children=[
+                    dbc.Col(width=4),
+                    dbc.Col(
+                        children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
+                        width=4,
+                    ),
+                    dbc.Col(width=4)
+                ]
+            )
             
-#             store_dict=None
+            store_dict=None
 
-#         #if there are no problems with the excel file or dataframe
-#         else:
-#             curate_button_children=dbc.Row(
-#                 children=[
-#                     dbc.Col(width=5),
-#                     dbc.Col(
-#                         children=[
+        #if there are no problems with the excel file or dataframe
+        else:
+            curate_button_children=dbc.Row(
+                children=[
+                    dbc.Col(width=5),
+                    dbc.Col(
+                        children=[
                             
-#                             dcc.Link(
-#                                 children=[                        
-#                                     html.Div(
-#                                         dbc.Button(
-#                                             'Process Form',
-#                                             id='button_form',
-#                                         ),
-#                                         className="d-grid gap-2 col-6 mx-auto",
-#                                     ),
-#                                 ],
-#                                 href='/curate-and-download',
-#                             )
-#                         ],
-#                         width=2
-#                     ),
-#                     dbc.Col(width=5)
-#                 ]
-#             )
+                            dcc.Link(
+                                children=[                        
+                                    html.Div(
+                                        dbc.Button(
+                                            'Process Form',
+                                            id='button_form',
+                                        ),
+                                        className="d-grid gap-2 col-6 mx-auto",
+                                    ),
+                                ],
+                                href='/curate-and-download',
+                            )
+                        ],
+                        width=2
+                    ),
+                    dbc.Col(width=5)
+                ]
+            )
 
-#             decoded=base64.b64decode(content_string)
-#             temp_dataframe=pd.read_excel(
-#                 io.BytesIO(decoded),
-#                 sheet_name='sample_sheet',
-#                 skiprows=1
-#             )
-#             temp_dataframe_2=pd.read_excel(
-#                 io.BytesIO(decoded),
-#                 sheet_name='sample_sheet',
-#                 header=None,
-#                 nrows=1
-#             )
-#             #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
-#             temp_dataframe_2.columns=temp_dataframe.columns
-#             temp_dataframe=pd.concat(
-#                 [temp_dataframe,temp_dataframe_2],
-#                 axis='index',
-#                 ignore_index=True
-#             )
-#             temp_dataframe=split_columns_if_delimited(temp_dataframe)
-#             temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
+            decoded=base64.b64decode(content_string)
+            temp_dataframe=pd.read_excel(
+                io.BytesIO(decoded),
+                sheet_name='sample_sheet',
+                #skiprows=1
+            )
+            # temp_dataframe_2=pd.read_excel(
+            #     io.BytesIO(decoded),
+            #     sheet_name='sample_sheet',
+            #     header=None,
+            #     nrows=1
+            # )
+            #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
+            # temp_dataframe_2.columns=temp_dataframe.columns
+            # temp_dataframe=pd.concat(
+            #     [temp_dataframe,temp_dataframe_2],
+            #     axis='index',
+            #     ignore_index=True
+            # )
+            temp_dataframe=split_columns_if_delimited(temp_dataframe)
+            temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
-#             store_dict={
-#                 'input_dataframe':temp_dataframe_as_json,
-#             }
+            store_dict={
+                'input_dataframe':temp_dataframe_as_json,
+            }
 
-#     displayed_name=html.Div([upload_form_filename],className='text-center')
-#     return [displayed_name,store_dict,curate_button_children]
+    displayed_name=html.Div([upload_form_filename],className='text-center')
+    return [displayed_name,store_dict,curate_button_children]
 
 
 

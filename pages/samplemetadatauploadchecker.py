@@ -33,7 +33,7 @@ class SampleMetadataUploadChecker:
         self.dataframe=pd.read_excel(
             io.BytesIO(decoded),
             sheet_name='sample_sheet',
-            skiprows=1
+            #skiprows=1
         )
 
     def headers_malformed(self):
