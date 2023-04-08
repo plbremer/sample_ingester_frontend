@@ -10,7 +10,7 @@ local_stylesheet = {
     "rel": "stylesheet"
 }
 
-app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, local_stylesheet ])
+app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, local_stylesheet ],suppress_callback_exceptions=True)
 
 # # #custom ordering of navbar
 my_page_link_list=[

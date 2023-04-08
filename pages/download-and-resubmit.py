@@ -2,7 +2,7 @@ from csv import excel
 from . import samplemetadatauploadchecker
 
 import dash
-from dash import dcc, html,callback, ALL, MATCH, ctx
+from dash import dcc, html,callback, ALL, MATCH, ctx, dash_table
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import dash_bootstrap_components as dbc
@@ -14,6 +14,7 @@ from xlsxwriter.utility import xl_rowcol_to_cell
 import json
 import base64
 import io
+from random import randint
 
 from pprint import pprint
 
@@ -245,7 +246,16 @@ layout = html.Div(
         html.Br(),
         html.Br(),
         html.Br(),
-        html.Div(id='Div_metadata_datatable'),
+        html.Div(
+            id='Div_metadata_datatable',
+            children=[
+                dash_table.DataTable(
+                    id='dt_for_preview',
+                    columns=None,
+                    data=None,
+                )
+            ]
+        ),
         dbc.Row(
             children=[
                 dbc.Col(width=5),
@@ -317,7 +327,7 @@ layout = html.Div(
 @callback(
     [
         Output(component_id="Div_metadata_datatable",component_property="children"),
-        Output(component_id="column_store", component_property="data"),
+        #Output(component_id="column_store", component_property="data"),
         # Output(component_id="main_store",component_property="data"),
         # Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
     ],
@@ -326,52 +336,96 @@ layout = html.Div(
         Input({'type':'header_button','index':ALL},"n_clicks")
     ],
     [
-        State(component_id="column_store", component_property="data"),
+        #State(component_id="column_store", component_property="data"),
+        State(component_id="dt_for_preview",component_property="columns")
     ],
     prevent_initial_call=True
 )
 def add_column_to_dt(
     header_button_n_clicks,
-    column_store_data
+    dt_for_preview_columns
 ):
     '''
     basically, we want the state to actually be the DT columns
     read the dt columns, add a new one if the button is clicked
     use the suppress callback thing in the initial case when the dt doesnt exist
     '''
-    print(column_store_data)
-    if column_store_data==None:
-        column_store_data=list()
+    # print(column_store_data)
+    # if column_store_data==None:
+    #     column_store_data=list()
 
     column_type=ctx.triggered_id['index'].split('_')[1]
     columns_to_append=header_button_column_relationships[column_type]
 
-    column_store_data.append(columns_to_append)
+    #column_store_data.append(columns_to_append)
     # column_path=Patch()
     # column_patch
     #print(ctx.triggered_id)
 
-    output_DT=dash_table.DataTable(
-        columns=[
-            # {"name": ["", "Year"], "id": "year"},
-            # {"name": ["City", "Montreal"], "id": "montreal","deletable":True},
-            # {"name": ["City", "Toronto"], "id": "toronto"},
-            # {"name": ["City", "Ottawa"], "id": "ottawa"},
-            # {"name": ["City", "Vancouver"], "id": "vancouver"},
-            # {"name": ["Climate", "Temperature"], "id": "temp"},
-            # {"name": ["Climate", "Humidity"], "id": "humidity"},
-            {'name':temp_element, 'id':temp_element} for temp_element in 
-        ],
-        data=[
-            {
-                
-            }
-            
-        ],
+    if dt_for_preview_columns != None:
+        total_columns=[
+                {'name':temp_element['name'], 'id':temp_element['id']} for temp_element in dt_for_preview_columns
+            ]+[
+                {'name':temp_element, 'id':temp_element+str(randint(0,2000000000))} for temp_element in columns_to_append
+            ]
+    else:
+        total_columns=[
+                {'name':temp_element, 'id':temp_element+str(randint(0,2000000000))} for temp_element in columns_to_append
+            ]
+
+    print(total_columns)
+    total_data=list()
+    print(
+        {
+            temp_col['id']:'download this table' for temp_col in total_columns
+        }
+    )
+    total_data.append(
+        {
+            temp_col['id']:'download this table' for temp_col in total_columns
+        }
     )
 
-    print(column_store_data)
-    return [html.H6('hello'),column_store_data]
+    output_children=dbc.Row(
+        children=[
+            dbc.Col(width=1),
+            dbc.Col(
+                children=[
+                    dash_table.DataTable(
+                        id='dt_for_preview',
+                        columns=total_columns,
+                        data=total_data,
+                        style_cell={
+                            'fontSize': 17,
+                            'padding': '8px',
+                            'textAlign': 'center'
+                        },
+                        style_header={
+                            'font-family': 'arial',
+                            'fontSize': 15,
+                            'fontWeight': 'bold',
+                            'textAlign': 'center'
+                        },
+                        style_data={
+                            'textAlign': 'center',
+                            'fontWeight': 'bold',
+                            'font-family': 'Roboto',
+                            'fontSize': 15,
+                        },
+                        style_table={
+                            'overflowX': 'scroll'
+                        }
+                    )
+                ],
+                width=10
+            ),
+            dbc.Col(width=1)
+        ]
+    ),
+
+
+    #print(column_store_data)
+    return [output_children]
     
 
 # dash_table.DataTable(
@@ -493,77 +547,77 @@ def add_column_to_dt(
 
 #     return workbook, worksheet
 
-# @callback(
-#     [
-#         Output(component_id="download_form", component_property="data"),
-#     ],
-#     [
-#         Input(component_id='button_form', component_property='n_clicks'),
-#     ],
-#     [
-#         State(component_id='sample_checklist', component_property='value'),
-#         State(component_id='study_checklist',component_property='value'),
-#     ],
-# )
-# def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
-#     '''
-#     creates the form that is downloaded by users
-#     '''
+@callback(
+    [
+        Output(component_id="download_form", component_property="data"),
+    ],
+    [
+        Input(component_id='button_form', component_property='n_clicks'),
+    ],
+    [
+        State(component_id='sample_checklist', component_property='value'),
+        State(component_id='study_checklist',component_property='value'),
+    ],
+)
+def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
+    '''
+    creates the form that is downloaded by users
+    '''
 
-#     #a potential improvement would be to generate a visible error if nothing is checked
-#     if sample_checklist_options==None and study_checklist_options==None:
-#         raise PreventUpdate
+    #a potential improvement would be to generate a visible error if nothing is checked
+    if sample_checklist_options==None and study_checklist_options==None:
+        raise PreventUpdate
     
-#     if sample_checklist_options==None:
-#         sample_checklist_options=[]
-#     if study_checklist_options==None:
-#         study_checklist_options=[]
+    if sample_checklist_options==None:
+        sample_checklist_options=[]
+    if study_checklist_options==None:
+        study_checklist_options=[]
     
-#     #multipele archetypes can have the same headers (eg tissue, cells both have species)
-#     #we want a non-repeating, ordered list of those headers
-#     total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
+    #multipele archetypes can have the same headers (eg tissue, cells both have species)
+    #we want a non-repeating, ordered list of those headers
+    total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
 
-#     #get the dicts that define the colors for the excel file
-#     group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
+    #get the dicts that define the colors for the excel file
+    group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
 
-#     #need to rearrange columns to match group order
-#     column_order_list=sum(group_to_header_dict.values(),[])
+    #need to rearrange columns to match group order
+    column_order_list=sum(group_to_header_dict.values(),[])
 
-#     #empty df for excel file
-#     temp_dataframe=pd.DataFrame.from_dict(
-#         {element:[] for element in column_order_list}
-#     )
+    #empty df for excel file
+    temp_dataframe=pd.DataFrame.from_dict(
+        {element:[] for element in column_order_list}
+    )
 
-#     #we write to bytes because it is much more versatile
-#     output_stream=io.BytesIO()
-#     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+    #we write to bytes because it is much more versatile
+    output_stream=io.BytesIO()
+    temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
 
-#     empty_df=pd.DataFrame()
-#     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
-#     temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False,startrow=1)
+    empty_df=pd.DataFrame()
+    empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
+    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False,startrow=1)
 
-#     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
-#     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
-#     workbook=temp_writer.book
-#     worksheet=temp_writer.sheets['sample_sheet']
+    #https://xlsxwriter.readthedocs.io/working_with_pandas.html
+    #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
+    workbook=temp_writer.book
+    worksheet=temp_writer.sheets['sample_sheet']
 
-#     #for each group in group_to_header_dict,group_to_archetype_dict
-#     #ascertain the number of involved columns in the group
-#     #ascertain the number of already seen columns
-#     #merge ((number of involved columns) offset by (number of already seen columns))
-#     #write text and color ((number of involved columns) offset by (number of already seen columns))
-#     #for each group, make a format
-#     #write and color the curation sheet
+    #for each group in group_to_header_dict,group_to_archetype_dict
+    #ascertain the number of involved columns in the group
+    #ascertain the number of already seen columns
+    #merge ((number of involved columns) offset by (number of already seen columns))
+    #write text and color ((number of involved columns) offset by (number of already seen columns))
+    #for each group, make a format
+    #write and color the curation sheet
     
-#     workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,group_to_header_dict,group_to_archetype_dict)
-#     workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
+    workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,group_to_header_dict,group_to_archetype_dict)
+    workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
 
-#     temp_writer.save()
-#     temp_data=output_stream.getvalue()
+    temp_writer.save()
+    temp_data=output_stream.getvalue()
 
-#     return [
-#         dcc.send_bytes(temp_data,"binbase_sample_ingestion_form.xlsx")
-#     ]
+    return [
+        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form.xlsx")
+    ]
 
 
 # def generate_curated_colors(worksheet,dataframe):
