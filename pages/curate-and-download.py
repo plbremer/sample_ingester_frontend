@@ -309,7 +309,7 @@ def update_options(
         'substring':dropdown_empty_options_search_value
     }
 
-    temp_values=requests.post(base_url_api+'/generatesubstringmatches/',json=outbound_json).json()
+    temp_values=requests.post(base_url_api+'/generatesubstringmatchesresource/',json=outbound_json).json()
 
 
     # print(temp_values)
@@ -450,7 +450,7 @@ def download_curated_forum(
         if input_curation_value_ALL[i]=='':
             input_curation_value_ALL[i]=None
 
-    new_vocabulary_error_list=requests.post(base_url_api+'/validatetermsfortraining/',json={'new_vocabulary':input_curation_value_ALL}).json()['errors']
+    new_vocabulary_error_list=requests.post(base_url_api+'/validatetermsfortrainingresource/',json={'new_vocabulary':input_curation_value_ALL}).json()['errors']
 
     if len(new_vocabulary_error_list)>0:
         output_div_children=dbc.Row(
@@ -582,7 +582,7 @@ def download_curated_forum(
     for temp_key in new_vocab_dict.keys():
         
         training_success=requests.post(
-            base_url_api+'/trainvocabularyterms/',json={
+            base_url_api+'/trainvocabularytermsresource/',json={
                 'header':temp_key,
                 'new_vocabulary':new_vocab_dict[temp_key]
             }
@@ -607,9 +607,9 @@ def download_curated_forum(
             temp_main_string=temp_tuple[1].split(' AKA ')[0]
 
         usecount_success=requests.post(
-            base_url_api+'/updateusecount/',json={
+            base_url_api+'/updateusecountresource/',json={
                 'header':temp_header_core_vocabulary,
-                'main_strings':temp_main_string
+                'main_string':temp_main_string
             }
         )
 
