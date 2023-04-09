@@ -17,8 +17,8 @@ import requests
 
 dash.register_page(__name__, path='/curate-and-download')
 
-#base_url_api = "http://127.0.0.1:4999/"
-base_url_api = "http://api_alias:4999/"
+#base_url_api = "http://127.0.0.1:4999"
+base_url_api = "http://api_alias:4999"
 
 #get the headers and their subset definitions
 with open('additional_files/subset_per_heading.json', 'r') as fp:
@@ -166,7 +166,7 @@ def curate_data(
         raise PreventUpdate
 
     store_panda=pd.read_json(main_store_data['input_dataframe'],orient='records')
-    store_panda=store_panda.iloc[:-1,:]
+    #store_panda=store_panda.iloc[:-1,:]
 
     written_strings_per_category=parse_stored_excel_file(store_panda)
 
@@ -441,8 +441,8 @@ def download_curated_forum(
     '''
 
     store_panda=pd.read_json(main_store_data['input_dataframe'],orient='records')
-    print(store_panda)
-    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    # print(store_panda)
+    # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     #if someone dtypes something into the new suggestions, then removes them, the value becomes '' not None
     #need to set '' to none

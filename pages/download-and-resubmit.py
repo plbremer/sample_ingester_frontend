@@ -61,8 +61,8 @@ for level_1 in FORM_HEADER_DICT.keys():
             # header_buttons[level_2+'_'+level_3]=html.Div(dbc.Button(level_3,id={'type':'header_button','index':level_2+'_'+level_3}))
             header_buttons[level_2+'_'+level_3]=dbc.Button(level_3,id={'type':'header_button','index':level_2+'_'+level_3})
 
-print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-print(header_button_column_relationships)
+# print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+# print(header_button_column_relationships)
 
 # def generate_form_headers(selected_archetypes):
 #     '''
