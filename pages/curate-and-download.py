@@ -17,8 +17,8 @@ import requests
 
 dash.register_page(__name__, path='/curate-and-download')
 
-#base_url_api = "http://127.0.0.1:4999"
-base_url_api = "http://api_alias:4999"
+base_url_api = "http://127.0.0.1:4999"
+#base_url_api = "http://api_alias:4999"
 
 #get the headers and their subset definitions
 with open('additional_files/subset_per_heading.json', 'r') as fp:
