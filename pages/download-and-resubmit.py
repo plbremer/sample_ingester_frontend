@@ -376,13 +376,13 @@ def add_column_to_dt(
                 {'name':temp_element, 'id':temp_element+'-'+str(randint(0,2000000000))} for temp_element in columns_to_append
             ]
 
-    print(total_columns)
+    # print(total_columns)
     total_data=list()
-    print(
-        {
-            temp_col['id']:'download this table' for temp_col in total_columns
-        }
-    )
+    # print(
+    #     {
+    #         temp_col['id']:'download this table' for temp_col in total_columns
+    #     }
+    # )
     total_data.append(
         {
             temp_col['id']:'download this table' for temp_col in total_columns
@@ -508,7 +508,7 @@ def update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe):#,gr
         'valign': 'vcenter',
         'font_size':8
     })
-    print(worksheet)
+    # print(worksheet)
 
     for i,temp_col in enumerate(temp_dataframe.columns):
         proper_text=temp_col.split('-')[0]
@@ -611,7 +611,8 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
     '''
     creates the form that is downloaded by users
     '''
-
+    print('+++++++++++++++++++++++++++')
+    print(ctx.triggered_id)
     #a potential improvement would be to generate a visible error if nothing is checked
     if dt_for_preview_columns==None:# and study_checklist_options==None:
         raise PreventUpdate
