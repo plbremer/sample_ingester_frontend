@@ -13,22 +13,23 @@ local_stylesheet = {
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, local_stylesheet ])
 
 #custom ordering of navbar
-my_page_link_list=[
-    dbc.NavLink('Start Here.', href='/download-and-resubmit',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
-    #dbc.NavLink('Curate and download', href='/curate-and-download',style = {'color': 'white','font-weight':'bold'}),
-]
+# my_page_link_list=[
+#     dbc.NavLink('Start Here.', href='/download-and-resubmit',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+#     #dbc.NavLink('Curate and download', href='/curate-and-download',style = {'color': 'white','font-weight':'bold'}),
+# ]
 
 app.layout = html.Div(
     [
         dcc.Store('main_store'),#,storage_type='session'),
         dcc.Location('url'),
-        dbc.NavbarSimple(
-            children=[]+my_page_link_list,
-            brand='Sample Ingester Prototype',
-            color='#1A3E68',
-            brand_style = {'color': '#FFCD00'},
-        ),
+        # dbc.NavbarSimple(
+        #     children=[]+my_page_link_list,
+        #     brand='Sample Ingester Prototype',
+        #     color='#1A3E68',
+        #     brand_style = {'color': '#FFCD00'},
+        # ),
         # content of each page
+
         dash.page_container
     ]
 )
