@@ -7,10 +7,39 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
-
+import json
 import numpy as np
 
 NUM_STEPS=3
+
+
+#def read_archetype_to_header_dict():
+with open('assets/form_header_dict_basics.json','r') as f:
+    FORM_HEADER_DICT=json.load(f)
+with open('assets/extra_columns.json','r') as f:
+    EXTRA_COLUMNS=json.load(f)
+#read_archetype_to_header_dict()
+
+
+def generate_form_headers(selected_archetypes):
+    '''
+    from the selected archetypes ('tissue', 'genetic', etc.)
+    create the total set of metadata headers. order matters 
+    '''
+    total_headers=[]
+    for temp_header in selected_archetypes:
+        for temp_element in FORM_HEADER_DICT[temp_header]:
+            if temp_element not in total_headers:
+                total_headers.append(temp_element)
+    
+    return total_headers
+
+def generate_extra_headers(selected_types):
+    total_headers=[]
+    for temp_header in selected_types:
+        total_headers+=EXTRA_COLUMNS[temp_header]
+
+    return total_headers
 
 
 dash.register_page(__name__, path='/generate-form')
@@ -33,16 +62,20 @@ layout = html.Div(
             ]
         ),
 
-        dbc.Row(
-            children=[
-                dbc.Col(width=3),
-                dbc.Col(
-                    children=[
-                        html.H6('hi')
-                    ]
-                )
-            ]
-        ),
+        # dbc.Row(
+        #     children=[
+        #         dbc.Col(width=3),
+        #         dbc.Col(
+        #             children=[
+        #                 html.H6('hi')
+        #             ]
+        #         )
+        #     ]
+        # ),
+        html.Br(),
+        html.Br(),
+        html.Br(),
+        html.Br(),
 
         html.Div(
             children=[
@@ -97,31 +130,113 @@ layout = html.Div(
                         ),
                         dmc.StepperStep(
                             label="Second step",
-                            description="Verify email",
-                            children=dmc.Text("1th content", align="center"),
+                            description="Extra Specifications",
+                            children=[
+                                dbc.Row(
+                                    children=[
+                                        dbc.Col(width=3),
+                                        dbc.Col(
+                                            children=[
+                                                html.H3('Sample Types'),
+                                                html.Br(),
+                                                dbc.Checklist(
+                                                    options=[
+                                                        {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
+                                                    ],
+                                                    id="extra_checklist",
+                                                ),
+                                            ],
+                                            width=4
+                                        ),
+                                        dbc.Col(
+                                            children=[
+                                                html.H3('Number of Samples'),
+                                                html.Br(),
+                                                dmc.NumberInput(
+                                                    id='sample_count_input',
+                                                    label="Number of Samples",
+                                                    description="Integer from 1 to infinity",
+                                                    value=1,
+                                                    min=1,
+                                                    step=1,
+                                                    style={"width": 250},
+                                                ),
+                                            ],
+                                            width=4
+                                        ),
+                                        dbc.Col(width=1)
+                                    ]
+                                )
+                            ]
+                            
+                            
+                            
                         ),
                         
                         dmc.StepperStep(
                             label="third step",
                             description="asdfgasdfg",
                             children=[
-                                dmc.Text("2th content", align="center"),
-                                dbc.Checklist(
-                                    options=[
-                                        {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
-                                        {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
-                                        {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
-                                        {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
-                                    ],
-                                    id="sample_checklist",
+
+
+                                dbc.Row(
+                                    children=[
+                                        dbc.Col(width=5),
+                                        dbc.Col(
+                                            children=[
+                                                html.Div(
+                                                    dbc.Button(
+                                                        'Download Form',
+                                                        id='button_form',
+                                                    ),
+                                                    className="d-grid gap-2 col-6 mx-auto",
+                                                ),
+                                            ],
+                                            width=2
+                                        ),
+                                        dbc.Col(width=5)
+                                    ]
                                 ),
+
+
+
+
+
+
+
+
+
+
+
                             ]
                         ),
                         dmc.StepperCompleted(
-                            children=dmc.Text(
-                                "Completed, click back button to get to previous step",
-                                align="center",
-                            )
+                            # label='some_label',
+                            # description='some description',
+
+
+
+                            
+                            children=[
+                                dbc.Row(
+                                    children=[
+                                        dbc.Col(width=5),
+                                        dbc.Col(
+                                            children=[
+                                                html.Div(
+                                                    dbc.Button(
+                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                    ),
+                                                    className="d-grid gap-2 col-6 mx-auto",
+                                                ),
+                                            ],
+                                            width=2
+                                        ),
+                                        dbc.Col(width=5)
+                                    ]
+                                ),
+
+                            ]
                         ),
                     ],
                 ),
@@ -197,3 +312,104 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
 
     # print('about to output')
     return [current,my_children]
+
+
+
+
+        # html.Div(
+        #     id='Div_metadata_datatable',
+        #     children=[
+        #         dash_table.DataTable(
+        #             id='dt_for_preview',
+        #             columns=None,
+        #             data=None,
+        #         )
+        #     ]
+        # ),
+
+
+
+@callback(
+    [
+        Output(component_id="Div_metadata_datatable", component_property="children"),
+    ],
+    [
+        # Input(component_id='stepper_generate_form_back', component_property="n_clicks"),
+        # Input(component_id='stepper_generate_form_next', component_property="n_clicks")
+        Input(component_id='sample_checklist', component_property='value'),
+        Input(component_id='study_checklist',component_property='value'),
+        Input(component_id="extra_checklist",component_property='value'),
+        Input(component_id="sample_count_input",component_property='value'),
+    ],
+    [
+        State(component_id='sample_checklist', component_property='value'),
+        State(component_id='study_checklist',component_property='value'),
+        State(component_id="extra_checklist",component_property='value'),
+        State(component_id="sample_count_input",component_property='value'),
+    ],
+    prevent_initial_call=True
+)
+def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklist_values,sample_count_input_value):
+
+    #### This should be something different. should probably just generate an empty DT ####
+    if sample_checklist_values==None and study_checklist_values==None:
+        raise PreventUpdate
+
+    if sample_checklist_values==None:
+        sample_checklist_values=[]
+    if study_checklist_values==None:
+        study_checklist_values=[]
+
+    if extra_checklist_values==None:
+        extra_checklist_values=[]
+
+
+    archetype_headers=generate_form_headers(sample_checklist_values+study_checklist_values)
+    extra_headers=generate_extra_headers(extra_checklist_values)
+    
+    total_headers=archetype_headers+extra_headers
+    
+    total_columns=[
+        {'name':temp_element, 'id':temp_element} for temp_element in total_headers
+    ]
+
+    #total_data=list()
+    #total_data.append(
+    total_data=[
+        {
+            temp_col['id']:'download this table' for temp_col in total_columns
+        }
+        for temp_row in range(sample_count_input_value)
+    ]
+
+    #print(total_headers)
+
+    output_children=[
+        dash_table.DataTable(
+            id='dt_for_preview',
+            columns=total_columns,
+            data=total_data,
+            style_cell={
+                'fontSize': 17,
+                'padding': '8px',
+                'textAlign': 'center'
+            },
+            style_header={
+                'font-family': 'arial',
+                'fontSize': 15,
+                'fontWeight': 'bold',
+                'textAlign': 'center'
+            },
+            style_data={
+                'textAlign': 'center',
+                'fontWeight': 'bold',
+                'font-family': 'Roboto',
+                'fontSize': 15,
+            },
+            style_table={
+                'overflowX': 'scroll'
+            }
+        )
+    ]
+
+    return [output_children]

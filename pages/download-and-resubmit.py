@@ -287,26 +287,26 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
         State(component_id='study_checklist',component_property='value'),
     ],
 )
-def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
+def generate_form(button_form_n_clicks,sample_checklist_values,study_checklist_values):
     '''
     creates the form that is downloaded by users
     '''
 
     #a potential improvement would be to generate a visible error if nothing is checked
-    if sample_checklist_options==None and study_checklist_options==None:
+    if sample_checklist_values==None and study_checklist_values==None:
         raise PreventUpdate
     
-    if sample_checklist_options==None:
-        sample_checklist_options=[]
-    if study_checklist_options==None:
-        study_checklist_options=[]
+    if sample_checklist_values==None:
+        sample_checklist_values=[]
+    if study_checklist_values==None:
+        study_checklist_values=[]
     
     #multipele archetypes can have the same headers (eg tissue, cells both have species)
     #we want a non-repeating, ordered list of those headers
-    total_headers=generate_form_headers(sample_checklist_options+study_checklist_options)
+    total_headers=generate_form_headers(sample_checklist_values+study_checklist_values)
 
     #get the dicts that define the colors for the excel file
-    group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_options+study_checklist_options,total_headers)
+    group_to_header_dict,group_to_archetype_dict=generate_header_colors(sample_checklist_values+study_checklist_values,total_headers)
 
     #need to rearrange columns to match group order
     column_order_list=sum(group_to_header_dict.values(),[])
