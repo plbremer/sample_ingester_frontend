@@ -15,13 +15,22 @@ layout = html.Div(
                 dbc.Col(width=2),
                 dbc.Col(
                     children=[
-                        html.H3('Any text or whatever'),
+                        html.H3('text'),
                         html.Br(),
                         dbc.Button(
                             dbc.NavLink('I want to generate a form', href='/generate-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
                         ),
                     ],
-                    width=8
+                    width=4
+                ),
+                dbc.Col(
+                    children=[
+                        html.Br(),
+                        dbc.Button(
+                            dbc.NavLink('I want to submit a form', href='/submit-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                        ),
+                    ],
+                    width=4
                 ),
                 dbc.Col(width=2)
             ]
