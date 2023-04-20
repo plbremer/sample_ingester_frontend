@@ -79,6 +79,16 @@ layout = html.Div(
 
         html.Div(
             children=[
+                
+
+                dbc.Row(
+                    children=[
+                        dbc.Col(width=1),
+                        dbc.Col(
+                            children=[
+                                
+
+
                 dmc.Stepper(
                     id="stepper_generate_form",
                     active=0,
@@ -167,18 +177,14 @@ layout = html.Div(
                                         dbc.Col(width=1)
                                     ]
                                 )
-                            ]
-                            
-                            
-                            
+                            ] 
                         ),
-                        
                         dmc.StepperStep(
-                            label="third step",
-                            description="asdfgasdfg",
+                            label="Third step",
+                            description="Download form",
                             children=[
-
-
+                                html.Br(),
+                                html.Br(),
                                 dbc.Row(
                                     children=[
                                         dbc.Col(width=5),
@@ -197,26 +203,13 @@ layout = html.Div(
                                         dbc.Col(width=5)
                                     ]
                                 ),
-
-
-
-
-
-
-
-
-
-
-
+                                html.Br(),
+                                html.Br(),
                             ]
                         ),
                         dmc.StepperCompleted(
                             # label='some_label',
                             # description='some description',
-
-
-
-                            
                             children=[
                                 dbc.Row(
                                     children=[
@@ -235,16 +228,174 @@ layout = html.Div(
                                         dbc.Col(width=5)
                                     ]
                                 ),
-
                             ]
                         ),
                     ],
                 ),
+
+
+
+
+                            ],
+                            width=10
+                        ),
+                        dbc.Col(width=1)
+                    ]
+                ),   
+
+
+
+
+
+
+                # dmc.Stepper(
+                #     id="stepper_generate_form",
+                #     active=0,
+                #     breakpoint="sm",
+                #     children=[
+                #         dmc.StepperStep(
+                #             label="First step",
+                #             description="Choose Archetypes",
+                #             children=[
+                #                 dbc.Row(
+                #                     children=[
+                #                         dbc.Col(width=3),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.H3('Sample Types'),
+                #                                 html.Br(),
+                #                                 dbc.Checklist(
+                #                                     options=[
+                #                                         {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
+                #                                         {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
+                #                                         {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
+                #                                         {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
+                #                                     ],
+                #                                     id="sample_checklist",
+                #                                 ),
+                #                             ],
+                #                             width=4
+                #                         ),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.H3('Study Types'),
+                #                                 html.Br(),
+                #                                 dbc.Checklist(
+                #                                     options=[
+                #                                         {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
+                #                                         {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
+                #                                         {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
+                #                                         {"label": "Effect (disease, etc.)", "value": 'effect'},
+                #                                     ],
+                #                                     id="study_checklist",
+                #                                 ),
+                #                             ],
+                #                             width=4
+                #                         ),
+                #                         dbc.Col(width=1)
+                #                     ]
+                #                 )
+                #             ]
+                #         ),
+                #         dmc.StepperStep(
+                #             label="Second step",
+                #             description="Extra Specifications",
+                #             children=[
+                #                 dbc.Row(
+                #                     children=[
+                #                         dbc.Col(width=3),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.H3('Sample Types'),
+                #                                 html.Br(),
+                #                                 dbc.Checklist(
+                #                                     options=[
+                #                                         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
+                #                                     ],
+                #                                     id="extra_checklist",
+                #                                 ),
+                #                             ],
+                #                             width=4
+                #                         ),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.H3('Number of Samples'),
+                #                                 html.Br(),
+                #                                 dmc.NumberInput(
+                #                                     id='sample_count_input',
+                #                                     label="Number of Samples",
+                #                                     description="Integer from 1 to infinity",
+                #                                     value=1,
+                #                                     min=1,
+                #                                     step=1,
+                #                                     style={"width": 250},
+                #                                 ),
+                #                             ],
+                #                             width=4
+                #                         ),
+                #                         dbc.Col(width=1)
+                #                     ]
+                #                 )
+                #             ] 
+                #         ),
+                #         dmc.StepperStep(
+                #             label="Third step",
+                #             description="Download form",
+                #             children=[
+                #                 html.Br(),
+                #                 html.Br(),
+                #                 dbc.Row(
+                #                     children=[
+                #                         dbc.Col(width=5),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.Div(
+                #                                     dbc.Button(
+                #                                         'Download Form',
+                #                                         id='button_form',
+                #                                     ),
+                #                                     className="d-grid gap-2 col-6 mx-auto",
+                #                                 ),
+                #                             ],
+                #                             width=2
+                #                         ),
+                #                         dbc.Col(width=5)
+                #                     ]
+                #                 ),
+                #                 html.Br(),
+                #                 html.Br(),
+                #             ]
+                #         ),
+                #         dmc.StepperCompleted(
+                #             # label='some_label',
+                #             # description='some description',
+                #             children=[
+                #                 dbc.Row(
+                #                     children=[
+                #                         dbc.Col(width=5),
+                #                         dbc.Col(
+                #                             children=[
+                #                                 html.Div(
+                #                                     dbc.Button(
+                #                                         dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                #                                     ),
+                #                                     className="d-grid gap-2 col-6 mx-auto",
+                #                                 ),
+                #                             ],
+                #                             width=2
+                #                         ),
+                #                         dbc.Col(width=5)
+                #                     ]
+                #                 ),
+                #             ]
+                #         ),
+                #     ],
+                # ),
                 dmc.Group(
                     position="center",
                     mt="xl",
                     children=[
-                        dbc.Button("Back", id="stepper_generate_form_back"),# variant="default"),
+                        dbc.Button("Prev. step", id="stepper_generate_form_back"),# variant="default"),
                         dbc.Button("Next step", id="stepper_generate_form_next")
                     ],
                 ),
@@ -385,31 +536,69 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
     #print(total_headers)
 
     output_children=[
-        dash_table.DataTable(
-            id='dt_for_preview',
-            columns=total_columns,
-            data=total_data,
-            style_cell={
-                'fontSize': 17,
-                'padding': '8px',
-                'textAlign': 'center'
-            },
-            style_header={
-                'font-family': 'arial',
-                'fontSize': 15,
-                'fontWeight': 'bold',
-                'textAlign': 'center'
-            },
-            style_data={
-                'textAlign': 'center',
-                'fontWeight': 'bold',
-                'font-family': 'Roboto',
-                'fontSize': 15,
-            },
-            style_table={
-                'overflowX': 'scroll'
-            }
-        )
+
+                                dbc.Row(
+                                    children=[
+                                        dbc.Col(width=1),
+                                        dbc.Col(
+                                            children=[
+                                                dash_table.DataTable(
+                                                    id='dt_for_preview',
+                                                    columns=total_columns,
+                                                    data=total_data,
+                                                    style_cell={
+                                                        'fontSize': 17,
+                                                        'padding': '8px',
+                                                        'textAlign': 'center'
+                                                    },
+                                                    style_header={
+                                                        'font-family': 'arial',
+                                                        'fontSize': 15,
+                                                        'fontWeight': 'bold',
+                                                        'textAlign': 'center'
+                                                    },
+                                                    style_data={
+                                                        'textAlign': 'center',
+                                                        'fontWeight': 'bold',
+                                                        'font-family': 'Roboto',
+                                                        'fontSize': 15,
+                                                    },
+                                                    style_table={
+                                                        'overflowX': 'scroll'
+                                                    }
+                                                )
+                                            ],
+                                            width=10
+                                        ),
+                                        dbc.Col(width=1)
+                                    ]
+                                ),        
+        
+        # dash_table.DataTable(
+        #     id='dt_for_preview',
+        #     columns=total_columns,
+        #     data=total_data,
+        #     style_cell={
+        #         'fontSize': 17,
+        #         'padding': '8px',
+        #         'textAlign': 'center'
+        #     },
+        #     style_header={
+        #         'font-family': 'arial',
+        #         'fontSize': 15,
+        #         'fontWeight': 'bold',
+        #         'textAlign': 'center'
+        #     },
+        #     style_data={
+        #         'textAlign': 'center',
+        #         'fontWeight': 'bold',
+        #         'font-family': 'Roboto',
+        #         'fontSize': 15,
+        #     },
+        #     style_table={
+        #         'overflowX': 'scroll'
+        #     }
+        # )
     ]
 
     return [output_children]

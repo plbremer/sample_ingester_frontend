@@ -15,7 +15,7 @@ layout = html.Div(
                 dbc.Col(width=2),
                 dbc.Col(
                     children=[
-                        html.H3('text'),
+                        #html.H3('text'),
                         html.Br(),
                         dbc.Button(
                             dbc.NavLink('I want to generate a form', href='/generate-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
