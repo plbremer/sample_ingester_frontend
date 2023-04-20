@@ -1,6 +1,7 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 
 
 
@@ -20,7 +21,7 @@ app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTS
 
 app.layout = html.Div(
     [
-        dcc.Store('main_store'),#,storage_type='session'),
+        #,storage_type='session'),
         dcc.Location('url'),
         # dbc.NavbarSimple(
         #     children=[]+my_page_link_list,
