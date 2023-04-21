@@ -13,13 +13,14 @@ import json
 import base64
 import io
 from pprint import pprint
+import requests
 
 from . import samplemetadatauploadchecker
 
 
 dash.register_page(__name__, path='/submit-form')
 
-
+BASE_URL_API = "http://127.0.0.1:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
@@ -28,6 +29,11 @@ with open('assets/extra_columns.json','r') as f:
 
 NUM_STEPS_2=5
 SPLIT_CHAR='~'
+NEIGHBORS_TO_RETRIEVE=100
+
+
+with open('additional_files/subset_per_heading.json', 'r') as fp:
+    subset_per_heading_json=json.load(fp)
 
 
 def generate_all_columns(list_of_jsons_value_lists_are_potential_columns):
@@ -123,6 +129,7 @@ layout = html.Div(
         # html.Div(id='Div_new_vocab_error_messages'),
         dcc.Store('upload_store'),
         dcc.Store('store_2'),
+        dcc.Store('store_3'),
         html.Br(),
         html.Br(),
         html.Br(),
@@ -261,9 +268,16 @@ layout = html.Div(
 @callback(
     [
         Output(component_id="stepper_submit_form", component_property="active"),
+        
+
+        Output(component_id="store_2", component_property="data"),
+        Output(component_id="store_3", component_property="data"),
+
         Output(component_id="step_2", component_property="children"),
-        # Output(component_id="step_3", component_property="children"),
-        # Output(component_id="step_4", component_property="children"),
+        Output(component_id="step_3", component_property="children"),
+
+
+        
 
         #Output(component_id="stepper_submit_form", component_property="children")
 
@@ -276,12 +290,13 @@ layout = html.Div(
         State(component_id="stepper_submit_form", component_property="active"),
         # State(component_id="stepper_submit_form", component_property="children")
         State(component_id="upload_store", component_property="data"),
-        # State(component_id="store_2", component_property="data"),
-        #State(component_id="store_3", component_property="data"),
+        State(component_id="store_2", component_property="data"),
+        State(component_id="store_3", component_property="data"),
         #State(component_id="store_4", component_property="data"),
         State(component_id="step_2", component_property="children"),
-        # Output(component_id="step_3", component_property="children"),
+        State(component_id="step_3", component_property="children"),
         # Output(component_id="step_4", component_property="children"),
+        State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
     ],
     prevent_initial_call=True
 )
@@ -290,7 +305,11 @@ def update_step_submit(
     stepper_submit_form_next_n_clicks, 
     current,
     upload_store_data,
-    step_2_children
+    store_2_data,
+    store_3_data,
+    step_2_children,
+    step_3_children,
+    step_2_curation_checkbox_n_clicks_ALL
     
 ):#,my_children):
     '''
@@ -319,17 +338,337 @@ def update_step_submit(
 
     #if we enter step 2
     if current==1:
-        generate_step_2_layout(written_strings_per_category)
+        panda_for_store_2,step_2_children=generate_step_2_layout_and_data_for_store(written_strings_per_category)
+        store_2_data=panda_for_store_2.to_dict(orient='records')
+        print(store_2_data)       
+        #print(dict_for_store_2)
+        print(pd.DataFrame.from_records(store_2_data))
+        print('&'*20)
+    #curation_dict,output_children
+    #elif current!=1:
+    elif current==2:
+        print(step_2_curation_checkbox_n_clicks_ALL)
+        step_3_children=generate_step_3_layout_and_data_for_store(
+            store_2_data,
+            step_2_curation_checkbox_n_clicks_ALL,
+        )
+
+
+
+    return [current,store_2_data,store_3_data,step_2_children,step_3_children]
+
+def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_checkbox_n_clicks_ALL):
+    print('in step 3')
+    print(step_2_curation_checkbox_n_clicks_ALL)
+    store_2_panda=pd.DataFrame.from_records(store_2_data)
+    print(store_2_panda)
+    written_strings_to_substring_panda=store_2_panda.loc[step_2_curation_checkbox_n_clicks_ALL]
+    if len(written_strings_to_substring_panda.index)==0:
+        print('need to figure this out')
+        output_children=html.H3('need to figure out when there are no curations to do')
+    else:
+        output_children=list()
+
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(
+                        html.H3('Metadata Header')
+                    ),    
+                    dbc.Col(
+                        html.H3('Written String')
+                    ),
+                    dbc.Col(
+                        html.H3('Substring Search')
+                    ),   
+                    dbc.Col(
+                        html.H3('None existent?') 
+                    ),
+                ]
+            )
+        )
+        #for temp_header in curation_dict.keys():
+        for temp_group in written_strings_to_substring_panda.groupby('header'):
+            
+            for i,(index,series) in enumerate(temp_group[1].iterrows()):
+                if i==0:
+                    output_children.append(
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H6(series['header'])
+                                ),    
+                                dbc.Col(
+                                    html.H6(series['written_string'])
+                                ),
+                                # dbc.Col(
+                                #     html.H6(
+                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                #     )
+                                # ),   
+                                dbc.Col(
+                                    dcc.Dropdown(
+                                        id={
+                                            'type':'dropdown_empty_options',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        multi=False,
+                                        placeholder='Type compound name to search',
+                                        options=['Type substring to populate options.'],
+                                        optionHeight=60
+                                    ),  
+                                ),
+                                dbc.Col(
+                                    dmc.Checkbox(
+                                        id={
+                                            'type':'step_3_curation_checkbox',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        # multi=False,
+                                        # #placeholder='Type compound name to search',
+                                        # options=['Type substring to populate options.'],
+                                        # optionHeight=60
+                                        checked=False
+                                    ),  
+                                ),
+                            ]
+                        )
+                    )
+                else:
+                    output_children.append(
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H6(' ')
+                                ),    
+                                dbc.Col(
+                                    html.H6(series['written_string'])
+                                ),
+                                # dbc.Col(
+                                #     html.H6(
+                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                #     )
+                                # ),   
+                                dbc.Col(
+                                    dcc.Dropdown(
+                                        id={
+                                            'type':'dropdown_empty_options',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        multi=False,
+                                        placeholder='Type compound name to search',
+                                        options=['Type substring to populate options.'],
+                                        optionHeight=60
+                                    ),  
+                                ),
+                                dbc.Col(
+                                    dmc.Checkbox(
+                                        id={
+                                            'type':'step_3_curation_checkbox',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        # multi=False,
+                                        # #placeholder='Type compound name to search',
+                                        # options=['Type substring to populate options.'],
+                                        # optionHeight=60
+                                        checked=False
+                                    ),  
+                                ),
+                            ]
+                        )
+                    )
+
+
+    return output_children
+
+               
+
+
+
+
+def generate_step_2_layout_and_data_for_store(written_strings_per_category):
+
+    curation_dict=dict()
+    #get curation proposals
+    for temp_header in written_strings_per_category.keys():
+
+        if temp_header not in subset_per_heading_json.keys():
+            continue
+        curation_dict[temp_header]=dict()
+
+        for temp_written_string in written_strings_per_category[temp_header]:
+
+            prediction_request={
+                "header":temp_header,
+                "written_strings":[temp_written_string],
+                "neighbors_to_retrieve":NEIGHBORS_TO_RETRIEVE
+            }
+
+            response = requests.post(BASE_URL_API + "/predictvocabularytermsresource/", json=prediction_request)
+            this_strings_neighbors = pd.read_json(response.json(), orient="records")  
         
+            #print(this_strings_neighbors)
+            curation_dict[temp_header][temp_written_string]={
+                'main_string':this_strings_neighbors.at[0,'main_string'],
+                'valid_string':this_strings_neighbors.at[0,'valid_string']
+            }
+    
 
 
-    return [current,step_2_children]
+
+
+        #for 
+    output_children=list()
+
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(
+                    html.H3('Metadata Header')
+                ),    
+                dbc.Col(
+                    html.H3('Written String')
+                ),
+                dbc.Col(
+                    html.H3('Curated String')
+                ),   
+                dbc.Col(
+                    html.H3('Curation Wrong?') 
+                ),
+            ]
+        )
+    )
+    for temp_header in curation_dict.keys():
+
+        for i,temp_written_string in enumerate(curation_dict[temp_header]):
+            if i==0:
+                output_children.append(
+                    dbc.Row(
+                        children=[
+                            dbc.Col(
+                                html.H6(temp_header)
+                            ),    
+                            dbc.Col(
+                                html.H6(temp_written_string)
+                            ),
+                            dbc.Col(
+                                html.H6(
+                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                )
+                            ),   
+                            dbc.Col(
+                                dmc.Checkbox(
+                                    id={
+                                        'type':'step_2_curation_checkbox',
+                                        'index':str(temp_header)+'_'+str(temp_written_string)
+                                    },
+                                    # multi=False,
+                                    # #placeholder='Type compound name to search',
+                                    # options=['Type substring to populate options.'],
+                                    # optionHeight=60
+                                    checked=False
+                                ),  
+                            ),
+                        ]
+                    )
+                )
+            else:
+                output_children.append(
+                    dbc.Row(
+                        children=[
+                            dbc.Col(
+                                html.H6(' ')
+                            ),    
+                            dbc.Col(
+                                html.H6(temp_written_string)
+                            ),
+                            dbc.Col(
+                                html.H6(
+                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                )
+                            ),   
+                            dbc.Col(
+                                dmc.Checkbox(
+                                    id={
+                                        'type':'step_2_curation_checkbox',
+                                        'index':str(temp_header)+'_'+str(temp_written_string)
+                                    },
+                                    # multi=False,
+                                    # #placeholder='Type compound name to search',
+                                    # options=['Type substring to populate options.'],
+                                    # optionHeight=60
+                                    checked=False
+                                ),  
+                            ),
+                        ]
+                    )
+                )
+
+    curation_panda_dict={
+        'header':[],
+        'written_string':[],
+        'valid_string':[],
+        'main_string':[]
+    }
+    for temp_header in curation_dict.keys():
+        # output_children.append(
+        #     dbc.Row(
+        #         children=[
+        #             dbc.Col(
+        #                 html.H3(temp_header)
+        #             )
+        #         ]
+        #     )
+        # )
+        for temp_written_string in (curation_dict[temp_header]):
+            curation_panda_dict['header'].append(temp_header)
+            curation_panda_dict['written_string'].append(temp_written_string)
+            curation_panda_dict['valid_string'].append(curation_dict[temp_header][temp_written_string]['valid_string'])
+            curation_panda_dict['main_string'].append(curation_dict[temp_header][temp_written_string]['main_string'])
+    curation_panda=pd.DataFrame.from_dict(curation_panda_dict)
+    
+    return curation_panda,output_children
 
 
 
-def generate_step_2_layout(written_strings_per_category):
 
 
+# @callback(
+#     [
+#         Output(component_id="store_2", component_property="data"),
+#         # State(component_id="store_3", component_property="data"),
+#         # State(component_id="store_4", component_property="data"),
+#         # Output(component_id="stepper_submit_form", component_property="active"),
+#         # Output(component_id="step_2", component_property="children"),
+#         # Output(component_id="step_3", component_property="children"),
+#         # Output(component_id="step_4", component_property="children"),
+
+#         #Output(component_id="stepper_submit_form", component_property="children")
+
+#     ],
+#     [
+#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+#         # Input(component_id='stepper_submit_form_next', component_property="n_clicks")
+#     ],
+#     [
+#     #     State(component_id="stepper_submit_form", component_property="active"),
+#     #     # State(component_id="stepper_submit_form", component_property="children")
+#         State(component_id="upload_store", component_property="data"),
+#     #     # State(component_id="store_2", component_property="data"),
+#     #     #State(component_id="store_3", component_property="data"),
+#     #     #State(component_id="store_4", component_property="data"),
+#     #     State(component_id="step_2", component_property="children"),
+#     #     # Output(component_id="step_3", component_property="children"),
+#     #     # Output(component_id="step_4", component_property="children"),
+#     ],
+#     prevent_initial_call=True
+# )
+
+# def update_step_stores(step_2_curation_checkbox_n_clicks_ALL,upload_store_data):
+#     print(ctx.triggered_id)
+#     print('in update stores')
+#     print(step_2_curation_checkbox_n_clicks_ALL)
+#     parse_stored_excel_file
 
 
 @callback(
