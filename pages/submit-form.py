@@ -30,7 +30,7 @@ with open('assets/extra_columns.json','r') as f:
 NUM_STEPS_2=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
-
+HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
 
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
@@ -297,6 +297,10 @@ layout = html.Div(
         State(component_id="step_3", component_property="children"),
         # Output(component_id="step_4", component_property="children"),
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+
+        State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+        State(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
+        
     ],
     prevent_initial_call=True
 )
@@ -309,8 +313,9 @@ def update_step_submit(
     store_3_data,
     step_2_children,
     step_3_children,
-    step_2_curation_checkbox_n_clicks_ALL
-    
+    step_2_curation_checkbox_n_clicks_ALL,
+    dropdown_empty_options_value_ALL,
+    step_3_curation_checkbox_n_clicks_ALL,
 ):#,my_children):
     '''
     we wnat to only do work according to the step that we are outputting
@@ -338,6 +343,9 @@ def update_step_submit(
 
     #if we enter step 2
     if current==1:
+        #NEED TO ADD######
+        #if the upload matches what is on the screen currently, do not search neighbors, just rebuild with current checkboxes etc
+        ###################
         panda_for_store_2,step_2_children=generate_step_2_layout_and_data_for_store(written_strings_per_category)
         store_2_data=panda_for_store_2.to_dict(orient='records')
         print(store_2_data)       
@@ -482,6 +490,57 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
     return output_children
 
                
+@callback(
+    [
+        Output(component_id={'type':'dropdown_empty_options','index':MATCH},component_property='options'),
+    ],
+    [
+        Input(component_id={'type':'dropdown_empty_options','index':MATCH},component_property='search_value'),
+    ],
+    # [
+    #     State(component_id={'type':'header_written_pair','index':MATCH},component_property="children"),
+    # ],
+)
+def update_options(
+    dropdown_empty_options_search_value,
+    # header_written_pair_children
+):
+    '''
+    generates the labels in the substring dropdown
+    ISSUE 36
+    ISSUE 37
+    '''
+
+
+    if not dropdown_empty_options_search_value:
+        raise PreventUpdate
+
+    # this_header_type=header_written_pair_children[0].split(':')[0].split('.')[0]
+    # if this_header_type not in HEADERS_WITH_SHORT_NGRAMS:
+    # if the "header type" eg species is not in 
+    print(ctx.triggered_id['index'])
+    if ctx.triggered_id['index'].split('_')[0] not in HEADERS_WITH_SHORT_NGRAMS:
+        if len(dropdown_empty_options_search_value)<3:
+            raise PreventUpdate
+
+    current_index=ctx.triggered_id['index'].split('_')[0].split('.')[0]
+
+    outbound_json={
+        'header':current_index,
+        'substring':dropdown_empty_options_search_value
+    }
+    print(outbound_json)
+
+    temp_values=requests.post(BASE_URL_API+'/generatesubstringmatchesresource/',json=outbound_json).json()
+
+
+    print(temp_values)
+    return [[
+        { 
+            'label': temp_string,
+            'value': temp_string
+        } for temp_string in temp_values
+    ]]
 
 
 
