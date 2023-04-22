@@ -1,10 +1,12 @@
-from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL
+from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL,Patch
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash
 
+import hashlib
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -127,6 +129,7 @@ layout = html.Div(
         # html.Br(),
         # html.Br(),
         # html.Div(id='Div_new_vocab_error_messages'),
+        dcc.Store('store_furthest_active',data=0),
         dcc.Store('upload_store'),
         dcc.Store('store_2'),
         dcc.Store('store_3'),
@@ -265,30 +268,125 @@ layout = html.Div(
     ],
 )
 
+
+# @callback(
+#     [
+#         Output(component_id="store_furthest_active", component_property="data"),
+#         Output(component_id="stepper_submit_form", component_property="active")
+#     ],
+#     [
+#         Input(component_id='stepper_submit_form_back', component_property="n_clicks"),
+#         Input(component_id='stepper_submit_form_next', component_property="n_clicks"),
+#         Input(component_id="upload_store", component_property="data"),
+#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+#         Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+#         Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
+
+#     ],
+#     [
+#         State(component_id="stepper_submit_form", component_property="active"),
+#         State(component_id="store_furthest_active", component_property="data"),
+#     ],
+#     prevent_initial_call=True
+# )
+# def update_furthest_active(
+#     stepper_submit_form_back_n_clicks, 
+#     stepper_submit_form_next_n_clicks, 
+#     upload_store_data,
+#     step_2_curation_checkbox_n_clicks_ALL,
+#     dropdown_empty_options_value_ALL,
+#     step_3_curation_checkbox_n_clicks_ALL,
+#     stepper_submit_form_active,
+#     store_furthest_active_data
+# ):
+
+#     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
+#         stepper_submit_form_active-=1
+#     elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
+#         stepper_submit_form_active+=1   
+#         if stepper_submit_form_active > store_furthest_active_data:
+#             store_furthest_active_data=stepper_submit_form_active
+
+
+#   # print(f'we are currently on step {stepper_submit_form_active}')
+#   # print(f'the max step is {store_furthest_active_data}')
+
+#     return [store_furthest_active_data,stepper_submit_form_active]
+
+def check_equal_hashings(state,input):
+    #state_json=json.dumps()
+    hash_state=hash(pickle.dumps(state))
+    hash_input=hash(pickle.dumps(input))
+  # print(hash_state)
+  # print(hash_input)
+    if hash_state==hash_input:
+        return True
+    else:
+        return False
+
+# @callback(
+#     [
+#         Output(component_id="store_furthest_active", component_property="data", allow_duplicate=True),
+#     ],
+#     [
+#         Input(component_id="upload_store", component_property="data"),
+#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+        
+#     ],
+#     [
+#         State(component_id="stepper_submit_form", component_property="active"),
+
+#         State(component_id="upload_store", component_property="data"),
+#         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),        
+#     ],
+#     prevent_initial_call=True
+# )
+# def update_furthest(
+#     input_upload_store_data,
+#     input_step_2_curation_checkbox_n_clicks_ALL,
+#     stepper_submit_form_active,
+#     state_upload_store_data,
+#     state_step_2_curation_checkbox_n_clicks_ALL,
+
+
+# ):
+#   # print('inside update furthest based on _ALL properties')
+#   # print(ctx.triggered_id)
+#   # print(input_upload_store_data)
+#   # print(input_step_2_curation_checkbox_n_clicks_ALL)
+#   # print('')
+#     #if ctx.triggered_id=='upload_store':
+#   # print(check_equal_hashings(input_upload_store_data,state_upload_store_data))
+#     #elif 
+#   # print(check_equal_hashings(input_step_2_curation_checkbox_n_clicks_ALL,state_step_2_curation_checkbox_n_clicks_ALL))
+#   # print('')
+
+
+#     return [stepper_submit_form_active]
+    
+
 @callback(
     [
         Output(component_id="stepper_submit_form", component_property="active"),
+        Output(component_id="store_furthest_active", component_property="data"),
         
-
         Output(component_id="store_2", component_property="data"),
-        Output(component_id="store_3", component_property="data"),
+        # Output(component_id="store_3", component_property="data"),
 
         Output(component_id="step_2", component_property="children"),
         Output(component_id="step_3", component_property="children"),
-
-
-        
-
-        #Output(component_id="stepper_submit_form", component_property="children")
-
     ],
     [
         Input(component_id='stepper_submit_form_back', component_property="n_clicks"),
-        Input(component_id='stepper_submit_form_next', component_property="n_clicks")
+        Input(component_id='stepper_submit_form_next', component_property="n_clicks"),
+        Input(component_id="upload_store", component_property="data"),
+        Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+        # Input(component_id="stepper_submit_form", component_property="active"),
     ],
     [
         State(component_id="stepper_submit_form", component_property="active"),
         # State(component_id="stepper_submit_form", component_property="children")
+        State(component_id="store_furthest_active", component_property="data"),
         State(component_id="upload_store", component_property="data"),
         State(component_id="store_2", component_property="data"),
         State(component_id="store_3", component_property="data"),
@@ -307,72 +405,126 @@ layout = html.Div(
 def update_step_submit(
     stepper_submit_form_back_n_clicks, 
     stepper_submit_form_next_n_clicks, 
-    current,
+    input_upload_store_data,
+    input_step_2_curation_checkbox_n_clicks_ALL,
+    stepper_submit_form_active,
+    store_furthest_active_data,
     upload_store_data,
     store_2_data,
     store_3_data,
     step_2_children,
     step_3_children,
-    step_2_curation_checkbox_n_clicks_ALL,
-    dropdown_empty_options_value_ALL,
-    step_3_curation_checkbox_n_clicks_ALL,
+    state_step_2_curation_checkbox_n_clicks_ALL,
+    state_store_dropdown_empty_options_value_ALL,
+    state_store_step_3_curation_checkbox_n_clicks_ALL,
 ):#,my_children):
     '''
     we wnat to only do work according to the step that we are outputting
-    for example, we only want to output the step_2_children if current becomes 1
+    for example, we only want to output the step_2_children if stepper_submit_form_active becomes 1
     '''
-    if ctx.triggered_id=="stepper_submit_form_back" and current>0:
-        current-=1
-    elif ctx.triggered_id=="stepper_submit_form_next" and current<NUM_STEPS_2:
-        current+=1   
-    # current+=1
+    print('')
+    print(ctx.triggered_id)
+    print(type(ctx.triggered_id))
+    
+    # need_to_generate_new_children=True
+    if ctx.triggered_id=='upload_store': #the ALL ones
+        store_furthest_active_data=stepper_submit_form_active
+        # junk_patch=Patch()
+        # need_to_generate_new_children=False
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
 
+    if type(ctx.triggered_id)==dash._utils.AttributeDict:
+        print('met dict if')
+        store_furthest_active_data=stepper_submit_form_active
+        # junk_patch=Patch()
+        #need_to_generate_new_children=False
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
+        # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+
+    # # store_furthest_active=stepper_submit_form_active
+    # #return everything, keeping children as is
+    
+  # print(f'we are starting callback on step {stepper_submit_form_active}')
+  # print(f'the starting callback with max step on {store_furthest_active_data}')
+    
+    
+    if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
+        stepper_submit_form_active-=1
+        junk_patch=Patch()
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch]
+        # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+
+    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
+        stepper_submit_form_active+=1   
+        junk_patch=Patch()
+        if stepper_submit_form_active > store_furthest_active_data:
+            store_furthest_active_data=stepper_submit_form_active
+        else:
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch]
+            # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+
+
+
+
+    # return [store_furthest_active_data,stepper_submit_form_active]
     upload_store_panda=pd.read_json(upload_store_data['input_dataframe'],orient='records')
     '''
         species.0 species.1.0 species.1.1 organ.0
     0     humen       mouse   porcupine   liver
     1     humen        mouo        None   lunge
     '''
-    print(upload_store_panda)
+    # print(upload_store_panda)
     written_strings_per_category=parse_stored_excel_file(upload_store_panda)
     '''
     {'organ': ['liver', 'lunge'],
     'species': ['humen', 'mouse', 'mouo', 'porcupine']}
     '''
-    pprint(written_strings_per_category)
+    # pprint(written_strings_per_category)
 
-    #if we enter step 2
-    if current==1:
+    # #if we enter step 2
+    if stepper_submit_form_active==1:
         #NEED TO ADD######
         #if the upload matches what is on the screen currently, do not search neighbors, just rebuild with current checkboxes etc
         ###################
         panda_for_store_2,step_2_children=generate_step_2_layout_and_data_for_store(written_strings_per_category)
         store_2_data=panda_for_store_2.to_dict(orient='records')
-        print(store_2_data)       
+        print(panda_for_store_2)
+        # print(store_2_data)       
         #print(dict_for_store_2)
-        print(pd.DataFrame.from_records(store_2_data))
-        print('&'*20)
+        # print(pd.DataFrame.from_records(store_2_data))
+        # print('&'*20)
     #curation_dict,output_children
-    #elif current!=1:
-    elif current==2:
-        print(step_2_curation_checkbox_n_clicks_ALL)
+    #elif stepper_submit_form_active!=1:
+    elif stepper_submit_form_active==2:
+        # print(step_2_curation_checkbox_n_clicks_ALL)
         step_3_children=generate_step_3_layout_and_data_for_store(
             store_2_data,
-            step_2_curation_checkbox_n_clicks_ALL,
+            state_step_2_curation_checkbox_n_clicks_ALL,
         )
 
+    # elif stepper_submit_form_active==3:
+    #     # print(step_2_curation_checkbox_n_clicks_ALL)
+    #     step_3_children=generate_step_4_layout_and_data_for_store(
+    #         store_2_data,
+    #         state_step_2_curation_checkbox_n_clicks_ALL,
+    #     )
+
+    
+
+ 
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
 
 
-    return [current,store_2_data,store_3_data,step_2_children,step_3_children]
+
 
 def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_checkbox_n_clicks_ALL):
-    print('in step 3')
-    print(step_2_curation_checkbox_n_clicks_ALL)
+  # print('in step 3')
+    #print(step_2_curation_checkbox_n_clicks_ALL)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
-    print(store_2_panda)
+    #print(store_2_panda)
     written_strings_to_substring_panda=store_2_panda.loc[step_2_curation_checkbox_n_clicks_ALL]
     if len(written_strings_to_substring_panda.index)==0:
-        print('need to figure this out')
+        #print('need to figure this out')
         output_children=html.H3('need to figure out when there are no curations to do')
     else:
         output_children=list()
@@ -390,7 +542,7 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                         html.H3('Substring Search')
                     ),   
                     dbc.Col(
-                        html.H3('None existent?') 
+                        html.H3('None exist?') 
                     ),
                 ]
             )
@@ -518,7 +670,7 @@ def update_options(
     # this_header_type=header_written_pair_children[0].split(':')[0].split('.')[0]
     # if this_header_type not in HEADERS_WITH_SHORT_NGRAMS:
     # if the "header type" eg species is not in 
-    print(ctx.triggered_id['index'])
+    #print(ctx.triggered_id['index'])
     if ctx.triggered_id['index'].split('_')[0] not in HEADERS_WITH_SHORT_NGRAMS:
         if len(dropdown_empty_options_search_value)<3:
             raise PreventUpdate
@@ -529,12 +681,12 @@ def update_options(
         'header':current_index,
         'substring':dropdown_empty_options_search_value
     }
-    print(outbound_json)
+    #print(outbound_json)
 
     temp_values=requests.post(BASE_URL_API+'/generatesubstringmatchesresource/',json=outbound_json).json()
 
 
-    print(temp_values)
+    #print(temp_values)
     return [[
         { 
             'label': temp_string,
@@ -724,9 +876,9 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
 # )
 
 # def update_step_stores(step_2_curation_checkbox_n_clicks_ALL,upload_store_data):
-#     print(ctx.triggered_id)
-#     print('in update stores')
-#     print(step_2_curation_checkbox_n_clicks_ALL)
+#   # print(ctx.triggered_id)
+#   # print('in update stores')
+#   # print(step_2_curation_checkbox_n_clicks_ALL)
 #     parse_stored_excel_file
 
 
@@ -854,7 +1006,7 @@ def upload_form(
             temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
 
 
-            print(temp_dataframe)
+            # print(temp_dataframe)
             
             store_dict={
                 'input_dataframe':temp_dataframe_as_json,

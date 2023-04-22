@@ -7,8 +7,15 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
 
-import json
 import numpy as np
+import pandas as pd
+from xlsxwriter.utility import xl_rowcol_to_cell
+import json
+import base64
+import io
+from pprint import pprint
+import requests
+
 
 NUM_STEPS=3
 
@@ -619,6 +626,8 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
         #State(component_id="column_store", component_property="data"),
         State(component_id="dt_for_preview",component_property="columns")
     ],
+    
+    prevent_initial_call=True
 )
 # def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
 def generate_form(button_form_n_clicks,dt_for_preview_columns):
@@ -626,9 +635,10 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
     creates the form that is downloaded by users
     '''
     print('+++++++++++++++++++++++++++')
+    print(button_form_n_clicks)
     print(ctx.triggered_id)
     #a potential improvement would be to generate a visible error if nothing is checked
-    if dt_for_preview_columns==None:# and study_checklist_options==None:
+    if dt_for_preview_columns==None or button_form_n_clicks==None:# and study_checklist_options==None:
         raise PreventUpdate
     
     # if sample_checklist_options==None:
@@ -673,8 +683,9 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
     #for each group, make a format
     #write and color the curation sheet
     
-    workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
-    workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
+    ###NEEED TO UPDAT#############3
+    # workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
+    # workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
