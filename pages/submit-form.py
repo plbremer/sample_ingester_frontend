@@ -1,3 +1,5 @@
+from turtle import down
+from dataclasses import replace
 from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL,Patch
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
@@ -338,7 +340,9 @@ def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_dat
 )
 def update_store_4_data(input_creation_value_ALL,store_4_data):
     store_4_panda=pd.DataFrame.from_records(store_4_data)
+    print('in update 4')
     print(store_4_panda)
+    print(input_creation_value_ALL)
     
     # print(input_store_dropdown_empty_options_value_ALL)
 
@@ -368,7 +372,36 @@ def update_store_4_data(input_creation_value_ALL,store_4_data):
 
     return [store_4_panda.to_dict(orient='records')]
 
+def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda):
+    total_replacement_panda=pd.concat(
+        [store_4_panda,store_3_panda,store_2_panda],
+        axis='index'
+    )
+    total_replacement_panda.drop_duplicates(
+        subset=['header','written_string'],
+        keep='first',
+        inplace=True,
+        ignore_index=True
+    )
+    print(total_replacement_panda)
 
+    replacement_dict=dict()
+    for temp_tuple in total_replacement_panda.groupby('header'):
+        replacement_dict[temp_tuple[0]]=dict()
+        for index,series in temp_tuple[1].iterrows():
+            replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']+' AKA '+series['valid_string']
+
+    pprint(replacement_dict)
+
+
+    for temp_col in upload_panda.columns:
+
+        upload_panda[temp_col].replace(
+            to_replace=replacement_dict[temp_col.split('.')[0]],
+            #value=None,
+            inplace=True
+        )    
+    return upload_panda
 
 
 @callback(
@@ -403,6 +436,72 @@ def control_download_button(
     print(store_2_panda)
     print(store_3_panda)
     print(store_4_panda)
+
+    download_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
+    print(download_panda)
+    ####generate the downlaodable excel file
+    output_stream=io.BytesIO()
+    temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+
+    empty_df=pd.DataFrame()
+    empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
+    #skip the last row which has the merger archetype info
+    download_panda.to_excel(
+        temp_writer,
+        sheet_name='sample_sheet_curated',
+        index=False,
+        startrow=1,
+        #take off the weird .0.1 etc
+        header=[element.split('.')[0] for element in download_panda.columns]
+    )
+
+    #https://xlsxwriter.readthedocs.io/working_with_pandas.html
+    #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
+    workbook=temp_writer.book
+    worksheet=temp_writer.sheets['sample_sheet_curated']
+    #workbook,worksheet=update_excel_sheet_curated_sample_formatting(workbook,worksheet,store_panda)
+    # to_excel(temp_writer,sheet_name='sample_sheet',index=False)
+    worksheet.autofit()
+
+    worksheet=temp_writer.sheets['title_page']
+    worksheet.hide_gridlines()
+    worksheet.write('B2','Enjoy the curations :)')
+
+    temp_writer.save()
+    temp_data=output_stream.getvalue()
+
+
+    ########################################
+
+    
+    # store_2_data=panda_for_store_2.to_dict(orient='records')
+
+    ####train new vocab####
+    for index,series in store_4_panda.iterrows():
+        training_success=requests.post(
+            BASE_URL_API+'/trainvocabularyterms/',json={
+                'header':series['header'],
+                'new_vocabulary':series['']
+            }
+        )
+    #######################
+
+    ###update use count###
+    for index,series in download_panda.iterrows():
+        usecount_success=requests.post(
+            BASE_URL_API+'/updateusecount/',json={
+                'header':series['main_string'],
+                'main_strings':series['valid_string']
+            }
+        )
+    ######################
+    
+
+
+    return [
+        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
+    ]
+
 
 
 
@@ -623,7 +722,7 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
                                 dbc.Col(
                                     dcc.Input(
                                         id={
-                                            'type':'input_curation',
+                                            'type':'input_creation',
                                             'index':series['header']+'_'+series['written_string']
                                         },
                                         placeholder="Nothing matches - Enter New"
