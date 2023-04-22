@@ -34,6 +34,7 @@ class SampleMetadataUploadChecker:
         self.dataframe=pd.read_excel(
             io.BytesIO(decoded),
             sheet_name='sample_sheet',
+            index_col=0
             #skiprows=1
         )
 

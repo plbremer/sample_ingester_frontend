@@ -147,7 +147,7 @@ layout = html.Div(
                         ),
                         dmc.StepperStep(
                             label="Second step",
-                            description="Extra Specifications",
+                            description="Add Extra Columns/Rows",
                             children=[
                                 dbc.Row(
                                     children=[
@@ -535,80 +535,177 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
     #total_data.append(
     total_data=[
         {
-            temp_col['id']:'download this table' for temp_col in total_columns
+            temp_col['id']:'table preview' for temp_col in total_columns
         }
         for temp_row in range(sample_count_input_value)
     ]
 
     #print(total_headers)
 
-    output_children=[
+    # output_children=[
+    #     dmc.Grid(
+    #         children=[
+    #             dmc.Col(span=1),
+    #             dmc.Col(
+    #                 children=[
+    #                     dmc.Center(
+    #                         children=[
+    #                             dash_table.DataTable(
+    #                                 id='dt_for_preview',
+    #                                 columns=total_columns,
+    #                                 data=total_data,
+    #                                 style_cell={
+    #                                     'fontSize': 17,
+    #                                     'padding': '8px',
+    #                                     'textAlign': 'center',
+                                        
+    #                                 },
+    #                                 style_header={
+    #                                     'font-family': 'arial',
+    #                                     'fontSize': 15,
+    #                                     'fontWeight': 'bold',
+    #                                     'textAlign': 'center'
+    #                                 },
+    #                                 style_data={
+    #                                     'textAlign': 'center',
+    #                                     'fontWeight': 'bold',
+    #                                     'font-family': 'Roboto',
+    #                                     'fontSize': 15,
+    #                                     'color':'grey',
+    #                                     'font-style':'italic'
+    #                                 },
+    #                                 style_table={
+    #                                     'overflowX': 'scroll'
+    #                                 },
+    #                                 page_action='native',
+    #                                 page_size=5,
+    #                                 #fill_width=False,
+    #                                 # virtualization=True
+    #                             )
+    #                         ],
+    #                         #style={"maxWidth":1000}
+    #                         #size=1000
+    #                         #style={'textAlign':'center'}
+    #                     )
+    #                 ],
+    #                 span=10
+    #             ),
+    #             dmc.Col(span=1)
+    #         ]
+    #     ),        
+    # ]
 
-                                dbc.Row(
-                                    children=[
-                                        dbc.Col(width=1),
-                                        dbc.Col(
-                                            children=[
-                                                dash_table.DataTable(
-                                                    id='dt_for_preview',
-                                                    columns=total_columns,
-                                                    data=total_data,
-                                                    style_cell={
-                                                        'fontSize': 17,
-                                                        'padding': '8px',
-                                                        'textAlign': 'center'
-                                                    },
-                                                    style_header={
-                                                        'font-family': 'arial',
-                                                        'fontSize': 15,
-                                                        'fontWeight': 'bold',
-                                                        'textAlign': 'center'
-                                                    },
-                                                    style_data={
-                                                        'textAlign': 'center',
-                                                        'fontWeight': 'bold',
-                                                        'font-family': 'Roboto',
-                                                        'fontSize': 15,
-                                                    },
-                                                    style_table={
-                                                        'overflowX': 'scroll'
-                                                    }
-                                                )
-                                            ],
-                                            width=10
-                                        ),
-                                        dbc.Col(width=1)
-                                    ]
-                                ),        
-        
-        # dash_table.DataTable(
-        #     id='dt_for_preview',
-        #     columns=total_columns,
-        #     data=total_data,
-        #     style_cell={
-        #         'fontSize': 17,
-        #         'padding': '8px',
-        #         'textAlign': 'center'
-        #     },
-        #     style_header={
-        #         'font-family': 'arial',
-        #         'fontSize': 15,
-        #         'fontWeight': 'bold',
-        #         'textAlign': 'center'
-        #     },
-        #     style_data={
-        #         'textAlign': 'center',
-        #         'fontWeight': 'bold',
-        #         'font-family': 'Roboto',
-        #         'fontSize': 15,
-        #     },
-        #     style_table={
-        #         'overflowX': 'scroll'
-        #     }
-        # )
+
+
+
+
+
+    output_children=[
+        dbc.Row(
+            children=[
+                dbc.Col(width=1),
+                dbc.Col(
+                    children=[
+                        dmc.Center(
+                        #html.Div(
+                            children=[
+                                dash_table.DataTable(
+                                    id='dt_for_preview',
+                                    columns=total_columns,
+                                    data=total_data,
+                                    style_cell={
+                                        'fontSize': 17,
+                                        'padding': '8px',
+                                        'textAlign': 'center',
+                                        
+                                    },
+                                    style_header={
+                                        'font-family': 'arial',
+                                        'fontSize': 15,
+                                        'fontWeight': 'bold',
+                                        'textAlign': 'center'
+                                    },
+                                    style_data={
+                                        'textAlign': 'center',
+                                        'fontWeight': 'bold',
+                                        'font-family': 'Roboto',
+                                        'fontSize': 15,
+                                        'color':'rgb(211,211,211)',
+                                        'font-style':'italic'
+                                    },
+                                    style_table={
+                                        'overflowX': 'scroll'
+                                    },
+                                    page_action='native',
+                                    page_size=3,
+                                    fill_width=False,
+                                    # virtualization=True
+                                )
+                            ],#style={"max-width": "600px"}
+                            #style={"max-width":"1000px",'textAlign':'center'}
+                            #size=1000
+                            #style={'textAlign':'center'}
+                        )
+                    ],
+                    width=10
+                ),
+                dbc.Col(width=1)
+            ]
+        ),        
     ]
 
     return [output_children]
+
+
+
+def fill_title_sheet(temp_writer,workbook,worksheet):
+    worksheet=temp_writer.sheets['title_page']
+    worksheet.hide_gridlines()
+    top_format=workbook.add_format({
+        'bold': 1,
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
+    rule_format=workbook.add_format({
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size':16
+    })
+        
+    #write the #first sheet
+    worksheet.merge_range('B2:L2','Guidelines',top_format)
+    worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
+    worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
+    worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
+    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
+
+    return workbook, worksheet
+
+def update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe):#,group_to_header_dict,group_to_archetype_dict):
+
+
+    my_format=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':8
+    })
+    # print(worksheet)
+
+    # for i,temp_col in enumerate(temp_dataframe.columns):
+    #     proper_text=temp_col.split('-')[0]
+    #     worksheet.write(0,i,proper_text,my_format)
+    # for i,temp_col in enumerate(temp_dataframe.columns):
+    #     #proper_text=temp_col.split('-')[0]
+    #     worksheet.write(0,i,temp_col,my_format)
+
+    worksheet.autofit()
+
+    return workbook, worksheet
+
+
+
 
 
 @callback(
@@ -624,13 +721,14 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
     # ],
     [
         #State(component_id="column_store", component_property="data"),
-        State(component_id="dt_for_preview",component_property="columns")
+        State(component_id="dt_for_preview",component_property="columns"),
+        State(component_id="dt_for_preview",component_property="data"),
     ],
     
     prevent_initial_call=True
 )
 # def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
-def generate_form(button_form_n_clicks,dt_for_preview_columns):
+def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_data):
     '''
     creates the form that is downloaded by users
     '''
@@ -658,7 +756,9 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
 
     #empty df for excel file
     temp_dataframe=pd.DataFrame.from_dict(
-        {element['id']:[] for element in dt_for_preview_columns}
+        {
+            element['id']:['' for temp_row in dt_for_preview_data] for element in dt_for_preview_columns
+        }
     )
 
     #we write to bytes because it is much more versatile
@@ -668,7 +768,13 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
 
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
-    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet',index=False)#,startrow=1)
+
+    print('--------------------------')
+    print(temp_dataframe)
+
+    temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet')#,index=False)#,startrow=1)
+
+
 
     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
@@ -684,8 +790,8 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns):
     #write and color the curation sheet
     
     ###NEEED TO UPDAT#############3
-    # workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
-    # workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
+    workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
+    workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
 
     temp_writer.save()
     temp_data=output_stream.getvalue()

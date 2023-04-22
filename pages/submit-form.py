@@ -247,7 +247,8 @@ layout = html.Div(
                                     ]
                                 )
                             ]
-                        )
+                        ),
+                        dbc.Col(width=1),
                     ]
                 ),
                 dmc.Group(
@@ -401,7 +402,7 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
             #value=None,
             inplace=True
         )    
-    return upload_panda
+    return upload_panda,total_replacement_panda
 
 
 @callback(
@@ -437,7 +438,7 @@ def control_download_button(
     print(store_3_panda)
     print(store_4_panda)
 
-    download_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
+    download_panda,total_replacement_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
     print(download_panda)
     ####generate the downlaodable excel file
     output_stream=io.BytesIO()
@@ -446,11 +447,13 @@ def control_download_button(
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
     #skip the last row which has the merger archetype info
+    
+    print('pre to excel')
     download_panda.to_excel(
         temp_writer,
         sheet_name='sample_sheet_curated',
-        index=False,
-        startrow=1,
+        #index=False,
+        #startrow=1,
         #take off the weird .0.1 etc
         header=[element.split('.')[0] for element in download_panda.columns]
     )
@@ -474,23 +477,32 @@ def control_download_button(
     ########################################
 
     
+    #####accumulate all new vocabulary terms per header
+
+
+
     # store_2_data=panda_for_store_2.to_dict(orient='records')
-
+    print('pretrain')
     ####train new vocab####
-    for index,series in store_4_panda.iterrows():
-        training_success=requests.post(
-            BASE_URL_API+'/trainvocabularyterms/',json={
-                'header':series['header'],
-                'new_vocabulary':series['']
-            }
-        )
+    #we only want to train each "type of vocabulary" once
+    if len(store_4_panda.index)>0:
+        for temp_tuple in store_4_panda.groupby('header'):
+        
+            #the first element in these tuples is the grouping definition, the second is the panda subset
+            # for index,series in temp_tuple[1].iterrows():
+            training_success=requests.post(
+                BASE_URL_API+'/trainvocabularyterms/',json={
+                    'header':temp_tuple[0],
+                    'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
+                }
+            )
     #######################
-
+    print('pre usecount')
     ###update use count###
-    for index,series in download_panda.iterrows():
+    for index,series in total_replacement_panda.iterrows():
         usecount_success=requests.post(
-            BASE_URL_API+'/updateusecount/',json={
-                'header':series['main_string'],
+            BASE_URL_API+'/updateusecountresource/',json={
+                'header':series['header'],
                 'main_strings':series['valid_string']
             }
         )
@@ -680,7 +692,30 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
     written_strings_for_new_terms_panda=store_3_panda.loc[step_3_curation_checkbox_n_clicks_ALL]
     if len(written_strings_for_new_terms_panda.index)==0:
         #print('need to figure this out')
-        output_children=html.H3('need to figure out when there are no curations to do')
+        output_children=[
+            html.Br(),
+            html.Br(),
+            dbc.Row(
+                children=[
+                    dbc.Col(
+                        width=3
+                    ),    
+                    dbc.Col(
+                        html.Div(
+                            children=[
+                                html.H3('Previous curations accepted - please continue')
+                            ],
+                            style={'text-align':'center'}
+                        )
+                    ),
+                    dbc.Col(
+                        width=3
+                    ),   
+                ]
+            ),
+        ]
+        
+        html.H3('need to figure out when there are no curations to do')
     else:
         output_children=list()
 
@@ -776,7 +811,28 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
     written_strings_to_substring_panda=store_2_panda.loc[step_2_curation_checkbox_n_clicks_ALL]
     if len(written_strings_to_substring_panda.index)==0:
         #print('need to figure this out')
-        output_children=html.H3('need to figure out when there are no curations to do')
+        output_children=[
+            html.Br(),
+            html.Br(),
+            dbc.Row(
+                children=[
+                    dbc.Col(
+                        width=3
+                    ),    
+                    dbc.Col(
+                        html.Div(
+                            children=[
+                                html.H3('Previous curations accepted - please continue')
+                            ],
+                            style={'text-align':'center'}
+                        )
+                    ),
+                    dbc.Col(
+                        width=3
+                    ),   
+                ]
+            )
+        ]
     else:
         output_children=list()
 
@@ -1135,8 +1191,11 @@ def upload_form(
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
+    print(excel_sheet_checks)
     if excel_sheet_checks[0]==False:
         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
+    print(excel_sheet_checks)
+    #if we ahve any errors
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
         curate_button_children=dbc.Row(
             children=[
@@ -1148,7 +1207,7 @@ def upload_form(
                 dbc.Col(width=4)
             ]
         )
-        store_dict=None
+        temp_dataframe_output=None
     else:
         dataframe_checks=list()
         my_SampleMetadataUploadChecker.create_dataframe()
@@ -1167,7 +1226,7 @@ def upload_form(
                 ]
             )
             
-            store_dict=None
+            temp_dataframe_output=None
 
         #if there are no problems with the excel file or dataframe
         else:
@@ -1201,6 +1260,7 @@ def upload_form(
                 io.BytesIO(decoded),
                 sheet_name='sample_sheet',
                 #skiprows=1
+                index_col=0
             )
             # temp_dataframe_2=pd.read_excel(
             #     io.BytesIO(decoded),
