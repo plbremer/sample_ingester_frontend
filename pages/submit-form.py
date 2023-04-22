@@ -503,7 +503,7 @@ def control_download_button(
         usecount_success=requests.post(
             BASE_URL_API+'/updateusecountresource/',json={
                 'header':series['header'],
-                'main_strings':series['valid_string']
+                'main_string':series['main_string']
             }
         )
     ######################
