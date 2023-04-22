@@ -133,6 +133,7 @@ layout = html.Div(
         dcc.Store('upload_store'),
         dcc.Store('store_2'),
         dcc.Store('store_3'),
+        dcc.Store('store_4'),
         html.Br(),
         html.Br(),
         html.Br(),
@@ -363,7 +364,105 @@ def check_equal_hashings(state,input):
 
 
 #     return [stepper_submit_form_active]
+@callback(
+    [
+        Output(component_id="store_3", component_property="data", allow_duplicate=True),
+    ],
+    [
+        Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+    ],
+    [
+        #State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+        State(component_id="store_3", component_property="data"),
+    ],
+    prevent_initial_call=True
+)
+def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_data):
+    store_3_panda=pd.DataFrame.from_records(store_3_data)
+    print(store_3_panda)
     
+    print(input_store_dropdown_empty_options_value_ALL)
+
+    output_valid=list()
+    output_main=list()
+    for temp_string in input_store_dropdown_empty_options_value_ALL:
+        try:
+            output_valid.append(temp_string.split(' AKA ')[0])
+            output_main.append(temp_string.split(' AKA ')[1])
+            
+        except AttributeError:
+            output_valid.append(None)
+            output_main.append(None)
+
+
+    store_3_panda['valid_string']=output_valid
+    store_3_panda['main_string']=output_main
+    # temp_index=store_3_panda.loc[
+    #     (store_3_panda.header==ctx.triggered_id['index'].split('_')[0]) &
+    #     (store_3_panda.written_string==ctx.triggered_id['index'].split('_')[1])
+    # ].index[0]
+    # print(temp_index)
+
+    # store_3_panda.at[temp_index,'valid_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[0]
+    # store_3_panda.at[temp_index,'main_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[1]
+
+
+    return [store_3_panda.to_dict(orient='records')]
+
+
+
+@callback(
+    [
+        Output(component_id="store_4", component_property="data", allow_duplicate=True),
+    ],
+    [
+        Input(component_id={'type':'input_creation','index':ALL}, component_property="value"),
+    ],
+    [
+        #State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+        State(component_id="store_4", component_property="data"),
+    ],
+    prevent_initial_call=True
+)
+def update_store_4_data(input_creation_value_ALL,store_4_data):
+    store_4_panda=pd.DataFrame.from_records(store_4_data)
+    print(store_4_panda)
+    
+    # print(input_store_dropdown_empty_options_value_ALL)
+
+    # output_valid=list()
+    # output_main=list()
+    # for temp_string in input_store_dropdown_empty_options_value_ALL:
+    #     try:
+    #         output_valid.append(temp_string.split(' AKA ')[0])
+    #         output_main.append(temp_string.split(' AKA ')[1])
+            
+    #     except AttributeError:
+    #         output_valid.append(None)
+    #         output_main.append(None)
+
+
+    store_4_panda['valid_string']=input_creation_value_ALL
+    store_4_panda['main_string']=input_creation_value_ALL
+    # temp_index=store_4_panda.loc[
+    #     (store_4_panda.header==ctx.triggered_id['index'].split('_')[0]) &
+    #     (store_4_panda.written_string==ctx.triggered_id['index'].split('_')[1])
+    # ].index[0]
+    # print(temp_index)
+
+    # store_4_panda.at[temp_index,'valid_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[0]
+    # store_4_panda.at[temp_index,'main_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[1]
+
+
+    return [store_4_panda.to_dict(orient='records')]
+
+
+
+
+
+
+
+
 
 @callback(
     [
@@ -371,16 +470,21 @@ def check_equal_hashings(state,input):
         Output(component_id="store_furthest_active", component_property="data"),
         
         Output(component_id="store_2", component_property="data"),
-        # Output(component_id="store_3", component_property="data"),
+        Output(component_id="store_3", component_property="data"),
+        Output(component_id="store_4", component_property="data"),
 
         Output(component_id="step_2", component_property="children"),
         Output(component_id="step_3", component_property="children"),
+        Output(component_id="step_4", component_property="children"),
     ],
     [
         Input(component_id='stepper_submit_form_back', component_property="n_clicks"),
         Input(component_id='stepper_submit_form_next', component_property="n_clicks"),
         Input(component_id="upload_store", component_property="data"),
         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+
+        Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
+        Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
         # Input(component_id="stepper_submit_form", component_property="active"),
     ],
     [
@@ -390,10 +494,10 @@ def check_equal_hashings(state,input):
         State(component_id="upload_store", component_property="data"),
         State(component_id="store_2", component_property="data"),
         State(component_id="store_3", component_property="data"),
-        #State(component_id="store_4", component_property="data"),
+        State(component_id="store_4", component_property="data"),
         State(component_id="step_2", component_property="children"),
         State(component_id="step_3", component_property="children"),
-        # Output(component_id="step_4", component_property="children"),
+        State(component_id="step_4", component_property="children"),
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
 
         State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
@@ -407,16 +511,21 @@ def update_step_submit(
     stepper_submit_form_next_n_clicks, 
     input_upload_store_data,
     input_step_2_curation_checkbox_n_clicks_ALL,
+    input_store_dropdown_empty_options_value_ALL,
+    input_store_step_3_curation_checkbox_n_clicks_ALL,
+
     stepper_submit_form_active,
     store_furthest_active_data,
     upload_store_data,
     store_2_data,
     store_3_data,
+    store_4_data,
     step_2_children,
     step_3_children,
+    step_4_children,
     state_step_2_curation_checkbox_n_clicks_ALL,
-    state_store_dropdown_empty_options_value_ALL,
-    state_store_step_3_curation_checkbox_n_clicks_ALL,
+    state_dropdown_empty_options_value_ALL,
+    state_step_3_curation_checkbox_n_clicks_ALL,
 ):#,my_children):
     '''
     we wnat to only do work according to the step that we are outputting
@@ -431,14 +540,14 @@ def update_step_submit(
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         # need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
 
     if type(ctx.triggered_id)==dash._utils.AttributeDict:
         print('met dict if')
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         #need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # # store_furthest_active=stepper_submit_form_active
@@ -451,7 +560,7 @@ def update_step_submit(
     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
         stepper_submit_form_active-=1
         junk_patch=Patch()
-        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch]
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
@@ -460,29 +569,25 @@ def update_step_submit(
         if stepper_submit_form_active > store_furthest_active_data:
             store_furthest_active_data=stepper_submit_form_active
         else:
-            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch]
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
             # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
-
-
-
-
-    # return [store_furthest_active_data,stepper_submit_form_active]
-    upload_store_panda=pd.read_json(upload_store_data['input_dataframe'],orient='records')
-    '''
-        species.0 species.1.0 species.1.1 organ.0
-    0     humen       mouse   porcupine   liver
-    1     humen        mouo        None   lunge
-    '''
-    # print(upload_store_panda)
-    written_strings_per_category=parse_stored_excel_file(upload_store_panda)
-    '''
-    {'organ': ['liver', 'lunge'],
-    'species': ['humen', 'mouse', 'mouo', 'porcupine']}
-    '''
-    # pprint(written_strings_per_category)
 
     # #if we enter step 2
     if stepper_submit_form_active==1:
+        # return [store_furthest_active_data,stepper_submit_form_active]
+        upload_store_panda=pd.read_json(upload_store_data['input_dataframe'],orient='records')
+        '''
+            species.0 species.1.0 species.1.1 organ.0
+        0     humen       mouse   porcupine   liver
+        1     humen        mouo        None   lunge
+        '''
+        # print(upload_store_panda)
+        written_strings_per_category=parse_stored_excel_file(upload_store_panda)
+        '''
+        {'organ': ['liver', 'lunge'],
+        'species': ['humen', 'mouse', 'mouo', 'porcupine']}
+        '''
+        # pprint(written_strings_per_category)
         #NEED TO ADD######
         #if the upload matches what is on the screen currently, do not search neighbors, just rebuild with current checkboxes etc
         ###################
@@ -497,22 +602,114 @@ def update_step_submit(
     #elif stepper_submit_form_active!=1:
     elif stepper_submit_form_active==2:
         # print(step_2_curation_checkbox_n_clicks_ALL)
-        step_3_children=generate_step_3_layout_and_data_for_store(
+        panda_for_store_3,step_3_children=generate_step_3_layout_and_data_for_store(
             store_2_data,
             state_step_2_curation_checkbox_n_clicks_ALL,
         )
+        store_3_data=panda_for_store_3.to_dict(orient='records')
 
-    # elif stepper_submit_form_active==3:
-    #     # print(step_2_curation_checkbox_n_clicks_ALL)
-    #     step_3_children=generate_step_4_layout_and_data_for_store(
-    #         store_2_data,
-    #         state_step_2_curation_checkbox_n_clicks_ALL,
-    #     )
+    elif stepper_submit_form_active==3:
+        # print(step_2_curation_checkbox_n_clicks_ALL)
+        panda_for_store_4,step_4_children=generate_step_4_layout_and_data_for_store(
+            store_3_data,
+            state_step_3_curation_checkbox_n_clicks_ALL,
+        )
+        store_4_data=panda_for_store_4.to_dict(orient='records')
 
-    
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
 
- 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,step_2_children,step_3_children]
+
+def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_checkbox_n_clicks_ALL):
+    store_3_panda=pd.DataFrame.from_records(store_3_data)
+    store_4_panda_output=store_3_panda.copy().loc[step_3_curation_checkbox_n_clicks_ALL]
+
+    written_strings_for_new_terms_panda=store_3_panda.loc[step_3_curation_checkbox_n_clicks_ALL]
+    if len(written_strings_for_new_terms_panda.index)==0:
+        #print('need to figure this out')
+        output_children=html.H3('need to figure out when there are no curations to do')
+    else:
+        output_children=list()
+
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(
+                        html.H3('Metadata Header')
+                    ),    
+                    dbc.Col(
+                        html.H3('Written String')
+                    ),
+                    dbc.Col(
+                        html.H3('New Term')
+                    ),   
+                ]
+            )
+        )
+
+
+        for temp_group in written_strings_for_new_terms_panda.groupby('header'):
+            
+            for i,(index,series) in enumerate(temp_group[1].iterrows()):
+                if i==0:
+                    output_children.append(
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H6(series['header'])
+                                ),    
+                                dbc.Col(
+                                    html.H6(series['written_string'])
+                                ),
+                                # dbc.Col(
+                                #     html.H6(
+                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                #     )
+                                # ),   
+                                dbc.Col(
+                                    dcc.Input(
+                                        id={
+                                            'type':'input_curation',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        placeholder="Nothing matches - Enter New"
+                                    )
+                                )
+                            ]
+                        )
+                    )
+                else:
+                    output_children.append(
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H6(' ')
+                                ),    
+                                dbc.Col(
+                                    html.H6(series['written_string'])
+                                ),
+                                # dbc.Col(
+                                #     html.H6(
+                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                #     )
+                                # ),   
+                                dbc.Col(
+                                    dcc.Input(
+                                        id={
+                                            'type':'input_curation',
+                                            'index':series['header']+'_'+series['written_string']
+                                        },
+                                        placeholder="Nothing matches - Enter New"
+                                    )
+                                )
+                            ]
+                        )
+                    )
+
+
+    store_4_panda_output['valid_string']=np.nan
+    store_4_panda_output['main_string']=np.nan
+
+    return [store_4_panda_output,output_children]
 
 
 
@@ -521,6 +718,8 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
   # print('in step 3')
     #print(step_2_curation_checkbox_n_clicks_ALL)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
+
+    store_3_panda_output=store_2_panda.copy().loc[step_2_curation_checkbox_n_clicks_ALL]
     #print(store_2_panda)
     written_strings_to_substring_panda=store_2_panda.loc[step_2_curation_checkbox_n_clicks_ALL]
     if len(written_strings_to_substring_panda.index)==0:
@@ -639,7 +838,10 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                     )
 
 
-    return output_children
+    store_3_panda_output['valid_string']=np.nan
+    store_3_panda_output['main_string']=np.nan
+
+    return [store_3_panda_output,output_children]
 
                
 @callback(
