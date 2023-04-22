@@ -98,42 +98,15 @@ def split_columns_if_delimited(temp_dataframe):
     return output_dataframe
 
 
-
-
 layout = html.Div(
     children=[
-        # html.H6('hi')
-        # dcc.Download(id="download_curated_form"),
-        # html.Br(),
-        # html.Br(),
-        # dbc.Row(
-        #     children=[
-        #         html.Div(
-        #             id='here_is_where_we_put_the curation_interface'
-        #         )
-        #     ]
-        # ),
-        # html.Br(),
-        # html.Br(),
-        # dbc.Row(
-        #     children=[
-        #         html.Div(
-        #             dbc.Button(
-        #                 'Download Curated Form',
-        #                 id='button_download_curated',
-        #             ),
-        #             className="d-grid gap-2 col-6 mx-auto",
-        #         ),
-        #     ]
-        # ),
-        # html.Br(),
-        # html.Br(),
-        # html.Div(id='Div_new_vocab_error_messages'),
+
         dcc.Store('store_furthest_active',data=0),
         dcc.Store('upload_store'),
         dcc.Store('store_2'),
         dcc.Store('store_3'),
         dcc.Store('store_4'),
+        dcc.Download(id="download_curated_form"),
         html.Br(),
         html.Br(),
         html.Br(),
@@ -159,7 +132,7 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             id='step_1',
                                             label="First step",
-                                            description="Choose Archetypes",
+                                            description="Upload Form",
                                             children=[
                                                 html.Div(id='Div_curate_button_or_error_messages'),
                                                 dbc.Row(
@@ -194,7 +167,7 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             id='step_2',
                                             label="Second step",
-                                            description="Extra Specifications",
+                                            description="Validate Automatic Curation",
                                             children=[
                                                 html.H6('second step')
                                                 
@@ -203,7 +176,7 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             id='step_3',
                                             label="3 step",
-                                            description="Extra Specifications",
+                                            description="Match to Substrings",
                                             children=[
                                                 html.H6('3 step')
                                                 
@@ -212,7 +185,7 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             id='step_4',
                                             label="4 step",
-                                            description="Extra Specifications",
+                                            description="Create New Terms",
                                             children=[
                                                 html.H6('4 step')
                                                 
@@ -221,9 +194,28 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             id='step_5',
                                             label="5 step",
-                                            description="Extra Specifications",
+                                            description="Download Curated Form",
                                             children=[
-                                                html.H6('5 step')
+                                                html.Br(),
+                                                html.Br(),
+                                                dbc.Row(
+                                                    children=[
+                                                        dbc.Col(width=5),
+                                                        dbc.Col(
+                                                            children=[
+                                                                html.Div(
+                                                                    dbc.Button(
+                                                                        'Download Form',
+                                                                        id='button_download_curated',
+                                                                    ),
+                                                                    className="d-grid gap-2 col-6 mx-auto",
+                                                                ),
+                                                            ],
+                                                            width=2
+                                                        ),
+                                                        dbc.Col(width=5)
+                                                    ]
+                                                ),
                                                 
                                             ] 
                                         ),
@@ -270,50 +262,6 @@ layout = html.Div(
 )
 
 
-# @callback(
-#     [
-#         Output(component_id="store_furthest_active", component_property="data"),
-#         Output(component_id="stepper_submit_form", component_property="active")
-#     ],
-#     [
-#         Input(component_id='stepper_submit_form_back', component_property="n_clicks"),
-#         Input(component_id='stepper_submit_form_next', component_property="n_clicks"),
-#         Input(component_id="upload_store", component_property="data"),
-#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
-#         Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
-#         Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
-
-#     ],
-#     [
-#         State(component_id="stepper_submit_form", component_property="active"),
-#         State(component_id="store_furthest_active", component_property="data"),
-#     ],
-#     prevent_initial_call=True
-# )
-# def update_furthest_active(
-#     stepper_submit_form_back_n_clicks, 
-#     stepper_submit_form_next_n_clicks, 
-#     upload_store_data,
-#     step_2_curation_checkbox_n_clicks_ALL,
-#     dropdown_empty_options_value_ALL,
-#     step_3_curation_checkbox_n_clicks_ALL,
-#     stepper_submit_form_active,
-#     store_furthest_active_data
-# ):
-
-#     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
-#         stepper_submit_form_active-=1
-#     elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
-#         stepper_submit_form_active+=1   
-#         if stepper_submit_form_active > store_furthest_active_data:
-#             store_furthest_active_data=stepper_submit_form_active
-
-
-#   # print(f'we are currently on step {stepper_submit_form_active}')
-#   # print(f'the max step is {store_furthest_active_data}')
-
-#     return [store_furthest_active_data,stepper_submit_form_active]
-
 def check_equal_hashings(state,input):
     #state_json=json.dumps()
     hash_state=hash(pickle.dumps(state))
@@ -325,42 +273,6 @@ def check_equal_hashings(state,input):
     else:
         return False
 
-# @callback(
-#     [
-#         Output(component_id="store_furthest_active", component_property="data", allow_duplicate=True),
-#     ],
-#     [
-#         Input(component_id="upload_store", component_property="data"),
-#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
-        
-#     ],
-#     [
-#         State(component_id="stepper_submit_form", component_property="active"),
-
-#         State(component_id="upload_store", component_property="data"),
-#         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),        
-#     ],
-#     prevent_initial_call=True
-# )
-# def update_furthest(
-#     input_upload_store_data,
-#     input_step_2_curation_checkbox_n_clicks_ALL,
-#     stepper_submit_form_active,
-#     state_upload_store_data,
-#     state_step_2_curation_checkbox_n_clicks_ALL,
-
-
-# ):
-#   # print('inside update furthest based on _ALL properties')
-#   # print(ctx.triggered_id)
-#   # print(input_upload_store_data)
-#   # print(input_step_2_curation_checkbox_n_clicks_ALL)
-#   # print('')
-#     #if ctx.triggered_id=='upload_store':
-#   # print(check_equal_hashings(input_upload_store_data,state_upload_store_data))
-#     #elif 
-#   # print(check_equal_hashings(input_step_2_curation_checkbox_n_clicks_ALL,state_step_2_curation_checkbox_n_clicks_ALL))
-#   # print('')
 
 
 #     return [stepper_submit_form_active]
@@ -459,6 +371,38 @@ def update_store_4_data(input_creation_value_ALL,store_4_data):
 
 
 
+@callback(
+    [
+        #Output(component_id="Div_new_vocab_error_messages", component_property="children"),
+        Output(component_id="download_curated_form", component_property="data")
+    ],
+    [
+        Input(component_id='button_download_curated', component_property="n_clicks")
+    ],
+    [
+        State(component_id="upload_store", component_property="data"),
+        State(component_id="store_2", component_property="data"),
+        State(component_id="store_3", component_property="data"),
+        State(component_id="store_4", component_property="data"),
+    ],
+    prevent_initial_call=True
+)
+def control_download_button(
+    button_download_curated_n_clicks,
+    upload_store_data,
+    store_2_data,
+    store_3_data,
+    store_4_data
+):
+    print(upload_store_data)
+    upload_panda=pd.DataFrame.from_records(upload_store_data)
+    store_2_panda=pd.DataFrame.from_records(store_2_data)
+    store_3_panda=pd.DataFrame.from_records(store_3_data)
+    store_4_panda=pd.DataFrame.from_records(store_4_data)
+    print(upload_panda)
+    print(store_2_panda)
+    print(store_3_panda)
+    print(store_4_panda)
 
 
 
@@ -476,6 +420,7 @@ def update_store_4_data(input_creation_value_ALL,store_4_data):
         Output(component_id="step_2", component_property="children"),
         Output(component_id="step_3", component_property="children"),
         Output(component_id="step_4", component_property="children"),
+
     ],
     [
         Input(component_id='stepper_submit_form_back', component_property="n_clicks"),
@@ -498,6 +443,7 @@ def update_store_4_data(input_creation_value_ALL,store_4_data):
         State(component_id="step_2", component_property="children"),
         State(component_id="step_3", component_property="children"),
         State(component_id="step_4", component_property="children"),
+
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
 
         State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
@@ -523,6 +469,7 @@ def update_step_submit(
     step_2_children,
     step_3_children,
     step_4_children,
+
     state_step_2_curation_checkbox_n_clicks_ALL,
     state_dropdown_empty_options_value_ALL,
     state_step_3_curation_checkbox_n_clicks_ALL,
@@ -575,7 +522,7 @@ def update_step_submit(
     # #if we enter step 2
     if stepper_submit_form_active==1:
         # return [store_furthest_active_data,stepper_submit_form_active]
-        upload_store_panda=pd.read_json(upload_store_data['input_dataframe'],orient='records')
+        upload_store_panda=pd.DataFrame.from_records(upload_store_data)
         '''
             species.0 species.1.0 species.1.1 organ.0
         0     humen       mouse   porcupine   liver
@@ -616,8 +563,16 @@ def update_step_submit(
         )
         store_4_data=panda_for_store_4.to_dict(orient='records')
 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+    # elif stepper_submit_form_active==4:
+    #     # print(step_2_curation_checkbox_n_clicks_ALL)
+    #     panda_for_store_4,step_4_children=generate_step_4_layout_and_data_for_store(
+    #         store_3_data,
+    #         state_step_3_curation_checkbox_n_clicks_ALL,
+    #     )
+    #     store_4_data=panda_for_store_4.to_dict(orient='records')
 
+
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
 
 def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_checkbox_n_clicks_ALL):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
@@ -695,7 +650,7 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
                                 dbc.Col(
                                     dcc.Input(
                                         id={
-                                            'type':'input_curation',
+                                            'type':'input_creation',
                                             'index':series['header']+'_'+series['written_string']
                                         },
                                         placeholder="Nothing matches - Enter New"
@@ -710,8 +665,6 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
     store_4_panda_output['main_string']=np.nan
 
     return [store_4_panda_output,output_children]
-
-
 
 
 def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_checkbox_n_clicks_ALL):
@@ -1043,47 +996,6 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     return curation_panda,output_children
 
 
-
-
-
-# @callback(
-#     [
-#         Output(component_id="store_2", component_property="data"),
-#         # State(component_id="store_3", component_property="data"),
-#         # State(component_id="store_4", component_property="data"),
-#         # Output(component_id="stepper_submit_form", component_property="active"),
-#         # Output(component_id="step_2", component_property="children"),
-#         # Output(component_id="step_3", component_property="children"),
-#         # Output(component_id="step_4", component_property="children"),
-
-#         #Output(component_id="stepper_submit_form", component_property="children")
-
-#     ],
-#     [
-#         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
-#         # Input(component_id='stepper_submit_form_next', component_property="n_clicks")
-#     ],
-#     [
-#     #     State(component_id="stepper_submit_form", component_property="active"),
-#     #     # State(component_id="stepper_submit_form", component_property="children")
-#         State(component_id="upload_store", component_property="data"),
-#     #     # State(component_id="store_2", component_property="data"),
-#     #     #State(component_id="store_3", component_property="data"),
-#     #     #State(component_id="store_4", component_property="data"),
-#     #     State(component_id="step_2", component_property="children"),
-#     #     # Output(component_id="step_3", component_property="children"),
-#     #     # Output(component_id="step_4", component_property="children"),
-#     ],
-#     prevent_initial_call=True
-# )
-
-# def update_step_stores(step_2_curation_checkbox_n_clicks_ALL,upload_store_data):
-#   # print(ctx.triggered_id)
-#   # print('in update stores')
-#   # print(step_2_curation_checkbox_n_clicks_ALL)
-#     parse_stored_excel_file
-
-
 @callback(
     [
         Output(component_id="upload_form",component_property="children"),
@@ -1205,14 +1117,14 @@ def upload_form(
             #     ignore_index=True
             # )
             temp_dataframe=split_columns_if_delimited(temp_dataframe)
-            temp_dataframe_as_json=temp_dataframe.to_json(orient='records')
+            temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
 
             # print(temp_dataframe)
             
-            store_dict={
-                'input_dataframe':temp_dataframe_as_json,
-            }
+            # store_dict={
+            #     'input_dataframe':temp_dataframe_as_json,
+            # }
 
     displayed_name=html.Div([upload_form_filename],className='text-center')
-    return [displayed_name,store_dict,curate_button_children]
+    return [displayed_name,temp_dataframe_output,curate_button_children]
