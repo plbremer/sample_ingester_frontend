@@ -1,0 +1,10 @@
+{
+    "tissue":["species","organ"],
+    "fluid":["species","organ"],
+    "cells":["species","cellLine","cellCount"],
+    "raw_material":["material"],
+    "genetic":["gene"],
+    "longitudinal":["zeroTimeEvent","time","timeUnit"],
+    "intervention":["drugName","drugDoseMagnitude","drugDoseUnit","diet","exercise"],
+    "effect":["disease"]
+}
