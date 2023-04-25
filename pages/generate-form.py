@@ -1,4 +1,5 @@
 
+from random import sample
 import dash
 from dash import dcc, html,dash_table,callback, ctx,MATCH,ALL
 import plotly.express as px
@@ -45,11 +46,43 @@ def generate_extra_headers(selected_types):
     total_headers=[]
     for temp_header in selected_types:
         total_headers+=EXTRA_COLUMNS[temp_header]
-
     return total_headers
-
+    # total_headers=[]
+    # for temp_grouping in EXTRA_COLUMNS:
+    #     for temp_type in EXTRA_COLUMNS[temp_grouping]:
+    #         if temp_type in selected_types:
+    #             total_headers+=EXTRA_COLUMNS[temp_grouping][temp_type]
+    # return total_headers
 
 dash.register_page(__name__, path='/generate-form')
+
+# extra_column_cols=list()
+# for temp_type in EXTRA_COLUMNS:
+#     extra_column_cols.append(
+#         dbc.Col(
+#             children=[
+#                 html.H3(temp_type),
+#                 html.Br(),
+#                 dbc.Checklist(
+#                     options=[
+#                         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS[temp_type]
+#                     ],
+#                     id="extra_checklist",
+#                 ), 
+#             ],
+#             width=2
+#         )
+#     )
+
+def generate_step_1_error_checker(sample_checklist_value):
+    print('-----------')
+    print(sample_checklist_value)
+    if sample_checklist_value==None:
+        return 'Must select at least 1 sample type.'
+    if len(sample_checklist_value)==0:
+        return 'Must select at least 1 sample type.'
+    else:
+        return False
 
 
 layout = html.Div(
@@ -70,8 +103,8 @@ layout = html.Div(
         ),
         html.Br(),
         html.Br(),
-        html.Br(),
-        html.Br(),
+        # html.Br(),
+        # html.Br(),
         html.Div(
             children=[
                 dbc.Row(
@@ -86,45 +119,56 @@ layout = html.Div(
                                     breakpoint="sm",
                                     children=[
                                         dmc.StepperStep(
+                                            id='generate_step_1',
                                             label="First step",
-                                            description="Choose Archetypes",
+                                            description="Choose Sample Types",
                                             children=[
                                                 dbc.Row(
+                                                    html.Div(
+                                                        id='generate_step_1_error_div',
+                                                        children=[]
+                                                    )
+                                                ),
+                                                dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=3),
+                                                        dbc.Col(width=4),
                                                         dbc.Col(
-                                                            children=[
-                                                                html.H3('Sample Types'),
-                                                                html.Br(),
-                                                                dbc.Checklist(
-                                                                    options=[
-                                                                        {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
-                                                                        {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
-                                                                        {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
-                                                                        {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
-                                                                    ],
-                                                                    id="sample_checklist",
-                                                                ),
-                                                            ],
+                                                            html.Div(
+                                                            
+                                                                children=[
+                                                                    html.H3('Sample Types'),
+                                                                    html.Br(),
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
+                                                                            {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
+                                                                            {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
+                                                                            {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
+                                                                        ],
+                                                                        id="sample_checklist",
+                                                                    ),
+                                                                ],
+                                                                className="d-flex justify-content-center align-items-center"
+                                                            ),
                                                             width=4
                                                         ),
-                                                        dbc.Col(
-                                                            children=[
-                                                                html.H3('Study Types'),
-                                                                html.Br(),
-                                                                dbc.Checklist(
-                                                                    options=[
-                                                                        {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
-                                                                        {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
-                                                                        {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
-                                                                        {"label": "Effect (disease, etc.)", "value": 'effect'},
-                                                                    ],
-                                                                    id="study_checklist",
-                                                                ),
-                                                            ],
-                                                            width=4
-                                                        ),
-                                                        dbc.Col(width=1)
+                                                        # dbc.Col(
+                                                        #     children=[
+                                                        #         html.H3('Study Types'),
+                                                        #         html.Br(),
+                                                        #         # dbc.Checklist(
+                                                        #         #     options=[
+                                                        #         #         {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
+                                                        #         #         {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
+                                                        #         #         {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
+                                                        #         #         {"label": "Effect (disease, etc.)", "value": 'effect'},
+                                                        #         #     ],
+                                                        #         #     id="study_checklist",
+                                                        #         # ),
+                                                        #     ],
+                                                        #     width=4
+                                                        # ),
+                                                        dbc.Col(width=4)
                                                     ]
                                                 )
                                             ]
@@ -135,7 +179,7 @@ layout = html.Div(
                                             children=[
                                                 dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=3),
+                                                        dbc.Col(width=1),
                                                         dbc.Col(
                                                             children=[
                                                                 html.H3('Additional Metadata'),
@@ -147,7 +191,7 @@ layout = html.Div(
                                                                     id="extra_checklist",
                                                                 ),
                                                             ],
-                                                            width=4
+                                                            width=3
                                                         ),
                                                         dbc.Col(
                                                             children=[
@@ -163,11 +207,15 @@ layout = html.Div(
                                                                     style={"width": 250},
                                                                 ),
                                                             ],
-                                                            width=4
+                                                            width=3
                                                         ),
-                                                        dbc.Col(width=1)
+                                                        dbc.Col(width=4)
                                                     ]
-                                                )
+                                                ),
+                                                html.Br(),
+                                                # dbc.Row(
+                                                #     children=extra_column_cols
+                                                # )
                                             ] 
                                         ),
                                         dmc.StepperStep(
@@ -278,7 +326,8 @@ layout = html.Div(
 @callback(
     [
         Output(component_id="stepper_generate_form", component_property="active"),
-        # Output(component_id="stepper_generate_form", component_property="children")
+        Output(component_id="generate_step_1_error_div",component_property="children")
+        #  Output(component_id="stepper_generate_form", component_property="children")
     ],
     [
         Input(component_id='stepper_generate_form_back', component_property="n_clicks"),
@@ -286,11 +335,33 @@ layout = html.Div(
     ],
     [
         State(component_id="stepper_generate_form", component_property="active"),
+        # State(component_id="generate_step_1",component_property="children")
+        State(component_id="sample_checklist",component_property="value")
         # State(component_id="stepper_generate_form", component_property="children")
     ],
     prevent_initial_call=True
 )
-def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_clicks, current):
+def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_clicks, current,sample_checklist_value):
+
+    if ctx.triggered_id=="stepper_generate_form_next":
+        if current==0:
+            generate_step_1_errors=generate_step_1_error_checker(sample_checklist_value)
+            print(generate_step_1_errors)
+            print(type(generate_step_1_errors))
+            if generate_step_1_errors!=False:
+                print('are we in if')
+                generate_step_1_error_div_children=html.H6(generate_step_1_errors)
+                generate_step_1_error_div_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=3),
+                        dbc.Col(dmc.Alert(generate_step_1_errors,withCloseButton=True),width=6),
+                        dbc.Col(width=3)
+                    ]
+                )
+                return [current,generate_step_1_error_div_children]
+                
+                
+    print(ctx.triggered_id)
 
     if ctx.triggered_id=="stepper_generate_form_back" and current>0:
         current-=1
@@ -303,7 +374,7 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
 
 
     # return [current,my_children]
-    return [current]
+    return [current,[]]
 
 
 
@@ -316,34 +387,34 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
         # Input(component_id='stepper_generate_form_back', component_property="n_clicks"),
         # Input(component_id='stepper_generate_form_next', component_property="n_clicks")
         Input(component_id='sample_checklist', component_property='value'),
-        Input(component_id='study_checklist',component_property='value'),
+        # Input(component_id='study_checklist',component_property='value'),
         Input(component_id="extra_checklist",component_property='value'),
         Input(component_id="sample_count_input",component_property='value'),
     ],
     [
         State(component_id='sample_checklist', component_property='value'),
-        State(component_id='study_checklist',component_property='value'),
+        # State(component_id='study_checklist',component_property='value'),
         State(component_id="extra_checklist",component_property='value'),
         State(component_id="sample_count_input",component_property='value'),
     ],
     prevent_initial_call=True
 )
-def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklist_values,sample_count_input_value):
+def update_example_table(a,c,d,sample_checklist_values,extra_checklist_values,sample_count_input_value):
 
     #### This should be something different. should probably just generate an empty DT ####
-    if sample_checklist_values==None and study_checklist_values==None:
+    if sample_checklist_values==None:# and study_checklist_values==None:
         raise PreventUpdate
 
     if sample_checklist_values==None:
         sample_checklist_values=[]
-    if study_checklist_values==None:
-        study_checklist_values=[]
+    # if study_checklist_values==None:
+    #     study_checklist_values=[]
 
     if extra_checklist_values==None:
         extra_checklist_values=[]
 
 
-    archetype_headers=generate_form_headers(sample_checklist_values+study_checklist_values)
+    archetype_headers=generate_form_headers(sample_checklist_values)#+study_checklist_values)
     extra_headers=generate_extra_headers(extra_checklist_values)
     
     total_headers=archetype_headers+extra_headers
