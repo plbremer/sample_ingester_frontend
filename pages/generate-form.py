@@ -54,7 +54,7 @@ dash.register_page(__name__, path='/generate-form')
 
 layout = html.Div(
     children=[
-        dcc.Download(id="download_form"),
+        
         html.Br(),
         html.Br(),
 
@@ -68,336 +68,168 @@ layout = html.Div(
                 )
             ]
         ),
-
-        # dbc.Row(
-        #     children=[
-        #         dbc.Col(width=3),
-        #         dbc.Col(
-        #             children=[
-        #                 html.H6('hi')
-        #             ]
-        #         )
-        #     ]
-        # ),
         html.Br(),
         html.Br(),
         html.Br(),
         html.Br(),
-
         html.Div(
             children=[
-                
-
                 dbc.Row(
                     children=[
                         dbc.Col(width=1),
                         dbc.Col(
                             children=[
-                                
-
-
-                dmc.Stepper(
-                    id="stepper_generate_form",
-                    active=0,
-                    breakpoint="sm",
-                    children=[
-                        dmc.StepperStep(
-                            label="First step",
-                            description="Choose Archetypes",
-                            children=[
-                                dbc.Row(
-                                    children=[
-                                        dbc.Col(width=3),
-                                        dbc.Col(
+        
+                                        dmc.Stepper(
+                                            id="stepper_generate_form",
+                                            active=0,
+                                            breakpoint="sm",
                                             children=[
-                                                html.H3('Sample Types'),
-                                                html.Br(),
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
-                                                        {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
-                                                        {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
-                                                        {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
-                                                    ],
-                                                    id="sample_checklist",
+                                                dmc.StepperStep(
+                                                    label="First step",
+                                                    description="Choose Archetypes",
+                                                    children=[
+                                                        dbc.Row(
+                                                            children=[
+                                                                dbc.Col(width=3),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.H3('Sample Types'),
+                                                                        html.Br(),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
+                                                                                {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
+                                                                                {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
+                                                                                {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
+                                                                            ],
+                                                                            id="sample_checklist",
+                                                                        ),
+                                                                    ],
+                                                                    width=4
+                                                                ),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.H3('Study Types'),
+                                                                        html.Br(),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
+                                                                                {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
+                                                                                {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
+                                                                                {"label": "Effect (disease, etc.)", "value": 'effect'},
+                                                                            ],
+                                                                            id="study_checklist",
+                                                                        ),
+                                                                    ],
+                                                                    width=4
+                                                                ),
+                                                                dbc.Col(width=1)
+                                                            ]
+                                                        )
+                                                    ]
+                                                ),
+                                                dmc.StepperStep(
+                                                    label="Second step",
+                                                    description="Add Extra Columns/Rows",
+                                                    children=[
+                                                        dbc.Row(
+                                                            children=[
+                                                                dbc.Col(width=3),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.H3('Sample Types'),
+                                                                        html.Br(),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
+                                                                            ],
+                                                                            id="extra_checklist",
+                                                                        ),
+                                                                    ],
+                                                                    width=4
+                                                                ),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.H3('Number of Samples'),
+                                                                        html.Br(),
+                                                                        dmc.NumberInput(
+                                                                            id='sample_count_input',
+                                                                            label="Number of Samples",
+                                                                            description="Integer from 1 to infinity",
+                                                                            value=1,
+                                                                            min=1,
+                                                                            step=1,
+                                                                            style={"width": 250},
+                                                                        ),
+                                                                    ],
+                                                                    width=4
+                                                                ),
+                                                                dbc.Col(width=1)
+                                                            ]
+                                                        )
+                                                    ] 
+                                                ),
+                                                dmc.StepperStep(
+                                                    label="Third step",
+                                                    description="Download form",
+                                                    children=[
+                                                        dcc.Download(id="download_form"),
+                                                        html.Br(),
+                                                        html.Br(),
+                                                        dbc.Row(
+                                                            children=[
+                                                                dbc.Col(width=5),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.Div(
+                                                                            dbc.Button(
+                                                                                'Download Form',
+                                                                                id='button_form',
+                                                                            ),
+                                                                            className="d-grid gap-2 col-6 mx-auto",
+                                                                        ),
+                                                                    ],
+                                                                    width=2
+                                                                ),
+                                                                dbc.Col(width=5)
+                                                            ]
+                                                        ),
+                                                        html.Br(),
+                                                        html.Br(),
+                                                    ]
+                                                ),
+                                                dmc.StepperCompleted(
+                                                    # label='some_label',
+                                                    # description='some description',
+                                                    children=[
+                                                        dbc.Row(
+                                                            children=[
+                                                                dbc.Col(width=5),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.Div(
+                                                                            dbc.Button(
+                                                                                dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                                            ),
+                                                                            className="d-grid gap-2 col-6 mx-auto",
+                                                                        ),
+                                                                    ],
+                                                                    width=2
+                                                                ),
+                                                                dbc.Col(width=5)
+                                                            ]
+                                                        ),
+                                                    ]
                                                 ),
                                             ],
-                                            width=4
                                         ),
-                                        dbc.Col(
-                                            children=[
-                                                html.H3('Study Types'),
-                                                html.Br(),
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
-                                                        {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
-                                                        {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
-                                                        {"label": "Effect (disease, etc.)", "value": 'effect'},
-                                                    ],
-                                                    id="study_checklist",
-                                                ),
-                                            ],
-                                            width=4
-                                        ),
-                                        dbc.Col(width=1)
-                                    ]
-                                )
-                            ]
-                        ),
-                        dmc.StepperStep(
-                            label="Second step",
-                            description="Add Extra Columns/Rows",
-                            children=[
-                                dbc.Row(
-                                    children=[
-                                        dbc.Col(width=3),
-                                        dbc.Col(
-                                            children=[
-                                                html.H3('Sample Types'),
-                                                html.Br(),
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
-                                                    ],
-                                                    id="extra_checklist",
-                                                ),
-                                            ],
-                                            width=4
-                                        ),
-                                        dbc.Col(
-                                            children=[
-                                                html.H3('Number of Samples'),
-                                                html.Br(),
-                                                dmc.NumberInput(
-                                                    id='sample_count_input',
-                                                    label="Number of Samples",
-                                                    description="Integer from 1 to infinity",
-                                                    value=1,
-                                                    min=1,
-                                                    step=1,
-                                                    style={"width": 250},
-                                                ),
-                                            ],
-                                            width=4
-                                        ),
-                                        dbc.Col(width=1)
-                                    ]
-                                )
-                            ] 
-                        ),
-                        dmc.StepperStep(
-                            label="Third step",
-                            description="Download form",
-                            children=[
-                                html.Br(),
-                                html.Br(),
-                                dbc.Row(
-                                    children=[
-                                        dbc.Col(width=5),
-                                        dbc.Col(
-                                            children=[
-                                                html.Div(
-                                                    dbc.Button(
-                                                        'Download Form',
-                                                        id='button_form',
-                                                    ),
-                                                    className="d-grid gap-2 col-6 mx-auto",
-                                                ),
-                                            ],
-                                            width=2
-                                        ),
-                                        dbc.Col(width=5)
-                                    ]
-                                ),
-                                html.Br(),
-                                html.Br(),
-                            ]
-                        ),
-                        dmc.StepperCompleted(
-                            # label='some_label',
-                            # description='some description',
-                            children=[
-                                dbc.Row(
-                                    children=[
-                                        dbc.Col(width=5),
-                                        dbc.Col(
-                                            children=[
-                                                html.Div(
-                                                    dbc.Button(
-                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
-                                                    ),
-                                                    className="d-grid gap-2 col-6 mx-auto",
-                                                ),
-                                            ],
-                                            width=2
-                                        ),
-                                        dbc.Col(width=5)
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ],
-                ),
-
-
-
-
                             ],
                             width=10
                         ),
                         dbc.Col(width=1)
                     ]
                 ),   
-
-
-
-
-
-
-                # dmc.Stepper(
-                #     id="stepper_generate_form",
-                #     active=0,
-                #     breakpoint="sm",
-                #     children=[
-                #         dmc.StepperStep(
-                #             label="First step",
-                #             description="Choose Archetypes",
-                #             children=[
-                #                 dbc.Row(
-                #                     children=[
-                #                         dbc.Col(width=3),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.H3('Sample Types'),
-                #                                 html.Br(),
-                #                                 dbc.Checklist(
-                #                                     options=[
-                #                                         {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
-                #                                         {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
-                #                                         {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
-                #                                         {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
-                #                                     ],
-                #                                     id="sample_checklist",
-                #                                 ),
-                #                             ],
-                #                             width=4
-                #                         ),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.H3('Study Types'),
-                #                                 html.Br(),
-                #                                 dbc.Checklist(
-                #                                     options=[
-                #                                         {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
-                #                                         {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
-                #                                         {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
-                #                                         {"label": "Effect (disease, etc.)", "value": 'effect'},
-                #                                     ],
-                #                                     id="study_checklist",
-                #                                 ),
-                #                             ],
-                #                             width=4
-                #                         ),
-                #                         dbc.Col(width=1)
-                #                     ]
-                #                 )
-                #             ]
-                #         ),
-                #         dmc.StepperStep(
-                #             label="Second step",
-                #             description="Extra Specifications",
-                #             children=[
-                #                 dbc.Row(
-                #                     children=[
-                #                         dbc.Col(width=3),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.H3('Sample Types'),
-                #                                 html.Br(),
-                #                                 dbc.Checklist(
-                #                                     options=[
-                #                                         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
-                #                                     ],
-                #                                     id="extra_checklist",
-                #                                 ),
-                #                             ],
-                #                             width=4
-                #                         ),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.H3('Number of Samples'),
-                #                                 html.Br(),
-                #                                 dmc.NumberInput(
-                #                                     id='sample_count_input',
-                #                                     label="Number of Samples",
-                #                                     description="Integer from 1 to infinity",
-                #                                     value=1,
-                #                                     min=1,
-                #                                     step=1,
-                #                                     style={"width": 250},
-                #                                 ),
-                #                             ],
-                #                             width=4
-                #                         ),
-                #                         dbc.Col(width=1)
-                #                     ]
-                #                 )
-                #             ] 
-                #         ),
-                #         dmc.StepperStep(
-                #             label="Third step",
-                #             description="Download form",
-                #             children=[
-                #                 html.Br(),
-                #                 html.Br(),
-                #                 dbc.Row(
-                #                     children=[
-                #                         dbc.Col(width=5),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.Div(
-                #                                     dbc.Button(
-                #                                         'Download Form',
-                #                                         id='button_form',
-                #                                     ),
-                #                                     className="d-grid gap-2 col-6 mx-auto",
-                #                                 ),
-                #                             ],
-                #                             width=2
-                #                         ),
-                #                         dbc.Col(width=5)
-                #                     ]
-                #                 ),
-                #                 html.Br(),
-                #                 html.Br(),
-                #             ]
-                #         ),
-                #         dmc.StepperCompleted(
-                #             # label='some_label',
-                #             # description='some description',
-                #             children=[
-                #                 dbc.Row(
-                #                     children=[
-                #                         dbc.Col(width=5),
-                #                         dbc.Col(
-                #                             children=[
-                #                                 html.Div(
-                #                                     dbc.Button(
-                #                                         dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
-                #                                     ),
-                #                                     className="d-grid gap-2 col-6 mx-auto",
-                #                                 ),
-                #                             ],
-                #                             width=2
-                #                         ),
-                #                         dbc.Col(width=5)
-                #                     ]
-                #                 ),
-                #             ]
-                #         ),
-                #     ],
-                # ),
                 dmc.Group(
                     position="center",
                     mt="xl",
@@ -408,8 +240,6 @@ layout = html.Div(
                 ),
             ]
         )
-
-
     ]
 )
 
@@ -431,15 +261,7 @@ layout = html.Div(
     prevent_initial_call=True
 )
 def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_clicks, current,my_children):
-    # print('-------')
-    # print(ctx.triggered_id)
-    print(current)
-    # button_id = ctx.triggered_id
-    # step = current if current is not None else active
-    # if button_id == "back-basic-usage":
-    #     step = step - 1 if step > min_step else step
-    # else:
-    #     step = step + 1 if step < max_step else step
+
     if ctx.triggered_id=="stepper_generate_form_back" and current>0:
         current-=1
     elif ctx.triggered_id=="stepper_generate_form_next" and current<NUM_STEPS:
@@ -450,40 +272,8 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
     output_children[current]=my_children[current]
 
 
-    # #output_children=my_children
-    # current_time=time()
-    # if current<3:
-    #     my_children[current]=dmc.StepperStep(
-    #                     label='this_should_be_dynamic',
-    #                     description="this_should_be_tynamic",
-    #                     children=dmc.Text(
-    #                         f"the previous time was {current_time}", align="center"
-    #                     ),
-    #                 )
-    # else:
-    #     my_children[current]=dmc.StepperCompleted(
-    #                 children=dmc.Text(
-    #                     "Completed, click back button to get to previous step",
-    #                     align="center",
-    #                 )
-    #             ),      
-
-    # print('about to output')
     return [current,my_children]
 
-
-
-
-        # html.Div(
-        #     id='Div_metadata_datatable',
-        #     children=[
-        #         dash_table.DataTable(
-        #             id='dt_for_preview',
-        #             columns=None,
-        #             data=None,
-        #         )
-        #     ]
-        # ),
 
 
 
@@ -539,66 +329,6 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
         }
         for temp_row in range(sample_count_input_value)
     ]
-
-    #print(total_headers)
-
-    # output_children=[
-    #     dmc.Grid(
-    #         children=[
-    #             dmc.Col(span=1),
-    #             dmc.Col(
-    #                 children=[
-    #                     dmc.Center(
-    #                         children=[
-    #                             dash_table.DataTable(
-    #                                 id='dt_for_preview',
-    #                                 columns=total_columns,
-    #                                 data=total_data,
-    #                                 style_cell={
-    #                                     'fontSize': 17,
-    #                                     'padding': '8px',
-    #                                     'textAlign': 'center',
-                                        
-    #                                 },
-    #                                 style_header={
-    #                                     'font-family': 'arial',
-    #                                     'fontSize': 15,
-    #                                     'fontWeight': 'bold',
-    #                                     'textAlign': 'center'
-    #                                 },
-    #                                 style_data={
-    #                                     'textAlign': 'center',
-    #                                     'fontWeight': 'bold',
-    #                                     'font-family': 'Roboto',
-    #                                     'fontSize': 15,
-    #                                     'color':'grey',
-    #                                     'font-style':'italic'
-    #                                 },
-    #                                 style_table={
-    #                                     'overflowX': 'scroll'
-    #                                 },
-    #                                 page_action='native',
-    #                                 page_size=5,
-    #                                 #fill_width=False,
-    #                                 # virtualization=True
-    #                             )
-    #                         ],
-    #                         #style={"maxWidth":1000}
-    #                         #size=1000
-    #                         #style={'textAlign':'center'}
-    #                     )
-    #                 ],
-    #                 span=10
-    #             ),
-    #             dmc.Col(span=1)
-    #         ]
-    #     ),        
-    # ]
-
-
-
-
-
 
     output_children=[
         dbc.Row(
@@ -659,7 +389,7 @@ def update(a,b,c,d,sample_checklist_values,study_checklist_values,extra_checklis
 
 
 def fill_title_sheet(temp_writer,workbook,worksheet):
-    worksheet=temp_writer.sheets['title_page']
+    worksheet=temp_writer.sheets['Instructions']
     worksheet.hide_gridlines()
     top_format=workbook.add_format({
         'bold': 1,
@@ -715,16 +445,11 @@ def update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe):#,gr
     [
         Input(component_id='button_form', component_property='n_clicks'),
     ],
-    # [
-    #     State(component_id='sample_checklist', component_property='value'),
-    #     State(component_id='study_checklist',component_property='value'),
-    # ],
     [
         #State(component_id="column_store", component_property="data"),
         State(component_id="dt_for_preview",component_property="columns"),
         State(component_id="dt_for_preview",component_property="data"),
     ],
-    
     prevent_initial_call=True
 )
 # def generate_form(button_form_n_clicks,sample_checklist_options,study_checklist_options):
@@ -736,7 +461,7 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     print(button_form_n_clicks)
     print(ctx.triggered_id)
     #a potential improvement would be to generate a visible error if nothing is checked
-    if dt_for_preview_columns==None or button_form_n_clicks==None:# and study_checklist_options==None:
+    if dt_for_preview_columns==None or button_form_n_clicks!=None:# and study_checklist_options==None:
         raise PreventUpdate
     
     # if sample_checklist_options==None:
@@ -767,11 +492,12 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     #temp_writer=pd.ExcelWriter(output_stream,engine='openpyxl')
 
     empty_df=pd.DataFrame()
-    empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
+    empty_df.to_excel(temp_writer,sheet_name='Instructions',index=False)
 
     print('--------------------------')
-    print(temp_dataframe)
+    # print(temp_dataframe)
 
+    temp_dataframe.index=[i+1 for i in temp_dataframe.index]
     temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet')#,index=False)#,startrow=1)
 
 

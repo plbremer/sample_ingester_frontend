@@ -1,6 +1,6 @@
 import dash
 from dash import dcc, html,dash_table,callback
-import dash_mantine_components as dmc
+#import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
@@ -112,5 +112,4 @@ def update(button_column_add_n_clicks):
 
 
 if __name__ == "__main__":
-    #app.run(debug=False, host='0.0.0.0')
     app.run(debug=True, host='0.0.0.0')

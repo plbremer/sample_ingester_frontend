@@ -24,8 +24,8 @@ from . import samplemetadatauploadchecker
 
 dash.register_page(__name__, path='/submit-form')
 
-# BASE_URL_API = "http://127.0.0.1:4999/"
-BASE_URL_API = "http://api_alias:4999/"
+BASE_URL_API = "http://127.0.0.1:4999/"
+# BASE_URL_API = "http://api_alias:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
