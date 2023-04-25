@@ -172,8 +172,25 @@ layout = html.Div(
                                             label="Second step",
                                             description="Validate Automatic Curation",
                                             children=[
-                                                html.H6('second step')
-                                                
+                                                # html.H6('second step')
+                                                html.Div(id="submit_step_2_error_div",children=[]),
+                                                dmc.Checkbox(
+                                                    id={
+                                                        'type':'step_2_curation_checkbox',
+                                                        'index':'temp'
+                                                    },
+                                                    # multi=False,
+                                                    # #placeholder='Type compound name to search',
+                                                    # options=['Type substring to populate options.'],
+                                                    # optionHeight=60
+                                                    checked=False,
+                                                    style={'horizontal-align': 'center'}
+                                                ),
+                                                dmc.Checkbox(
+                                                    id='step_2_curation_checkbox_all_correct',
+                                                    checked=False,
+                                                    style={'horizontal-align': 'center'}
+                                                ),
                                             ] 
                                         ),
                                         dmc.StepperStep(
@@ -531,6 +548,7 @@ def control_download_button(
 
         Output(component_id="submit_step_1_error_div", component_property="children", allow_duplicate=True),
         Output(component_id="step_2", component_property="children"),
+        Output(component_id="submit_step_2_error_div", component_property="children", allow_duplicate=True),
         Output(component_id="step_3", component_property="children"),
         Output(component_id="step_4", component_property="children"),
 
@@ -556,16 +574,19 @@ def control_download_button(
 
         State(component_id="submit_step_1_error_div", component_property="children"),
         State(component_id="step_2", component_property="children"),
+        State(component_id="submit_step_2_error_div", component_property="children"),
         State(component_id="step_3", component_property="children"),
         State(component_id="step_4", component_property="children"),
 
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
+        State(component_id='step_2_curation_checkbox_all_correct', component_property="checked"),
 
         State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
         State(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
         
     ],
-    prevent_initial_call=True
+    prevent_initial_call=True,
+    suppress_callback_exceptions=True
 )
 def update_step_submit(
     stepper_submit_form_back_n_clicks, 
@@ -584,10 +605,13 @@ def update_step_submit(
 
     submit_step_1_error_div_children,
     step_2_children,
+    submit_step_2_error_div_children,
     step_3_children,
     step_4_children,
 
     state_step_2_curation_checkbox_n_clicks_ALL,
+    step_2_curation_checkbox_all_correct_checked,
+
     state_dropdown_empty_options_value_ALL,
     state_step_3_curation_checkbox_n_clicks_ALL,
 ):#,my_children):
@@ -599,17 +623,17 @@ def update_step_submit(
     # print(ctx.triggered_id)
     # print(type(ctx.triggered_id))
 
-    print(stepper_submit_form_active)
-    print(store_furthest_active_data)
+    # print(stepper_submit_form_active)
+    # print(store_furthest_active_data)
     
-    print(store_2_data)
-    print(store_3_data)
-    print(store_4_data)
+    # print(store_2_data)
+    # print(store_3_data)
+    # print(store_4_data)
 
-    print(submit_step_1_error_div_children)
-    print(step_2_children)
-    print(step_3_children)
-    print(step_4_children)
+    # print(submit_step_1_error_div_children)
+    # print(step_2_children)
+    # print(step_3_children)
+    # print(step_4_children)
 
 
 
@@ -627,7 +651,7 @@ def update_step_submit(
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         # need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
 
     #if a button click in one of the children steps triggered things
     if type(ctx.triggered_id)==dash._utils.AttributeDict:
@@ -635,7 +659,7 @@ def update_step_submit(
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         #need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # # store_furthest_active=stepper_submit_form_active
@@ -648,7 +672,8 @@ def update_step_submit(
     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
         stepper_submit_form_active-=1
         junk_patch=Patch()
-        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
+        #the [] is returned to get rid of error messages
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,[],junk_patch,junk_patch]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     #if we are going forward....
@@ -670,8 +695,23 @@ def update_step_submit(
                         dbc.Col(width=4)
                     ]
                 )
-                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,step_3_children,step_4_children]
-                
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+        elif stepper_submit_form_active==1:
+            submit_step_2_errors=submit_step_2_error_checker(input_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked)
+            if submit_step_2_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_2_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_2_error_div_children,step_2_children,curate_button_children,step_3_children,step_4_children]
+
         
         #if the errors are non existent, then proceed with updates
         stepper_submit_form_active+=1   
@@ -679,7 +719,7 @@ def update_step_submit(
         if stepper_submit_form_active > store_furthest_active_data:
             store_furthest_active_data=stepper_submit_form_active
         else:
-            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
             # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # #if we enter step 2
@@ -735,7 +775,19 @@ def update_step_submit(
     #     store_4_data=panda_for_store_4.to_dict(orient='records')
 
 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+
+
+def submit_step_2_error_checker(input_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked):
+    print(input_step_2_curation_checkbox_n_clicks_ALL)
+    print(step_2_curation_checkbox_all_correct_checked)
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+
+    #^ means XOR in python for bitwise comparisons
+    if ((any(input_step_2_curation_checkbox_n_clicks_ALL)) ^ step_2_curation_checkbox_all_correct_checked):
+        return False
+    else:
+        return ['Please indicate if curations are wrong OR all are correct.']
 
 def submit_step_1_error_checker(upload_store_data):
     if upload_store_data==None:
@@ -1142,6 +1194,39 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     output_children.append(
         dbc.Row(
             children=[
+                dbc.Col(width=4),
+                dbc.Col(html.H3('Automatic Curation Step'),width=4),
+                dbc.Col(width=4),
+            ]
+        )
+    )
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(width=2),
+                dbc.Col(
+                    html.Div(
+                        html.H6('This step attempts to map written strings to official vocabulary terms. Please invalidate any attempts, or, if all are correct, acknowledge that at the bottom of the page.'),
+                        style={'textAlign':'center'}
+                    ),
+                    width=8
+                ),
+                dbc.Col(width=2),
+            ]
+        )
+    )
+    output_children.append(html.Br())
+    output_children.append(
+        html.Div(
+            id="submit_step_2_error_div",
+            children=[]       
+        )
+    )
+    output_children.append(html.Br())
+
+    output_children.append(
+        dbc.Row(
+            children=[
                 # dbc.Col(
                 #     html.H3('Metadata Header')
                 # ),    
@@ -1268,6 +1353,39 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
             #             ]
             #         )
             #     )
+
+    output_children.append(
+        html.Br(),
+    )
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    children=[
+                        html.H6('If all curations are correct, check here'),
+                        # dmc.Checkbox(
+                        #     id='step_2_curation_checkbox_all_correct',
+                        #     checked=False,
+                        #     style={'horizontal-align': 'center'}
+                        # ),
+                    ],
+                    width=3
+                ),
+                dbc.Col(
+                    children=[
+                        dmc.Checkbox(
+                            id='step_2_curation_checkbox_all_correct',
+                            checked=False,
+                            style={'horizontal-align': 'center'}
+                        ),
+                    ],
+                    width=1
+                ),
+                dbc.Col(width=4),
+            ]
+        )
+    )
 
     #what we really should do is make the panda firs so that the rest of this method can look like steps 3 and 4
     curation_panda_dict={
