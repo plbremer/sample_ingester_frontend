@@ -32,7 +32,7 @@ with open('assets/form_header_dict_basics.json','r') as f:
 with open('assets/extra_columns.json','r') as f:
     EXTRA_COLUMNS=json.load(f)
 
-NUM_STEPS_2=5
+NUM_STEPS_SUBMIT=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
@@ -137,7 +137,7 @@ layout = html.Div(
                                             label="First step",
                                             description="Upload Form",
                                             children=[
-                                                html.Div(id='Div_curate_button_or_error_messages'),
+                                                html.Div(id='submit_step_1_error_div'),
                                                 dbc.Row(
                                                     children=[
                                                         dbc.Col(width=4),
@@ -529,6 +529,7 @@ def control_download_button(
         Output(component_id="store_3", component_property="data"),
         Output(component_id="store_4", component_property="data"),
 
+        Output(component_id="submit_step_1_error_div", component_property="children", allow_duplicate=True),
         Output(component_id="step_2", component_property="children"),
         Output(component_id="step_3", component_property="children"),
         Output(component_id="step_4", component_property="children"),
@@ -552,6 +553,8 @@ def control_download_button(
         State(component_id="store_2", component_property="data"),
         State(component_id="store_3", component_property="data"),
         State(component_id="store_4", component_property="data"),
+
+        State(component_id="submit_step_1_error_div", component_property="children"),
         State(component_id="step_2", component_property="children"),
         State(component_id="step_3", component_property="children"),
         State(component_id="step_4", component_property="children"),
@@ -578,6 +581,8 @@ def update_step_submit(
     store_2_data,
     store_3_data,
     store_4_data,
+
+    submit_step_1_error_div_children,
     step_2_children,
     step_3_children,
     step_4_children,
@@ -591,22 +596,46 @@ def update_step_submit(
     for example, we only want to output the step_2_children if stepper_submit_form_active becomes 1
     '''
     print('')
-    print(ctx.triggered_id)
-    print(type(ctx.triggered_id))
+    # print(ctx.triggered_id)
+    # print(type(ctx.triggered_id))
+
+    print(stepper_submit_form_active)
+    print(store_furthest_active_data)
+    
+    print(store_2_data)
+    print(store_3_data)
+    print(store_4_data)
+
+    print(submit_step_1_error_div_children)
+    print(step_2_children)
+    print(step_3_children)
+    print(step_4_children)
+
+
+
+
+
+
+
+
+
+
     
     # need_to_generate_new_children=True
+    #if a new upload triggered things
     if ctx.triggered_id=='upload_store': #the ALL ones
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         # need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
 
+    #if a button click in one of the children steps triggered things
     if type(ctx.triggered_id)==dash._utils.AttributeDict:
         print('met dict if')
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         #need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # # store_furthest_active=stepper_submit_form_active
@@ -615,20 +644,42 @@ def update_step_submit(
   # print(f'we are starting callback on step {stepper_submit_form_active}')
   # print(f'the starting callback with max step on {store_furthest_active_data}')
     
-    
+    #if we are going back, just go back
     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
         stepper_submit_form_active-=1
         junk_patch=Patch()
-        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
-    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
+    #if we are going forward....
+    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_SUBMIT:
+        #if we are on the first step
+        if stepper_submit_form_active==0:
+            submit_step_1_errors=submit_step_1_error_checker(upload_store_data)
+            #if there are errors
+            print(submit_step_1_errors)
+            if submit_step_1_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_1_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,step_3_children,step_4_children]
+                
+        
+        #if the errors are non existent, then proceed with updates
         stepper_submit_form_active+=1   
         junk_patch=Patch()
         if stepper_submit_form_active > store_furthest_active_data:
             store_furthest_active_data=stepper_submit_form_active
         else:
-            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
             # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # #if we enter step 2
@@ -684,7 +735,14 @@ def update_step_submit(
     #     store_4_data=panda_for_store_4.to_dict(orient='records')
 
 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,step_3_children,step_4_children]
+
+def submit_step_1_error_checker(upload_store_data):
+    if upload_store_data==None:
+        return 'Must upload a valid .xlsx'
+    else:
+        return False
+
 
 def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_checkbox_n_clicks_ALL):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
@@ -1242,7 +1300,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     [
         Output(component_id="upload_form",component_property="children"),
         Output(component_id="upload_store",component_property="data"),
-        Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
+        Output(component_id="submit_step_1_error_div",component_property="children"),
     ],
     [
         Input(component_id="upload_form", component_property="contents"),
@@ -1288,12 +1346,14 @@ def upload_form(
             children=[
                 dbc.Col(width=4),
                 dbc.Col(
-                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
+                    children=[dmc.Alert(element,withCloseButton=True) for element in excel_sheet_checks if element!=False],
                     width=4,
                 ),
                 dbc.Col(width=4)
             ]
         )
+
+
         temp_dataframe_output=None
     else:
         dataframe_checks=list()
@@ -1306,7 +1366,7 @@ def upload_form(
                 children=[
                     dbc.Col(width=4),
                     dbc.Col(
-                        children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
+                        children=[dmc.Alert(element,withCloseButton=True) for element in dataframe_checks if element!=False],
                         width=4,
                     ),
                     dbc.Col(width=4)
@@ -1317,30 +1377,31 @@ def upload_form(
 
         #if there are no problems with the excel file or dataframe
         else:
-            curate_button_children=dbc.Row(
-                children=[
-                    dbc.Col(width=5),
-                    dbc.Col(
-                        children=[
-                            html.H6('form passes checks')
-                            # dcc.Link(
-                            #     children=[                        
-                            #         html.Div(
-                            #             dbc.Button(
-                            #                 'Process Form',
-                            #                 id='button_form',
-                            #             ),
-                            #             className="d-grid gap-2 col-6 mx-auto",
-                            #         ),
-                            #     ],
-                            #     href='/curate-and-download',
-                            # )
-                        ],
-                        width=2
-                    ),
-                    dbc.Col(width=5)
-                ]
-            )
+            # curate_button_children=dbc.Row(
+            #     children=[
+            #         dbc.Col(width=5),
+            #         dbc.Col(
+            #             children=[
+            #                 html.H6('form passes checks')
+            #                 # dcc.Link(
+            #                 #     children=[                        
+            #                 #         html.Div(
+            #                 #             dbc.Button(
+            #                 #                 'Process Form',
+            #                 #                 id='button_form',
+            #                 #             ),
+            #                 #             className="d-grid gap-2 col-6 mx-auto",
+            #                 #         ),
+            #                 #     ],
+            #                 #     href='/curate-and-download',
+            #                 # )
+            #             ],
+            #             width=2
+            #         ),
+            #         dbc.Col(width=5)
+            #     ]
+            # )
+            curate_button_children=[]
 
             decoded=base64.b64decode(content_string)
             temp_dataframe=pd.read_excel(
