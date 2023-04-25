@@ -391,7 +391,7 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
     for temp_tuple in total_replacement_panda.groupby('header'):
         replacement_dict[temp_tuple[0]]=dict()
         for index,series in temp_tuple[1].iterrows():
-            replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']+' AKA '+series['valid_string']
+            replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']#+' AKA '+series['valid_string']
 
     pprint(replacement_dict)
 
@@ -723,15 +723,26 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
         output_children.append(
             dbc.Row(
                 children=[
+                    # dbc.Col(
+                    #     html.H3('Metadata Header')
+                    # ),    
+                    dbc.Col(width=1),
+                    # dbc.Col(
+                    #     html.H3('Written String'),
+                    #     style={'text-align':'center'},
+                    #     width=3
+                    # ),
+                    #dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Metadata Header')
-                    ),    
-                    dbc.Col(
-                        html.H3('Written String')
-                    ),
-                    dbc.Col(
-                        html.H3('New Term')
+                        html.H3('Written String'),
+                        style={'text-align':'center'},
+                        width=4
                     ),   
+                    dbc.Col(
+                        html.H3('Term to create for future use') ,
+                        style={'text-align':'center'},
+                        width=4
+                    ),
                 ]
             )
         )
@@ -740,15 +751,18 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
         for temp_group in written_strings_for_new_terms_panda.groupby('header'):
             
             for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i==0:
+                if i>-1:
                     output_children.append(
                         dbc.Row(
                             children=[
+                                # dbc.Col(
+                                #     html.H6(series['header'])
+                                # ),    
+                                dbc.Col(width=1),
                                 dbc.Col(
-                                    html.H6(series['header'])
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
+                                    html.H6(series['header']+': '+series['written_string']),
+                                    style={'text-align':'center'},
+                                    width=4
                                 ),
                                 # dbc.Col(
                                 #     html.H6(
@@ -756,44 +770,50 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
                                 #     )
                                 # ),   
                                 dbc.Col(
-                                    dcc.Input(
-                                        id={
-                                            'type':'input_creation',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        placeholder="Nothing matches - Enter New"
-                                    )
+                                    html.Div(
+                                        dcc.Input(
+                                            id={
+                                                'type':'input_creation',
+                                                'index':series['header']+'_'+series['written_string'],
+                                                
+                                            },
+                                            value=series['written_string']
+                                            #placeholder="Please enter new term"
+                                        ),
+                                        className="d-flex justify-content-center align-items-center"
+                                    ),
+                                    width=4
                                 )
                             ]
                         )
                     )
-                else:
-                    output_children.append(
-                        dbc.Row(
-                            children=[
-                                dbc.Col(
-                                    html.H6(' ')
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Input(
-                                        id={
-                                            'type':'input_creation',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        placeholder="Nothing matches - Enter New"
-                                    )
-                                )
-                            ]
-                        )
-                    )
+                # else:
+                #     output_children.append(
+                #         dbc.Row(
+                #             children=[
+                #                 dbc.Col(
+                #                     html.H6(' ')
+                #                 ),    
+                #                 dbc.Col(
+                #                     html.H6(series['written_string'])
+                #                 ),
+                #                 # dbc.Col(
+                #                 #     html.H6(
+                #                 #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                #                 #     )
+                #                 # ),   
+                #                 dbc.Col(
+                #                     dcc.Input(
+                #                         id={
+                #                             'type':'input_creation',
+                #                             'index':series['header']+'_'+series['written_string']
+                #                         },
+                #                         placeholder="Nothing matches - Enter New"
+                #                     )
+                #                 )
+                #             ]
+                #         )
+                #     )
 
 
     store_4_panda_output['valid_string']=np.nan
@@ -840,17 +860,25 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
         output_children.append(
             dbc.Row(
                 children=[
+                    # dbc.Col(
+                    #     html.H3('Metadata Header')
+                    # ),    
+                    dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Metadata Header')
-                    ),    
-                    dbc.Col(
-                        html.H3('Written String')
+                        html.H3('Written String'),
+                        style={'text-align':'center'},
+                        width=3
                     ),
+                    #dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Substring Search')
+                        html.H3('Substring Search'),
+                        style={'text-align':'center'},
+                        width=3
                     ),   
                     dbc.Col(
-                        html.H3('None exist?') 
+                        html.H3('No term exists?') ,
+                        style={'text-align':'center'},
+                        width=3
                     ),
                 ]
             )
@@ -859,15 +887,18 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
         for temp_group in written_strings_to_substring_panda.groupby('header'):
             
             for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i==0:
+                if i>-1:
                     output_children.append(
                         dbc.Row(
                             children=[
+                                # dbc.Col(
+                                #     html.H6(series['header'])
+                                # ),  
+                                dbc.Col(width=1),  
                                 dbc.Col(
-                                    html.H6(series['header'])
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
+                                    html.H6(series['header']+': '+series['written_string']),
+                                    style={'text-align':'center'},
+                                    width=3
                                 ),
                                 # dbc.Col(
                                 #     html.H6(
@@ -884,67 +915,75 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                                         placeholder='Type substring to search',
                                         options=['Type substring to populate options.'],
                                         optionHeight=60
-                                    ),  
+                                    ),
+                                    style={'text-align':'center'},
+                                    width=3
                                 ),
                                 dbc.Col(
-                                    dmc.Checkbox(
-                                        id={
-                                            'type':'step_3_curation_checkbox',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        # multi=False,
-                                        # #placeholder='Type compound name to search',
-                                        # options=['Type substring to populate options.'],
-                                        # optionHeight=60
-                                        checked=False
-                                    ),  
-                                ),
-                            ]
-                        )
-                    )
-                else:
-                    output_children.append(
-                        dbc.Row(
-                            children=[
-                                dbc.Col(
-                                    html.H6(' ')
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Dropdown(
-                                        id={
-                                            'type':'dropdown_empty_options',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        multi=False,
-                                        placeholder='Type compound name to search',
-                                        options=['Type substring to populate options.'],
-                                        optionHeight=60
-                                    ),  
-                                ),
-                                dbc.Col(
-                                    dmc.Checkbox(
-                                        id={
-                                            'type':'step_3_curation_checkbox',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        # multi=False,
-                                        # #placeholder='Type compound name to search',
-                                        # options=['Type substring to populate options.'],
-                                        # optionHeight=60
-                                        checked=False
-                                    ),  
+                                    html.Div(
+                                        dmc.Checkbox(
+                                            id={
+                                                'type':'step_3_curation_checkbox',
+                                                'index':series['header']+'_'+series['written_string']
+                                            },
+                                            # multi=False,
+                                            # #placeholder='Type compound name to search',
+                                            # options=['Type substring to populate options.'],
+                                            # optionHeight=60
+                                            checked=False,
+
+                                            ),  
+                                        className="d-flex justify-content-center align-items-center"
+                                    ),
+                                    width=3
+                                    
                                 ),
                             ]
                         )
                     )
+                # else:
+                #     output_children.append(
+                #         dbc.Row(
+                #             children=[
+                #                 # dbc.Col(
+                #                 #     html.H6(series['header'])
+                #                 # ),    
+                #                 dbc.Col(
+                #                     html.H6(series['header']+': '+series['written_string'])
+                #                 ),
+                #                 # dbc.Col(
+                #                 #     html.H6(
+                #                 #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                #                 #     )
+                #                 # ),   
+                #                 dbc.Col(
+                #                     dcc.Dropdown(
+                #                         id={
+                #                             'type':'dropdown_empty_options',
+                #                             'index':series['header']+'_'+series['written_string']
+                #                         },
+                #                         multi=False,
+                #                         placeholder='Type compound name to search',
+                #                         options=['Type substring to populate options.'],
+                #                         optionHeight=60
+                #                     ),  
+                #                 ),
+                #                 dbc.Col(
+                #                     dmc.Checkbox(
+                #                         id={
+                #                             'type':'step_3_curation_checkbox',
+                #                             'index':series['header']+'_'+series['written_string']
+                #                         },
+                #                         # multi=False,
+                #                         # #placeholder='Type compound name to search',
+                #                         # options=['Type substring to populate options.'],
+                #                         # optionHeight=60
+                #                         checked=False
+                #                     ),  
+                #                 ),
+                #             ]
+                #         )
+                #     )
 
 
     store_3_panda_output['valid_string']=np.nan
@@ -1045,17 +1084,25 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     output_children.append(
         dbc.Row(
             children=[
+                # dbc.Col(
+                #     html.H3('Metadata Header')
+                # ),    
+                dbc.Col(width=1),
                 dbc.Col(
-                    html.H3('Metadata Header')
-                ),    
-                dbc.Col(
-                    html.H3('Written String')
+                    html.H3('Written String'),
+                    style={'text-align':'center'},
+                    width=3
                 ),
+                #dbc.Col(width=1),
                 dbc.Col(
-                    html.H3('Curated String')
+                    html.H3('Curated String'),
+                    style={'text-align':'center'},
+                    width=3
                 ),   
                 dbc.Col(
-                    html.H3('Curation Wrong?') 
+                    html.H3('Curation Wrong?') ,
+                    style={'text-align':'center'},
+                    width=3
                 ),
             ]
         )
@@ -1063,69 +1110,108 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     for temp_header in curation_dict.keys():
 
         for i,temp_written_string in enumerate(curation_dict[temp_header]):
-            if i==0:
+            if i>-1:
                 output_children.append(
                     dbc.Row(
                         children=[
+                            # dbc.Col(
+                            #     html.H6(temp_header)
+                            # ),    
+                            dbc.Col(width=1),
                             dbc.Col(
-                                html.H6(temp_header)
-                            ),    
-                            dbc.Col(
-                                html.H6(temp_written_string)
+                                html.H6(temp_header+': '+temp_written_string),
+                                style={'text-align':'center'},
+                                width=3
                             ),
+                            
+                            # dbc.Col(
+                            #     html.H6(
+                            #         '     '+curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                            #     )
+                            # ),  
                             dbc.Col(
                                 html.H6(
-                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                )
-                            ),   
+                                   curation_dict[temp_header][temp_written_string]['main_string']
+                                ),
+                                style={'text-align':'center'},
+                                width=3
+                            ), 
                             dbc.Col(
-                                dmc.Checkbox(
-                                    id={
-                                        'type':'step_2_curation_checkbox',
-                                        'index':str(temp_header)+'_'+str(temp_written_string)
-                                    },
-                                    # multi=False,
-                                    # #placeholder='Type compound name to search',
-                                    # options=['Type substring to populate options.'],
-                                    # optionHeight=60
-                                    checked=False
-                                ),  
-                            ),
-                        ]
-                    )
-                )
-            else:
-                output_children.append(
-                    dbc.Row(
-                        children=[
-                            dbc.Col(
-                                html.H6(' ')
-                            ),    
-                            dbc.Col(
-                                html.H6(temp_written_string)
-                            ),
-                            dbc.Col(
-                                html.H6(
-                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                )
-                            ),   
-                            dbc.Col(
-                                dmc.Checkbox(
-                                    id={
-                                        'type':'step_2_curation_checkbox',
-                                        'index':str(temp_header)+'_'+str(temp_written_string)
-                                    },
-                                    # multi=False,
-                                    # #placeholder='Type compound name to search',
-                                    # options=['Type substring to populate options.'],
-                                    # optionHeight=60
-                                    checked=False
-                                ),  
-                            ),
-                        ]
-                    )
-                )
+                                html.Div(
 
+                                    dmc.Checkbox(
+                                        id={
+                                            'type':'step_2_curation_checkbox',
+                                            'index':str(temp_header)+'_'+str(temp_written_string)
+                                        },
+                                        # multi=False,
+                                        # #placeholder='Type compound name to search',
+                                        # options=['Type substring to populate options.'],
+                                        # optionHeight=60
+                                        checked=False,
+                                        style={'horizontal-align': 'center'}
+                                    ),
+                                    className="d-flex justify-content-center align-items-center"
+                                    #style={'text-align':'center'},
+                                ),
+                                align='center',
+                                width=3
+                            ),
+                        ]
+                    )
+                )
+            # else:
+            #     output_children.append(
+            #         dbc.Row(
+            #             children=[
+            #                 # dbc.Col(
+            #                 #     html.H6(temp_header)
+            #                 # ),    
+            #                 dbc.Col(width=1),
+            #                 dbc.Col(
+            #                     html.H6(temp_header+': '+temp_written_string),
+            #                     style={'text-align':'center'},
+            #                     width=3
+            #                 ),
+                            
+            #                 # dbc.Col(
+            #                 #     html.H6(
+            #                 #         '     '+curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+            #                 #     )
+            #                 # ),
+            #                 dbc.Col(
+            #                     html.H6(
+            #                        curation_dict[temp_header][temp_written_string]['main_string']
+            #                     ),
+            #                     style={'text-align':'center'},
+            #                     width=3
+            #                 ),
+            #                 dbc.Col(
+            #                     html.Div(
+
+            #                         dmc.Checkbox(
+            #                             id={
+            #                                 'type':'step_2_curation_checkbox',
+            #                                 'index':str(temp_header)+'_'+str(temp_written_string)
+            #                             },
+            #                             # multi=False,
+            #                             # #placeholder='Type compound name to search',
+            #                             # options=['Type substring to populate options.'],
+            #                             # optionHeight=60
+            #                             checked=False,
+            #                             style={'horizontal-align': 'center'}
+            #                         ),
+            #                         className="d-flex justify-content-center align-items-center"
+            #                         #style={'text-align':'center'},
+            #                     ),
+            #                     align='center',
+            #                     width=3
+            #                 ),
+            #             ]
+            #         )
+            #     )
+
+    #what we really should do is make the panda firs so that the rest of this method can look like steps 3 and 4
     curation_panda_dict={
         'header':[],
         'written_string':[],
