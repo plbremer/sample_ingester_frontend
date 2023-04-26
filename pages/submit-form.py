@@ -498,7 +498,7 @@ def control_download_button(
             #the first element in these tuples is the grouping definition, the second is the panda subset
             # for index,series in temp_tuple[1].iterrows():
             training_success=requests.post(
-                BASE_URL_API+'/trainvocabularyterms/',json={
+                BASE_URL_API+'/trainvocabularytermsresource/',json={
                     'header':temp_tuple[0],
                     'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
                 }
@@ -903,9 +903,17 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
         output_children.append(
             dbc.Row(
                 children=[
-                    dbc.Col(width=4),
-                    dbc.Col(html.H3('New Vocabulary Step'),width=4),
-                    dbc.Col(width=4),
+                    dbc.Col(width=2),
+                    dbc.Col(
+                        html.Div(
+                            children=[
+                                html.H3('New Vocabulary Step')
+                            ],
+                            style={'textAlign':'center'}
+                        ),
+                        width=8
+                    ),
+                    dbc.Col(width=2),
                 ]
             )
         )
@@ -915,7 +923,11 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                     dbc.Col(width=2),
                     dbc.Col(
                         html.Div(
-                            html.H6('Terms written here will be added to the corresponding vocabularies for use by the next client.'),
+                            # html.H6('Terms written here will be added to the corresponding vocabularies for use by the next client.'),
+                            children=[
+                                html.H6('•Remaining words are added to vocabularies•'),
+                                html.H6('•Please confirm spelling•'),
+                            ],
                             style={'textAlign':'center'}
                         ),
                         width=8
@@ -1079,9 +1091,17 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
         output_children.append(
             dbc.Row(
                 children=[
-                    dbc.Col(width=4),
-                    dbc.Col(html.H3('Manual Curation Step'),width=4),
-                    dbc.Col(width=4),
+                    dbc.Col(width=2),
+                    dbc.Col(
+                        html.Div(
+                            children=[
+                                html.H3('Manual Curation Step')
+                            ],
+                            style={'textAlign':'center'}
+                        ),
+                        width=8
+                    ),
+                    dbc.Col(width=2),
                 ]
             )
         )
@@ -1091,7 +1111,12 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                     dbc.Col(width=2),
                     dbc.Col(
                         html.Div(
-                            html.H6('In this step you manually search for matching strings. Please invalidate any attempts, or, if all are correct, acknowledge that at the bottom of the page.'),
+                            children=[
+                                html.H6('•We try manually searching vocabularies for matches•'),
+                                html.H6('•If no match, leave blank•'),
+                                html.H6('•Species searches may lag•')
+                            ],
+                            #html.H6('In this step you manually search for matching strings. Please invalidate any attempts, or, if all are correct, acknowledge that at the bottom of the page.'),
                             style={'textAlign':'center'}
                         ),
                         width=8
@@ -1116,13 +1141,13 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                     # ),    
                     dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Written String'),
+                        html.H3('You Wrote'),
                         style={'text-align':'center'},
                         width=3
                     ),
                     #dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Substring Search'),
+                        html.H3('Vocabulary Search'),
                         style={'text-align':'center'},
                         width=6
                     ),   
@@ -1359,9 +1384,17 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     output_children.append(
         dbc.Row(
             children=[
-                dbc.Col(width=4),
-                dbc.Col(html.H3('Automatic Curation Step'),width=4),
-                dbc.Col(width=4),
+                dbc.Col(width=2),
+                dbc.Col(
+                    html.Div(
+                        children=[
+                            html.H3('Automatic Curation Step')
+                        ],
+                        style={'textAlign':'center'}
+                    ),
+                    width=8
+                ),
+                dbc.Col(width=2),
             ]
         )
     )
@@ -1371,7 +1404,10 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 dbc.Col(width=2),
                 dbc.Col(
                     html.Div(
-                        html.H6('This step attempts to map written strings to official vocabulary terms. Please invalidate any attempts, or, if all are correct, acknowledge that at the bottom of the page.'),
+                        children=[
+                            html.H6('•We try to map written words to vocabulary terms•'),
+                            html.H6('•Please mark any mistakes•'),
+                        ],
                         style={'textAlign':'center'}
                     ),
                     width=8
@@ -1397,18 +1433,18 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 # ),    
                 dbc.Col(width=1),
                 dbc.Col(
-                    html.H3('Written String'),
+                    html.H3('You Wrote'),
                     style={'text-align':'center'},
                     width=3
                 ),
                 #dbc.Col(width=1),
                 dbc.Col(
-                    html.H3('Curated String'),
+                    html.H3('We Guessed'),
                     style={'text-align':'center'},
                     width=3
                 ),   
                 dbc.Col(
-                    html.H3('Curation Wrong?') ,
+                    html.H3('Incorrect?') ,
                     style={'text-align':'center'},
                     width=3
                 ),
@@ -1528,7 +1564,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 dbc.Col(width=4),
                 dbc.Col(
                     children=[
-                        html.H6('If all curations are correct, check here'),
+                        html.H6('If all are correct, check here:'),
                         # dmc.Checkbox(
                         #     id='step_2_curation_checkbox_all_correct',
                         #     checked=False,
