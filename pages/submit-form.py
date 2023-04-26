@@ -207,7 +207,7 @@ layout = html.Div(
                                             label="4 step",
                                             description="Create New Terms",
                                             children=[
-                                                html.H6('4 step')
+                                                html.Div(id="submit_step_4_error_div",children=[]),
                                                 
                                             ] 
                                         ),
@@ -283,19 +283,6 @@ layout = html.Div(
 )
 
 
-def check_equal_hashings(state,input):
-    #state_json=json.dumps()
-    hash_state=hash(pickle.dumps(state))
-    hash_input=hash(pickle.dumps(input))
-  # print(hash_state)
-  # print(hash_input)
-    if hash_state==hash_input:
-        return True
-    else:
-        return False
-
-
-
 #     return [stepper_submit_form_active]
 @callback(
     [
@@ -312,9 +299,11 @@ def check_equal_hashings(state,input):
 )
 def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_data):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
-    print(store_3_panda)
+    # print(input_store_dropdown_empty_options_value_ALL)
+    # print(store_3_panda)
+    # print('$'*100)
     
-    print(input_store_dropdown_empty_options_value_ALL)
+    # print(input_store_dropdown_empty_options_value_ALL)
 
     output_valid=list()
     output_main=list()
@@ -359,9 +348,9 @@ def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_dat
 )
 def update_store_4_data(input_creation_value_ALL,store_4_data):
     store_4_panda=pd.DataFrame.from_records(store_4_data)
-    print('in update 4')
-    print(store_4_panda)
-    print(input_creation_value_ALL)
+    # print('in update 4')
+    # print(store_4_panda)
+    # print(input_creation_value_ALL)
     
     # print(input_store_dropdown_empty_options_value_ALL)
 
@@ -402,7 +391,7 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         inplace=True,
         ignore_index=True
     )
-    print(total_replacement_panda)
+    # print(total_replacement_panda)
 
     replacement_dict=dict()
     for temp_tuple in total_replacement_panda.groupby('header'):
@@ -446,18 +435,18 @@ def control_download_button(
     store_3_data,
     store_4_data
 ):
-    print(upload_store_data)
+    # print(upload_store_data)
     upload_panda=pd.DataFrame.from_records(upload_store_data)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
     store_3_panda=pd.DataFrame.from_records(store_3_data)
     store_4_panda=pd.DataFrame.from_records(store_4_data)
-    print(upload_panda)
-    print(store_2_panda)
-    print(store_3_panda)
-    print(store_4_panda)
+    # print(upload_panda)
+    # print(store_2_panda)
+    # print(store_3_panda)
+    # print(store_4_panda)
 
     download_panda,total_replacement_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
-    print(download_panda)
+    # print(download_panda)
     ####generate the downlaodable excel file
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
@@ -466,7 +455,7 @@ def control_download_button(
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
     #skip the last row which has the merger archetype info
     
-    print('pre to excel')
+    # print('pre to excel')
     download_panda.to_excel(
         temp_writer,
         sheet_name='sample_sheet_curated',
@@ -500,7 +489,7 @@ def control_download_button(
 
 
     # store_2_data=panda_for_store_2.to_dict(orient='records')
-    print('pretrain')
+    # print('pretrain')
     ####train new vocab####
     #we only want to train each "type of vocabulary" once
     if len(store_4_panda.index)>0:
@@ -515,7 +504,7 @@ def control_download_button(
                 }
             )
     #######################
-    print('pre usecount')
+    # print('pre usecount')
     ###update use count###
     for index,series in total_replacement_panda.iterrows():
         usecount_success=requests.post(
@@ -548,9 +537,11 @@ def control_download_button(
 
         Output(component_id="submit_step_1_error_div", component_property="children", allow_duplicate=True),
         Output(component_id="step_2", component_property="children"),
-        Output(component_id="submit_step_2_error_div", component_property="children", allow_duplicate=True),
+        Output(component_id="submit_step_2_error_div", component_property="children"),
         Output(component_id="step_3", component_property="children"),
+        # Output(component_id="submit_step_3_error_div", component_property="children"),
         Output(component_id="step_4", component_property="children"),
+        Output(component_id="submit_step_4_error_div", component_property="children"),
 
     ],
     [
@@ -560,7 +551,7 @@ def control_download_button(
         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
 
         Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
-        Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
+        # Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
         # Input(component_id="stepper_submit_form", component_property="active"),
     ],
     [
@@ -576,13 +567,16 @@ def control_download_button(
         State(component_id="step_2", component_property="children"),
         State(component_id="submit_step_2_error_div", component_property="children"),
         State(component_id="step_3", component_property="children"),
+        # State(component_id="submit_step_3_error_div", component_property="children"),
         State(component_id="step_4", component_property="children"),
+        State(component_id="submit_step_4_error_div", component_property="children"),
 
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
         State(component_id='step_2_curation_checkbox_all_correct', component_property="checked"),
 
         State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
-        State(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
+        State(component_id={'type':'input_creation','index':ALL}, component_property="value"),
+        # State(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
         
     ],
     prevent_initial_call=True,
@@ -594,7 +588,7 @@ def update_step_submit(
     input_upload_store_data,
     input_step_2_curation_checkbox_n_clicks_ALL,
     input_store_dropdown_empty_options_value_ALL,
-    input_store_step_3_curation_checkbox_n_clicks_ALL,
+    # input_store_step_3_curation_checkbox_n_clicks_ALL,
 
     stepper_submit_form_active,
     store_furthest_active_data,
@@ -607,19 +601,22 @@ def update_step_submit(
     step_2_children,
     submit_step_2_error_div_children,
     step_3_children,
+    # submit_step_3_error_div_children,
     step_4_children,
+    submit_step_4_error_div_children,
 
     state_step_2_curation_checkbox_n_clicks_ALL,
     step_2_curation_checkbox_all_correct_checked,
 
     state_dropdown_empty_options_value_ALL,
-    state_step_3_curation_checkbox_n_clicks_ALL,
+    # state_step_3_curation_checkbox_n_clicks_ALL,
+    input_creation_value_ALL
 ):#,my_children):
     '''
     we wnat to only do work according to the step that we are outputting
     for example, we only want to output the step_2_children if stepper_submit_form_active becomes 1
     '''
-    print('')
+    # print('')
     # print(ctx.triggered_id)
     # print(type(ctx.triggered_id))
 
@@ -651,15 +648,15 @@ def update_step_submit(
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         # need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
 
     #if a button click in one of the children steps triggered things
     if type(ctx.triggered_id)==dash._utils.AttributeDict:
-        print('met dict if')
+        # print('met dict if')
         store_furthest_active_data=stepper_submit_form_active
         # junk_patch=Patch()
         #need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # # store_furthest_active=stepper_submit_form_active
@@ -673,7 +670,7 @@ def update_step_submit(
         stepper_submit_form_active-=1
         junk_patch=Patch()
         #the [] is returned to get rid of error messages
-        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,[],junk_patch,junk_patch]
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,[],junk_patch,junk_patch,[]]
         # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     #if we are going forward....
@@ -682,7 +679,7 @@ def update_step_submit(
         if stepper_submit_form_active==0:
             submit_step_1_errors=submit_step_1_error_checker(upload_store_data)
             #if there are errors
-            print(submit_step_1_errors)
+            # print(submit_step_1_errors)
             if submit_step_1_errors!=False:
                 junk_patch=Patch()
                 curate_button_children=dbc.Row(
@@ -695,9 +692,9 @@ def update_step_submit(
                         dbc.Col(width=4)
                     ]
                 )
-                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
         elif stepper_submit_form_active==1:
-            submit_step_2_errors=submit_step_2_error_checker(input_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked)
+            submit_step_2_errors=submit_step_2_error_checker(state_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked)
             if submit_step_2_errors!=False:
                 junk_patch=Patch()
                 curate_button_children=dbc.Row(
@@ -710,7 +707,37 @@ def update_step_submit(
                         dbc.Col(width=4)
                     ]
                 )
-                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_2_error_div_children,step_2_children,curate_button_children,step_3_children,step_4_children]
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,curate_button_children,step_3_children,step_4_children,submit_step_4_error_div_children]
+        elif stepper_submit_form_active==3:
+            submit_step_4_errors=submit_step_4_error_checker(input_creation_value_ALL,store_3_data)
+
+            if submit_step_4_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_4_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,curate_button_children]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
         #if the errors are non existent, then proceed with updates
@@ -719,7 +746,7 @@ def update_step_submit(
         if stepper_submit_form_active > store_furthest_active_data:
             store_furthest_active_data=stepper_submit_form_active
         else:
-            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
             # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
 
     # #if we enter step 2
@@ -743,7 +770,7 @@ def update_step_submit(
         ###################
         panda_for_store_2,step_2_children=generate_step_2_layout_and_data_for_store(written_strings_per_category)
         store_2_data=panda_for_store_2.to_dict(orient='records')
-        print(panda_for_store_2)
+        # print(panda_for_store_2)
         # print(store_2_data)       
         #print(dict_for_store_2)
         # print(pd.DataFrame.from_records(store_2_data))
@@ -762,7 +789,8 @@ def update_step_submit(
         # print(step_2_curation_checkbox_n_clicks_ALL)
         panda_for_store_4,step_4_children=generate_step_4_layout_and_data_for_store(
             store_3_data,
-            state_step_3_curation_checkbox_n_clicks_ALL,
+            # state_step_3_curation_checkbox_n_clicks_ALL,
+            state_dropdown_empty_options_value_ALL
         )
         store_4_data=panda_for_store_4.to_dict(orient='records')
 
@@ -775,16 +803,50 @@ def update_step_submit(
     #     store_4_data=panda_for_store_4.to_dict(orient='records')
 
 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children]
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
 
 
-def submit_step_2_error_checker(input_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked):
-    print(input_step_2_curation_checkbox_n_clicks_ALL)
-    print(step_2_curation_checkbox_all_correct_checked)
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+def submit_step_4_error_checker(input_creation_value_ALL,store_3_data):
+    #if any are none, then return with error
+
+
+    # print(input_creation_value_ALL)
+    # print(store_3_data)
+
+    #null_value_list=list()
+    for temp in input_creation_value_ALL:
+        if temp=='' or temp==None:
+            return 'Values cannot be empty. Either add a new term or accept one on previous steps.'
+    
+    outbound_json={
+        'new_vocabulary':input_creation_value_ALL
+    }
+    print(outbound_json)
+
+
+    temp_values=requests.post(BASE_URL_API+'/validatetermsfortrainingresource/',json=outbound_json).json()
+
+    print(temp_values)
+    print('++++++++++++++++++++++++++++++++++++++++++++')
+
+    for temp_error in temp_values['errors']:
+        if temp_error!=False:
+            return temp_error
+
+    return False
+
+
+
+
+
+
+def submit_step_2_error_checker(state_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked):
+    # print(input_step_2_curation_checkbox_n_clicks_ALL)
+    # print(step_2_curation_checkbox_all_correct_checked)
+    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
     #^ means XOR in python for bitwise comparisons
-    if ((any(input_step_2_curation_checkbox_n_clicks_ALL)) ^ step_2_curation_checkbox_all_correct_checked):
+    if ((any(state_step_2_curation_checkbox_n_clicks_ALL)) ^ step_2_curation_checkbox_all_correct_checked):
         return False
     else:
         return ['Please indicate if curations are wrong OR all are correct.']
@@ -796,12 +858,17 @@ def submit_step_1_error_checker(upload_store_data):
         return False
 
 
-def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_checkbox_n_clicks_ALL):
+def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_options_value_ALL):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
-    store_4_panda_output=store_3_panda.copy().loc[step_3_curation_checkbox_n_clicks_ALL]
+    # print(state_dropdown_empty_options_value_ALL)
+    # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
-    written_strings_for_new_terms_panda=store_3_panda.loc[step_3_curation_checkbox_n_clicks_ALL]
-    if len(written_strings_for_new_terms_panda.index)==0:
+    subset_boolean_list=[True if temp==None else False for temp in state_dropdown_empty_options_value_ALL]
+
+    store_4_panda_output=store_3_panda.loc[subset_boolean_list]
+
+    #written_strings_for_new_terms_panda=store_3_panda.loc[subset_boolean_list]
+    if len(store_4_panda_output.index)==0:
         #print('need to figure this out')
         output_children=[
             html.Br(),
@@ -829,6 +896,46 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
         html.H3('need to figure out when there are no curations to do')
     else:
         output_children=list()
+
+
+        output_children=list()
+
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=4),
+                    dbc.Col(html.H3('New Vocabulary Step'),width=4),
+                    dbc.Col(width=4),
+                ]
+            )
+        )
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=2),
+                    dbc.Col(
+                        html.Div(
+                            html.H6('Terms written here will be added to the corresponding vocabularies for use by the next client.'),
+                            style={'textAlign':'center'}
+                        ),
+                        width=8
+                    ),
+                    dbc.Col(width=2),
+                ]
+            )
+        )
+        output_children.append(html.Br())
+        output_children.append(
+            html.Div(
+                id="submit_step_4_error_div",
+                children=[]       
+            )
+        )
+        output_children.append(html.Br())
+
+
+
+
 
         output_children.append(
             dbc.Row(
@@ -858,45 +965,43 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
         )
 
 
-        for temp_group in written_strings_for_new_terms_panda.groupby('header'):
-            
-            for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i>-1:
-                    output_children.append(
-                        dbc.Row(
-                            children=[
-                                # dbc.Col(
-                                #     html.H6(series['header'])
-                                # ),    
-                                dbc.Col(width=1),
-                                dbc.Col(
-                                    html.H6(series['header']+': '+series['written_string']),
-                                    style={'text-align':'center'},
-                                    width=4
+        for index,series in store_4_panda_output.iterrows():
+  
+            output_children.append(
+                dbc.Row(
+                    children=[
+                        # dbc.Col(
+                        #     html.H6(series['header'])
+                        # ),    
+                        dbc.Col(width=1),
+                        dbc.Col(
+                            html.H6(series['header']+': '+series['written_string']),
+                            style={'text-align':'center'},
+                            width=4
+                        ),
+                        # dbc.Col(
+                        #     html.H6(
+                        #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                        #     )
+                        # ),   
+                        dbc.Col(
+                            html.Div(
+                                dcc.Input(
+                                    id={
+                                        'type':'input_creation',
+                                        'index':series['header']+'_'+series['written_string'],
+                                        
+                                    },
+                                    value=series['written_string']
+                                    #placeholder="Please enter new term"
                                 ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    html.Div(
-                                        dcc.Input(
-                                            id={
-                                                'type':'input_creation',
-                                                'index':series['header']+'_'+series['written_string'],
-                                                
-                                            },
-                                            value=series['written_string']
-                                            #placeholder="Please enter new term"
-                                        ),
-                                        className="d-flex justify-content-center align-items-center"
-                                    ),
-                                    width=4
-                                )
-                            ]
+                                className="d-flex justify-content-center align-items-center"
+                            ),
+                            width=4
                         )
-                    )
+                    ]
+                )
+            )
                 # else:
                 #     output_children.append(
                 #         dbc.Row(
@@ -936,6 +1041,9 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
   # print('in step 3')
     #print(step_2_curation_checkbox_n_clicks_ALL)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
+    print(store_2_panda)
+    print(step_2_curation_checkbox_n_clicks_ALL)
+    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
     store_3_panda_output=store_2_panda.copy().loc[step_2_curation_checkbox_n_clicks_ALL]
     #print(store_2_panda)
@@ -967,6 +1075,39 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
     else:
         output_children=list()
 
+
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=4),
+                    dbc.Col(html.H3('Manual Curation Step'),width=4),
+                    dbc.Col(width=4),
+                ]
+            )
+        )
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=2),
+                    dbc.Col(
+                        html.Div(
+                            html.H6('In this step you manually search for matching strings. Please invalidate any attempts, or, if all are correct, acknowledge that at the bottom of the page.'),
+                            style={'textAlign':'center'}
+                        ),
+                        width=8
+                    ),
+                    dbc.Col(width=2),
+                ]
+            )
+        )
+        output_children.append(html.Br())
+
+
+
+
+
+
+
         output_children.append(
             dbc.Row(
                 children=[
@@ -983,74 +1124,74 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                     dbc.Col(
                         html.H3('Substring Search'),
                         style={'text-align':'center'},
-                        width=3
+                        width=6
                     ),   
-                    dbc.Col(
-                        html.H3('No term exists?') ,
-                        style={'text-align':'center'},
-                        width=3
-                    ),
+                    # dbc.Col(
+                    #     html.H3('No term exists?') ,
+                    #     style={'text-align':'center'},
+                    #     width=3
+                    # ),
                 ]
             )
         )
         #for temp_header in curation_dict.keys():
-        for temp_group in written_strings_to_substring_panda.groupby('header'):
+        # for temp_group in written_strings_to_substring_panda.groupby('header'):
             
-            for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i>-1:
-                    output_children.append(
-                        dbc.Row(
-                            children=[
-                                # dbc.Col(
-                                #     html.H6(series['header'])
-                                # ),  
-                                dbc.Col(width=1),  
-                                dbc.Col(
-                                    html.H6(series['header']+': '+series['written_string']),
-                                    style={'text-align':'center'},
-                                    width=3
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Dropdown(
-                                        id={
-                                            'type':'dropdown_empty_options',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        multi=False,
-                                        placeholder='Type substring to search',
-                                        options=['Type substring to populate options.'],
-                                        optionHeight=60
-                                    ),
-                                    style={'text-align':'center'},
-                                    width=3
-                                ),
-                                dbc.Col(
-                                    html.Div(
-                                        dmc.Checkbox(
-                                            id={
-                                                'type':'step_3_curation_checkbox',
-                                                'index':series['header']+'_'+series['written_string']
-                                            },
-                                            # multi=False,
-                                            # #placeholder='Type compound name to search',
-                                            # options=['Type substring to populate options.'],
-                                            # optionHeight=60
-                                            checked=False,
+        for index,series in store_3_panda_output.iterrows():
+            
+            output_children.append(
+                dbc.Row(
+                    children=[
+                        # dbc.Col(
+                        #     html.H6(series['header'])
+                        # ),  
+                        dbc.Col(width=1),  
+                        dbc.Col(
+                            html.H6(series['header']+': '+series['written_string']),
+                            style={'text-align':'center'},
+                            width=3
+                        ),
+                        # dbc.Col(
+                        #     html.H6(
+                        #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                        #     )
+                        # ),   
+                        dbc.Col(
+                            dcc.Dropdown(
+                                id={
+                                    'type':'dropdown_empty_options',
+                                    'index':series['header']+'_'+series['written_string']
+                                },
+                                multi=False,
+                                placeholder='Type substring to search',
+                                options=['Type substring to populate options.'],
+                                optionHeight=60
+                            ),
+                            style={'text-align':'center'},
+                            width=6
+                        ),
+                        # dbc.Col(
+                        #     html.Div(
+                        #         dmc.Checkbox(
+                        #             id={
+                        #                 'type':'step_3_curation_checkbox',
+                        #                 'index':series['header']+'_'+series['written_string']
+                        #             },
+                        #             # multi=False,
+                        #             # #placeholder='Type compound name to search',
+                        #             # options=['Type substring to populate options.'],
+                        #             # optionHeight=60
+                        #             checked=False,
 
-                                            ),  
-                                        className="d-flex justify-content-center align-items-center"
-                                    ),
-                                    width=3
-                                    
-                                ),
-                            ]
-                        )
-                    )
+                        #             ),  
+                        #         className="d-flex justify-content-center align-items-center"
+                        #     ),
+                        #     width=3
+                            
+                        # ),
+                    ]
+                )
+            )
                 # else:
                 #     output_children.append(
                 #         dbc.Row(
@@ -1184,8 +1325,32 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 'valid_string':this_strings_neighbors.at[0,'valid_string']
             }
     
+    #what we really should do is make the panda firs so that the rest of this method can look like steps 3 and 4
+    curation_panda_dict={
+        'header':[],
+        'written_string':[],
+        'valid_string':[],
+        'main_string':[]
+    }
+    for temp_header in curation_dict.keys():
+        # output_children.append(
+        #     dbc.Row(
+        #         children=[
+        #             dbc.Col(
+        #                 html.H3(temp_header)
+        #             )
+        #         ]
+        #     )
+        # )
+        for temp_written_string in (curation_dict[temp_header]):
+            curation_panda_dict['header'].append(temp_header)
+            curation_panda_dict['written_string'].append(temp_written_string)
+            curation_panda_dict['valid_string'].append(curation_dict[temp_header][temp_written_string]['valid_string'])
+            curation_panda_dict['main_string'].append(curation_dict[temp_header][temp_written_string]['main_string'])
+    curation_panda=pd.DataFrame.from_dict(curation_panda_dict)
 
-
+    # print(curation_panda)
+    # print('curation panda inside of creating step 2 children')
 
 
         #for 
@@ -1250,59 +1415,59 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
             ]
         )
     )
-    for temp_header in curation_dict.keys():
+    # for temp_header in curation_dict.keys():
 
-        for i,temp_written_string in enumerate(curation_dict[temp_header]):
-            if i>-1:
-                output_children.append(
-                    dbc.Row(
-                        children=[
-                            # dbc.Col(
-                            #     html.H6(temp_header)
-                            # ),    
-                            dbc.Col(width=1),
-                            dbc.Col(
-                                html.H6(temp_header+': '+temp_written_string),
-                                style={'text-align':'center'},
-                                width=3
-                            ),
-                            
-                            # dbc.Col(
-                            #     html.H6(
-                            #         '     '+curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                            #     )
-                            # ),  
-                            dbc.Col(
-                                html.H6(
-                                   curation_dict[temp_header][temp_written_string]['main_string']
-                                ),
-                                style={'text-align':'center'},
-                                width=3
-                            ), 
-                            dbc.Col(
-                                html.Div(
+    for index,series in curation_panda.iterrows():
+        
+        output_children.append(
+            dbc.Row(
+                children=[
+                    # dbc.Col(
+                    #     html.H6(temp_header)
+                    # ),    
+                    dbc.Col(width=1),
+                    dbc.Col(
+                        html.H6(series['header']+': '+series['written_string']),
+                        style={'text-align':'center'},
+                        width=3
+                    ),
+                    
+                    # dbc.Col(
+                    #     html.H6(
+                    #         '     '+curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                    #     )
+                    # ),  
+                    dbc.Col(
+                        html.H6(
+                            series['main_string']
+                        ),
+                        style={'text-align':'center'},
+                        width=3
+                    ), 
+                    dbc.Col(
+                        html.Div(
 
-                                    dmc.Checkbox(
-                                        id={
-                                            'type':'step_2_curation_checkbox',
-                                            'index':str(temp_header)+'_'+str(temp_written_string)
-                                        },
-                                        # multi=False,
-                                        # #placeholder='Type compound name to search',
-                                        # options=['Type substring to populate options.'],
-                                        # optionHeight=60
-                                        checked=False,
-                                        style={'horizontal-align': 'center'}
-                                    ),
-                                    className="d-flex justify-content-center align-items-center"
-                                    #style={'text-align':'center'},
-                                ),
-                                align='center',
-                                width=3
+                            dmc.Checkbox(
+                                id={
+                                    'type':'step_2_curation_checkbox',
+                                    'index':str(temp_header)+'_'+str(temp_written_string)
+                                },
+                                # multi=False,
+                                # #placeholder='Type compound name to search',
+                                # options=['Type substring to populate options.'],
+                                # optionHeight=60
+                                checked=False,
+                                style={'horizontal-align': 'center'}
                             ),
-                        ]
-                    )
-                )
+                            className="d-flex justify-content-center align-items-center"
+                            #style={'text-align':'center'},
+                        ),
+                        align='center',
+                        width=3
+                    ),
+                ]
+            )
+        )
             # else:
             #     output_children.append(
             #         dbc.Row(
@@ -1387,29 +1552,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         )
     )
 
-    #what we really should do is make the panda firs so that the rest of this method can look like steps 3 and 4
-    curation_panda_dict={
-        'header':[],
-        'written_string':[],
-        'valid_string':[],
-        'main_string':[]
-    }
-    for temp_header in curation_dict.keys():
-        # output_children.append(
-        #     dbc.Row(
-        #         children=[
-        #             dbc.Col(
-        #                 html.H3(temp_header)
-        #             )
-        #         ]
-        #     )
-        # )
-        for temp_written_string in (curation_dict[temp_header]):
-            curation_panda_dict['header'].append(temp_header)
-            curation_panda_dict['written_string'].append(temp_written_string)
-            curation_panda_dict['valid_string'].append(curation_dict[temp_header][temp_written_string]['valid_string'])
-            curation_panda_dict['main_string'].append(curation_dict[temp_header][temp_written_string]['main_string'])
-    curation_panda=pd.DataFrame.from_dict(curation_panda_dict)
+
     
     return curation_panda,output_children
 
@@ -1454,10 +1597,10 @@ def upload_form(
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
-    print(excel_sheet_checks)
+    # print(excel_sheet_checks)
     if excel_sheet_checks[0]==False:
         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
-    print(excel_sheet_checks)
+    # print(excel_sheet_checks)
     #if we ahve any errors
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
         curate_button_children=dbc.Row(
