@@ -889,10 +889,21 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                     dbc.Col(
                         width=3
                     ),   
+                    html.Div(
+                        id="submit_step_4_error_div",
+                        children=[]       
+                    )
                 ]
             ),
         ]
         
+
+
+
+
+
+
+
         html.H3('need to figure out when there are no curations to do')
     else:
         output_children=list()
@@ -1081,6 +1092,8 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                     dbc.Col(
                         width=3
                     ),   
+                     
+                    
                 ]
             )
         ]
@@ -1396,6 +1409,10 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 ),
                 dbc.Col(width=2),
             ]
+        ),
+        html.Div(
+            id="submit_step_2_error_div",
+            children=[]       
         )
     )
     output_children.append(
