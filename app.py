@@ -26,7 +26,7 @@ app.layout = html.Div(
         dcc.Location('url'),
         dbc.NavbarSimple(
             children=[]+my_page_link_list,
-            brand='Model Metadata Tool',
+            brand='Sample Metadata Standardizer',
             color='#1A3E68',
             brand_style = {'color': '#FFCD00'},
         ),
