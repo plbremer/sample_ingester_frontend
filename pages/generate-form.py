@@ -137,6 +137,50 @@ layout = html.Div(
                                                             
                                                                 children=[
                                                                     html.H3('Sample Types'),
+                                                                    # html.Br(),
+                                                                    # dbc.Checklist(
+                                                                    #     options=[
+                                                                    #         {"label": "Tissue (lung, heart, etc.)", "value": 'tissue'},
+                                                                    #         {"label": "Biofluids (plasma, urine, etc.)", "value": 'fluid'},
+                                                                    #         {"label": "Cells (culture, organoid, etc.)", "value": 'cells'},
+                                                                    #         {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
+                                                                    #     ],
+                                                                    #     id="sample_checklist",
+                                                                    # ),
+                                                                ],
+                                                                className="d-flex justify-content-center align-items-center"
+                                                            ),
+                                                            width=4
+                                                        ),
+                                                        # dbc.Col(
+                                                        #     children=[
+                                                        #         html.H3('Study Types'),
+                                                        #         html.Br(),
+                                                        #         # dbc.Checklist(
+                                                        #         #     options=[
+                                                        #         #         {"label": "Genetic (knockout, CRISPR, MIR, etc.)", "value": 'genetic'},
+                                                        #         #         {"label": "Time Series (longitudinal)", "value": 'longitudinal'},
+                                                        #         #         {"label": "Intervention (drug, diet, exercise, etc.)", "value": 'intervention'},
+                                                        #         #         {"label": "Effect (disease, etc.)", "value": 'effect'},
+                                                        #         #     ],
+                                                        #         #     id="study_checklist",
+                                                        #         # ),
+                                                        #     ],
+                                                        #     width=4
+                                                        # ),
+                                                        dbc.Col(width=4)
+                                                    ]
+                                                ),
+
+
+                                                dbc.Row(
+                                                    children=[
+                                                        dbc.Col(width=4),
+                                                        dbc.Col(
+                                                            html.Div(
+                                                            
+                                                                children=[
+                                                                    # html.H3('Sample Types'),
                                                                     html.Br(),
                                                                     dbc.Checklist(
                                                                         options=[
@@ -184,12 +228,12 @@ layout = html.Div(
                                                             children=[
                                                                 html.H3('Additional Metadata'),
                                                                 html.Br(),
-                                                                dbc.Checklist(
-                                                                    options=[
-                                                                        {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
-                                                                    ],
-                                                                    id="extra_checklist",
-                                                                ),
+                                                                # dbc.Checklist(
+                                                                #     options=[
+                                                                #         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
+                                                                #     ],
+                                                                #     id="extra_checklist",
+                                                                # ),
                                                             ],
                                                             width=3
                                                         ),

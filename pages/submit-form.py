@@ -486,23 +486,6 @@ def control_download_button(
     
     #####accumulate all new vocabulary terms per header
 
-
-
-    # store_2_data=panda_for_store_2.to_dict(orient='records')
-    # print('pretrain')
-    ####train new vocab####
-    #we only want to train each "type of vocabulary" once
-    if len(store_4_panda.index)>0:
-        for temp_tuple in store_4_panda.groupby('header'):
-        
-            #the first element in these tuples is the grouping definition, the second is the panda subset
-            # for index,series in temp_tuple[1].iterrows():
-            training_success=requests.post(
-                BASE_URL_API+'/trainvocabularytermsresource/',json={
-                    'header':temp_tuple[0],
-                    'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
-                }
-            )
     #######################
     # print('pre usecount')
     ###update use count###
@@ -514,6 +497,44 @@ def control_download_button(
             }
         )
     ######################
+
+    # store_2_data=panda_for_store_2.to_dict(orient='records')
+    # print('pretrain')
+    ####train new vocab####
+    #we only want to train each "type of vocabulary" once
+    if len(store_4_panda.index)>0:
+        for temp_tuple in store_4_panda.groupby('header'):
+        
+            #the first element in these tuples is the grouping definition, the second is the panda subset
+            # for index,series in temp_tuple[1].iterrows():
+            # training_success=requests.post(
+            #     BASE_URL_API+'/trainvocabularytermsresource/',json={
+            #         'header':temp_tuple[0],
+            #         'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
+            #     }
+            # )
+            vocab_add_success=requests.post(
+                BASE_URL_API+'/addtermstovocabularyresource/',json={
+                    'header':temp_tuple[0],
+                    'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
+                }
+            )
+            # print(vocab_add_success)
+
+            try:
+                training_success=requests.post(
+                    BASE_URL_API+'/trainvocabularyresource/',json={
+                        'header':temp_tuple[0],
+                        # 'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
+                    },
+                    timeout=1
+                )
+            except:
+                print('bypassed that long training session')
+                pass
+            # print(training_success)
+
+
     
 
 
@@ -677,7 +698,11 @@ def update_step_submit(
     elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_SUBMIT:
         #if we are on the first step
         if stepper_submit_form_active==0:
+            print(upload_store_data)
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+
             submit_step_1_errors=submit_step_1_error_checker(upload_store_data)
+            print(submit_step_1_errors)
             #if there are errors
             # print(submit_step_1_errors)
             if submit_step_1_errors!=False:
@@ -764,6 +789,8 @@ def update_step_submit(
         {'organ': ['liver', 'lunge'],
         'species': ['humen', 'mouse', 'mouo', 'porcupine']}
         '''
+        print(written_strings_per_category)
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         # pprint(written_strings_per_category)
         #NEED TO ADD######
         #if the upload matches what is on the screen currently, do not search neighbors, just rebuild with current checkboxes etc
@@ -1342,6 +1369,9 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     #get curation proposals
     for temp_header in written_strings_per_category.keys():
 
+        print(subset_per_heading_json.keys())
+        print(temp_header)
+        print('****************************************************')
         if temp_header not in subset_per_heading_json.keys():
             continue
         curation_dict[temp_header]=dict()
@@ -1410,6 +1440,8 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 dbc.Col(width=2),
             ]
         ),
+    )
+    output_children.append(
         html.Div(
             id="submit_step_2_error_div",
             children=[]       
@@ -1510,7 +1542,10 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                                 # options=['Type substring to populate options.'],
                                 # optionHeight=60
                                 checked=False,
-                                style={'horizontal-align': 'center'}
+                                style={'horizontal-align': 'center'},
+                                styles= {
+                                    "input": {"borderColor": 'black'}
+                                },
                             ),
                             className="d-flex justify-content-center align-items-center"
                             #style={'text-align':'center'},
@@ -1579,26 +1614,30 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         dbc.Row(
             children=[
                 dbc.Col(width=4),
-                dbc.Col(
-                    children=[
-                        html.H6('If all are correct, check here:'),
-                        # dmc.Checkbox(
-                        #     id='step_2_curation_checkbox_all_correct',
-                        #     checked=False,
-                        #     style={'horizontal-align': 'center'}
-                        # ),
-                    ],
-                    width=3
-                ),
+                # dbc.Col(
+                #     children=[
+                #         html.H6('If all are correct, check here:'),
+                #         # dmc.Checkbox(
+                #         #     id='step_2_curation_checkbox_all_correct',
+                #         #     checked=False,
+                #         #     style={'horizontal-align': 'center'}
+                #         # ),
+                #     ],
+                #     width=3
+                # ),
                 dbc.Col(
                     children=[
                         dmc.Checkbox(
                             id='step_2_curation_checkbox_all_correct',
                             checked=False,
-                            style={'horizontal-align': 'center'}
+                            style={'horizontal-align': 'center'},
+                            label='If all are correct, check here:',
+                            styles= {
+                                "input": {"borderColor": 'black'}
+                            },
                         ),
                     ],
-                    width=1
+                    width=4
                 ),
                 dbc.Col(width=4),
             ]
@@ -1746,6 +1785,9 @@ def upload_form(
             # store_dict={
             #     'input_dataframe':temp_dataframe_as_json,
             # }
+
+    print('++++++++++++++++++++++++++++++++')
+    print(temp_dataframe)
 
     displayed_name=html.Div([upload_form_filename],className='text-center')
     return [displayed_name,temp_dataframe_output,curate_button_children]
