@@ -101,7 +101,38 @@ def split_columns_if_delimited(temp_dataframe):
     return output_dataframe
 
 
-layout = html.Div(
+layout = dmc.MantineProvider(
+    theme={
+        # "components":{
+        #     "Button":{
+        #         "styles":{
+        #             "color":"green"
+        #         }
+        #     }
+        # }
+        "colors":{
+            "darkBlue":[
+                "#617285",
+                "#54677D",
+                "#485D77",
+                "#3C5471",
+                "#304C6D",
+                "#25456A",
+                "#1A3E68",
+                "#1E3857",
+                "#203349",
+                "#212E3E",
+                "#202A35",
+                "#1F262E",
+                "#1D2228"
+            ]
+        }
+    },
+    children=[
+
+
+
+html.Div(
     children=[
 
         dcc.Store('store_furthest_active',data=0),
@@ -130,6 +161,7 @@ layout = html.Div(
                                 dmc.Stepper(
                                     id="stepper_submit_form",
                                     active=0,
+                                    color='darkBlue',
                                     breakpoint="sm",
                                     children=[
                                         dmc.StepperStep(
@@ -137,6 +169,7 @@ layout = html.Div(
                                             label="First step",
                                             description="Upload Form",
                                             children=[
+                                                html.Br(),
                                                 html.Div(id='submit_step_1_error_div'),
                                                 dbc.Row(
                                                     children=[
@@ -273,15 +306,16 @@ layout = html.Div(
                     position="center",
                     mt="xl",
                     children=[
-                        dbc.Button("Prev. step", id="stepper_submit_form_back"),# variant="default"),
-                        dbc.Button("Next step", id="stepper_submit_form_next")
+                        dmc.Button("Prev. step", id="stepper_submit_form_back",color='darkBlue',size='md'),# variant="default"),
+                        dmc.Button("Next step", id="stepper_submit_form_next",color='darkBlue',size='md')
                     ],
                 ),
             ]
         )
     ],
 )
-
+    ]
+)
 
 #     return [stepper_submit_form_active]
 @callback(
@@ -1424,23 +1458,23 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         #for 
     output_children=list()
 
-    output_children.append(
-        dbc.Row(
-            children=[
-                dbc.Col(width=2),
-                dbc.Col(
-                    html.Div(
-                        children=[
-                            html.H3('Automatic Curation Step')
-                        ],
-                        style={'textAlign':'center'}
-                    ),
-                    width=8
-                ),
-                dbc.Col(width=2),
-            ]
-        ),
-    )
+    # output_children.append(
+    #     dbc.Row(
+    #         children=[
+    #             dbc.Col(width=2),
+    #             dbc.Col(
+    #                 html.Div(
+    #                     children=[
+    #                         html.H3('Automatic Curation Step')
+    #                     ],
+    #                     style={'textAlign':'center'}
+    #                 ),
+    #                 width=8
+    #             ),
+    #             dbc.Col(width=2),
+    #         ]
+    #     ),
+    # )
     output_children.append(
         html.Div(
             id="submit_step_2_error_div",
@@ -1448,20 +1482,47 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         )
     )
     output_children.append(
+        html.Br()
+    )
+    output_children.append(
         dbc.Row(
             children=[
-                dbc.Col(width=2),
+                dbc.Col(width=4),
                 dbc.Col(
                     html.Div(
-                        children=[
-                            html.H6('•We try to map written words to vocabulary terms•'),
-                            html.H6('•Please mark any mistakes•'),
-                        ],
-                        style={'textAlign':'center'}
+                        dbc.Card(
+                            # [
+                            #     dbc.CardHeader(
+                            #         [html.H6('Automatic Curation Step')],
+                            #         # className="border-0 d-flex align-items-center"
+                            #     ),
+                            #     dbc.CardBody(
+                            #         children=[
+                            #             # html.H6('•We try to map written words to vocabulary terms•'),
+                            #             # html.H6('•Please mark any mistakes•'),
+                            #             html.P('•We try to map written words to vocabulary terms••Please mark any mistakes•'),
+                            #         ]
+                            #     )
+                            # ],
+                            children=[
+                                html.H6(''),
+                                # html.H6('Automatic Curation Step'),
+                                html.H6('•We try to map written words to vocabulary terms•'),
+                                html.H6('•Please mark any mistakes•'),
+                                html.H6(''),
+                            ],
+                            color='#fff4e4',
+                            style={
+                                'textAlign':'center',
+                                "box-shadow": "1px 2px 7px 0px grey",
+                                "border-radius": "10px"
+                            }
+                        ),
+                        
                     ),
-                    width=8
+                    width=4
                 ),
-                dbc.Col(width=2),
+                dbc.Col(width=4),
             ]
         )
     )
@@ -1480,22 +1541,22 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                 # dbc.Col(
                 #     html.H3('Metadata Header')
                 # ),    
-                dbc.Col(width=1),
+                dbc.Col(width=3),
                 dbc.Col(
-                    html.H3('You Wrote'),
+                    html.H2('You Wrote'),
                     style={'text-align':'center'},
-                    width=3
+                    width=2
                 ),
                 #dbc.Col(width=1),
                 dbc.Col(
-                    html.H3('We Guessed'),
+                    html.H2('We Guessed'),
                     style={'text-align':'center'},
-                    width=3
+                    width=2
                 ),   
                 dbc.Col(
-                    html.H3('Incorrect?') ,
+                    html.H2('Incorrect?') ,
                     style={'text-align':'center'},
-                    width=3
+                    width=2
                 ),
             ]
         )
@@ -1507,55 +1568,79 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         output_children.append(
             dbc.Row(
                 children=[
-                    # dbc.Col(
-                    #     html.H6(temp_header)
-                    # ),    
-                    dbc.Col(width=1),
+                    dbc.Col(width=3),
                     dbc.Col(
-                        html.H6(series['header']+': '+series['written_string']),
-                        style={'text-align':'center'},
-                        width=3
-                    ),
-                    
-                    # dbc.Col(
-                    #     html.H6(
-                    #         '     '+curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                    #     )
-                    # ),  
-                    dbc.Col(
-                        html.H6(
-                            series['main_string']
-                        ),
-                        style={'text-align':'center'},
-                        width=3
-                    ), 
-                    dbc.Col(
-                        html.Div(
+                        children=[
 
-                            dmc.Checkbox(
-                                id={
-                                    'type':'step_2_curation_checkbox',
-                                    'index':str(temp_header)+'_'+str(temp_written_string)
+
+                            dbc.Card(
+                                children=[
+                                    dbc.Row(
+                                        children=[
+
+                                            dbc.Col(
+                                                html.H6(series['header']+': '+series['written_string']),
+                                                style={'text-align':'center'},
+                                                width=4
+                                            ),
+                                            
+                                            dbc.Col(
+                                                html.H6(
+                                                    series['main_string']
+                                                ),
+                                                style={'text-align':'center'},
+                                                width=4
+                                            ), 
+                                            dbc.Col(
+                                                html.Div(
+
+                                                    dmc.Checkbox(
+                                                        id={
+                                                            'type':'step_2_curation_checkbox',
+                                                            'index':str(temp_header)+'_'+str(temp_written_string)
+                                                        },
+                                                        checked=False,
+                                                        style={'horizontal-align': 'center'},
+                                                        styles= {
+                                                            "input": {"borderColor": 'black'}
+                                                        },
+                                                        color='darkBlue'
+                                                    ),
+                                                    className="d-flex justify-content-center align-items-center"
+                                                    #style={'text-align':'center'},
+                                                ),
+                                                align='center',
+                                                width=4
+                                            ),
+
+
+                                        ]
+                                    )
+                                ],
+                                color='#fff4e4',
+                                style={
+                                    "box-shadow": "1px 2px 7px 0px grey",
+                                    "border-radius": "10px"
                                 },
-                                # multi=False,
-                                # #placeholder='Type compound name to search',
-                                # options=['Type substring to populate options.'],
-                                # optionHeight=60
-                                checked=False,
-                                style={'horizontal-align': 'center'},
-                                styles= {
-                                    "input": {"borderColor": 'black'}
-                                },
-                            ),
-                            className="d-flex justify-content-center align-items-center"
-                            #style={'text-align':'center'},
-                        ),
-                        align='center',
-                        width=3
+                                className="text-center text-nowrap my-2 p-2 mw-55"
+                            )
+                        ],
+                        width=6
                     ),
-                ]
-            )
+                    dbc.Col(width=3)
+
+
+
+                ],
+                
+            ),
+            
         )
+
+        
+                
+        # children=[])
+        # )
             # else:
             #     output_children.append(
             #         dbc.Row(
@@ -1610,39 +1695,114 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     output_children.append(
         html.Br(),
     )
+    # output_children.append(
+    #     dbc.Row(
+    #         children=[
+    #             dbc.Col(width=4),
+    #             dbc.Col(
+    #                 children=[
+    #                     html.H6('If all are correct, check here:'),
+    #                     # dmc.Checkbox(
+    #                     #     id='step_2_curation_checkbox_all_correct',
+    #                     #     checked=False,
+    #                     #     style={'horizontal-align': 'center'}
+    #                     # ),
+    #                 ],
+    #                 width=3
+    #             ),
+    #             dbc.Col(
+    #                 children=[
+    #                     dmc.Checkbox(
+    #                         id='step_2_curation_checkbox_all_correct',
+    #                         checked=False,
+    #                         style={'horizontal-align': 'center'},
+    #                         # label='If all are correct, check here:',
+    #                         styles= {
+    #                             "input": {"borderColor": 'black'}
+    #                         },
+    #                     ),
+    #                 ],
+    #                 width=4
+    #             ),
+    #             dbc.Col(width=4),
+    #         ]
+    #     )
+    # )
+
     output_children.append(
         dbc.Row(
             children=[
                 dbc.Col(width=4),
-                # dbc.Col(
-                #     children=[
-                #         html.H6('If all are correct, check here:'),
-                #         # dmc.Checkbox(
-                #         #     id='step_2_curation_checkbox_all_correct',
-                #         #     checked=False,
-                #         #     style={'horizontal-align': 'center'}
-                #         # ),
-                #     ],
-                #     width=3
-                # ),
                 dbc.Col(
                     children=[
-                        dmc.Checkbox(
-                            id='step_2_curation_checkbox_all_correct',
-                            checked=False,
-                            style={'horizontal-align': 'center'},
-                            label='If all are correct, check here:',
-                            styles= {
-                                "input": {"borderColor": 'black'}
+
+
+                        dbc.Card(
+                            children=[
+                                
+
+
+
+                                dbc.Row(
+                                    children=[
+                                        # dbc.Col(width=2),
+                                        dbc.Col(
+                                            children=[
+                                                html.H6('If all are correct, check here:'),
+                                                # dmc.Checkbox(
+                                                #     id='step_2_curation_checkbox_all_correct',
+                                                #     checked=False,
+                                                #     style={'horizontal-align': 'center'}
+                                                # ),
+                                            ],
+                                            # width=2
+                                        ),
+                                        dbc.Col(
+                                            children=[
+                                                dmc.Checkbox(
+                                                    id='step_2_curation_checkbox_all_correct',
+                                                    checked=False,
+                                                    style={'horizontal-align': 'center'},
+                                                    # label='If all are correct, check here:',
+                                                    styles= {
+                                                        "input": {"borderColor": 'black'}
+                                                    },
+                                                    color='darkBlue'
+                                                ),
+                                            ],
+                                            # width=1
+                                        ),
+                                        # dbc.Col(width=4),
+                                    ]
+                                )
+
+
+
+
+
+
+
+                            ],
+                            color='#fff4e4',
+                            style={
+                                "box-shadow": "1px 2px 7px 0px grey",
+                                "border-radius": "10px"
                             },
-                        ),
+                            className="text-center text-nowrap my-2 p-2 mw-55"
+                        )
                     ],
                     width=4
                 ),
-                dbc.Col(width=4),
-            ]
-        )
+                dbc.Col(width=4)
+
+            ],
+            
+        ),
+        
     )
+
+
+
 
 
     
