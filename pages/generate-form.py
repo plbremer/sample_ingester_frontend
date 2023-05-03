@@ -354,7 +354,7 @@ html.Div(
                                                                         dbc.Checklist(
                                                                             options=[
                                                                                 {"label": "Drug", "value": 'drug'},
-                                                                                {"label": "Genotype", "value": 'genotype'},
+                                                                                {"label": "Gene Knockout", "value": 'geneKnockout'},
                                                                                 {"label": "Disease", "value": 'disease'},
                                                                                 {"label": "Diet", "value": 'diet'},
                                                                                 {"label": "Exercise", "value": 'exercise'},                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         

@@ -8,7 +8,7 @@
     "longitudinal":["zeroTimeEvent","time","timeUnit"],
     "diet":["diet"],
     "exercise":["exercise"],
-    "effect":["disease"],
+    "disease":["disease"],
     "drug":["drugName","drugDoseMagnitude","drugDoseUnit"],
     "exclusion":["exclusion"],
     "inclusion":["inclusion"],
