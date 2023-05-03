@@ -485,26 +485,24 @@ html.Div(
                                             # label='some_label',
                                             # description='some description',
                                             children=[
+                                                html.Br(),
                                                 dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=5),
+                                                        dbc.Col(width=4),
                                                         dbc.Col(
                                                             children=[
-                                                                html.Br(),
                                                                 html.Div(
-
-                                                                    dbc.Button(
-                                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                                    dmc.Button(
+                                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                        id='button_download_curated',color='darkBlue',size='md'
                                                                     ),
                                                                     className="d-grid gap-2 col-6 mx-auto",
+                                                                    style={'textAlign':'center'}
                                                                 ),
-                                                                html.Br(),
-                                                                html.Br(),
-                                                                
                                                             ],
-                                                            width=2
+                                                            width=4
                                                         ),
-                                                        dbc.Col(width=5)
+                                                        dbc.Col(width=4)
                                                     ]
                                                 ),
                                             ]

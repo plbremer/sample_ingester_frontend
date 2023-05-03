@@ -253,20 +253,41 @@ html.Div(
                                                 html.Br(),
                                                 dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=5),
+                                                        dbc.Col(width=4),
                                                         dbc.Col(
                                                             children=[
                                                                 html.Div(
-                                                                    dbc.Button(
-                                                                        'Download Form',
-                                                                        id='button_download_curated',
-                                                                    ),
-                                                                    className="d-grid gap-2 col-6 mx-auto",
+                                                                    children=[
+                                                                        html.H6('Download the standardized metadata form.'),
+                                                                        #html.H6('Reupload '),
+                                                                        html.Br(),
+                                                                    ],
+                                                                    #className="d-grid gap-4 col-6 mx-auto",
+                                                                    style={'textAlign':'center'}
                                                                 ),
                                                             ],
-                                                            width=2
+                                                            width=4
                                                         ),
-                                                        dbc.Col(width=5)
+                                                        dbc.Col(width=4)
+                                                    ]
+                                                ),
+                                                dbc.Row(
+                                                    children=[
+                                                        dbc.Col(width=4),
+                                                        dbc.Col(
+                                                            children=[
+                                                                html.Div(
+                                                                    dmc.Button(
+                                                                        'Download Form',
+                                                                        id='button_download_curated',color='darkBlue',size='md'
+                                                                    ),
+                                                                    className="d-grid gap-2 col-6 mx-auto",
+                                                                    style={'textAlign':'center'}
+                                                                ),
+                                                            ],
+                                                            width=4
+                                                        ),
+                                                        dbc.Col(width=4)
                                                     ]
                                                 ),
                                                 
@@ -276,23 +297,48 @@ html.Div(
                                             # label='some_label',
                                             # description='some description',
                                             children=[
+                                                html.Br(),
                                                 dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=5),
+                                                        dbc.Col(width=4),
                                                         dbc.Col(
                                                             children=[
                                                                 html.Div(
-                                                                    dbc.Button(
-                                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                                    dmc.Button(
+                                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                        id='button_download_curated',color='darkBlue',size='md'
                                                                     ),
                                                                     className="d-grid gap-2 col-6 mx-auto",
+                                                                    style={'textAlign':'center'}
                                                                 ),
                                                             ],
-                                                            width=2
+                                                            width=4
                                                         ),
-                                                        dbc.Col(width=5)
+                                                        dbc.Col(width=4)
                                                     ]
                                                 ),
+
+
+
+
+
+                                                # dbc.Row(
+                                                #     children=[
+                                                #         dbc.Col(width=5),
+                                                #         dbc.Col(
+                                                #             children=[
+                                                #                 html.Div(
+                                                #                     dbc.Button(
+                                                #                         dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                #                     ),
+                                                #                     className="d-grid gap-2 col-6 mx-auto",
+                                                #                 ),
+                                                #             ],
+                                                #             width=2
+                                                #         ),
+                                                #         dbc.Col(width=5)
+                                                #     ]
+                                                # ),
                                             ]
                                         ),
                                     ]
@@ -969,55 +1015,52 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
     else:
         output_children=list()
 
-
-        output_children=list()
+        output_children.append(html.Br())
 
         output_children.append(
             dbc.Row(
                 children=[
-                    dbc.Col(width=2),
+                    dbc.Col(width=4),
                     dbc.Col(
                         html.Div(
-                            children=[
-                                html.H3('New Vocabulary Step')
-                            ],
-                            style={'textAlign':'center'}
+                            dbc.Card(
+                                # [
+                                #     dbc.CardHeader(
+                                #         [html.H6('Automatic Curation Step')],
+                                #         # className="border-0 d-flex align-items-center"
+                                #     ),
+                                #     dbc.CardBody(
+                                #         children=[
+                                #             # html.H6('•We try to map written words to vocabulary terms•'),
+                                #             # html.H6('•Please mark any mistakes•'),
+                                #             html.P('•We try to map written words to vocabulary terms••Please mark any mistakes•'),
+                                #         ]
+                                #     )
+                                # ],
+                                children=[
+                                    html.H6(''),
+                                    # html.H6('Automatic Curation Step'),
+                                    html.H6('•Remaining words are added to vocabularies•'),
+                                    html.H6('•Please confirm spelling•'),
+                                    html.H6(''),
+                                ],
+                                color='#fff4e4',
+                                style={
+                                    'textAlign':'center',
+                                    "box-shadow": "1px 2px 7px 0px grey",
+                                    "border-radius": "10px"
+                                }
+                            ),
+                            
                         ),
-                        width=8
+                        width=4
                     ),
-                    dbc.Col(width=2),
+                    dbc.Col(width=4),
                 ]
             )
         )
-        output_children.append(
-            dbc.Row(
-                children=[
-                    dbc.Col(width=2),
-                    dbc.Col(
-                        html.Div(
-                            # html.H6('Terms written here will be added to the corresponding vocabularies for use by the next client.'),
-                            children=[
-                                html.H6('•Remaining words are added to vocabularies•'),
-                                html.H6('•Please confirm spelling•'),
-                            ],
-                            style={'textAlign':'center'}
-                        ),
-                        width=8
-                    ),
-                    dbc.Col(width=2),
-                ]
-            )
-        )
-        output_children.append(html.Br())
-        output_children.append(
-            html.Div(
-                id="submit_step_4_error_div",
-                children=[]       
-            )
-        )
-        output_children.append(html.Br())
 
-
+        output_children.append(html.Br())
 
 
 
@@ -1027,65 +1070,129 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                     # dbc.Col(
                     #     html.H3('Metadata Header')
                     # ),    
-                    dbc.Col(width=1),
-                    # dbc.Col(
-                    #     html.H3('Written String'),
-                    #     style={'text-align':'center'},
-                    #     width=3
-                    # ),
+                    dbc.Col(width=2),
+                    dbc.Col(
+                        html.H2('You Wrote'),
+                        style={'text-align':'center'},
+                        width=3
+                    ),
                     #dbc.Col(width=1),
                     dbc.Col(
-                        html.H3('Written String'),
+                        html.H2('Terms for future use'),
                         style={'text-align':'center'},
-                        width=4
+                        width=3
                     ),   
-                    dbc.Col(
-                        html.H3('Term to create for future use') ,
-                        style={'text-align':'center'},
-                        width=4
-                    ),
+                    # dbc.Col(
+                    #     # html.H2('Incorrect?') ,
+                    #     # style={'text-align':'center'},
+                    #     width=4
+                    # ),
                 ]
             )
         )
 
 
+
+
+        # output_children.append(html.Br())
+        output_children.append(
+            html.Div(
+                id="submit_step_4_error_div",
+                children=[]       
+            )
+        )
+        # output_children.append(html.Br())
+
+
+
         for index,series in store_4_panda_output.iterrows():
   
+
+
             output_children.append(
                 dbc.Row(
                     children=[
-                        # dbc.Col(
-                        #     html.H6(series['header'])
-                        # ),    
-                        dbc.Col(width=1),
+                        dbc.Col(width=3),
                         dbc.Col(
-                            html.H6(series['header']+': '+series['written_string']),
-                            style={'text-align':'center'},
-                            width=4
-                        ),
-                        # dbc.Col(
-                        #     html.H6(
-                        #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                        #     )
-                        # ),   
-                        dbc.Col(
-                            html.Div(
-                                dcc.Input(
-                                    id={
-                                        'type':'input_creation',
-                                        'index':series['header']+'_'+series['written_string'],
-                                        
+                            children=[
+
+                                dbc.Card(
+                                    children=[
+                                        dbc.Row(
+                                            children=[
+
+
+                                                # dbc.Col(width=2),
+                                                dbc.Col(
+                                                    html.H6(series['header']+': '+series['written_string']),
+                                                    style={'text-align':'center'},
+                                                    width=3
+                                                ),
+                                                # dbc.Col(
+                                                #     html.H6(
+                                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
+                                                #     )
+                                                # ),   
+                                                dbc.Col(
+                                                    html.Div(
+                                                        dcc.Input(
+                                                            id={
+                                                                'type':'input_creation',
+                                                                'index':series['header']+'_'+series['written_string'],
+                                                                
+                                                            },
+                                                            value=series['written_string']
+                                                            #placeholder="Please enter new term"
+                                                        ),
+                                                        className="d-flex justify-content-center align-items-center"
+                                                    ),
+                                                    # width=3
+                                                )
+
+
+
+                                            ]
+                                        )
+                                    ],
+                                    color='#fff4e4',
+                                    style={
+                                        "box-shadow": "1px 2px 7px 0px grey",
+                                        "border-radius": "10px"
                                     },
-                                    value=series['written_string']
-                                    #placeholder="Please enter new term"
-                                ),
-                                className="d-flex justify-content-center align-items-center"
-                            ),
-                            width=4
-                        )
-                    ]
-                )
+                                    className="text-center text-nowrap my-2 p-2 mw-55"
+                                )
+                            ],
+                            width=6
+                        ),
+                        dbc.Col(width=3)
+
+                    ],
+                    
+                ),
+                
             )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 # else:
                 #     output_children.append(
                 #         dbc.Row(
