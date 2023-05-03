@@ -13,6 +13,8 @@
     "exclusion":["exclusion"],
     "inclusion":["inclusion"],
     "comment":["comment"],
-    "geneKnockout":["geneKnockout"]
-
+    "geneKnockout":["geneKnockout"],
+    "ethnicity":["ethnicity"],
+    "strain":["strain"],
+    "geographicalOrigin":["geographicalOrigin"]
 }

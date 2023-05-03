@@ -85,7 +85,38 @@ def generate_step_1_error_checker(sample_checklist_value):
         return False
 
 
-layout = html.Div(
+layout = dmc.MantineProvider(
+    theme={
+        # "components":{
+        #     "Button":{
+        #         "styles":{
+        #             "color":"green"
+        #         }
+        #     }
+        # }
+        "colors":{
+            "darkBlue":[
+                "#617285",
+                "#54677D",
+                "#485D77",
+                "#3C5471",
+                "#304C6D",
+                "#25456A",
+                "#1A3E68",
+                "#1E3857",
+                "#203349",
+                "#212E3E",
+                "#202A35",
+                "#1F262E",
+                "#1D2228"
+            ]
+        }
+    },
+    children=[
+
+
+
+html.Div(
     children=[
         
         html.Br(),
@@ -116,6 +147,7 @@ layout = html.Div(
                                 dmc.Stepper(
                                     id="stepper_generate_form",
                                     active=0,
+                                    color='darkBlue',
                                     breakpoint="sm",
                                     children=[
                                         dmc.StepperStep(
@@ -123,6 +155,7 @@ layout = html.Div(
                                             label="First step",
                                             description="Choose Sample Types",
                                             children=[
+                                                html.Br(),
                                                 dbc.Row(
                                                     html.Div(
                                                         id='generate_step_1_error_div',
@@ -190,6 +223,10 @@ layout = html.Div(
                                                                             {"label": "Raw Material (soil, water, gas, etc.)", "value": 'raw_material'},
                                                                         ],
                                                                         id="sample_checklist",
+                                                                        input_checked_style={
+                                                                            'backgroundColor':'#1A3E68',
+                                                                            'borderColor':'#1A3E68'
+                                                                        }
                                                                     ),
                                                                 ],
                                                                 className="d-flex justify-content-center align-items-center"
@@ -220,20 +257,150 @@ layout = html.Div(
                                         dmc.StepperStep(
                                             label="Second step",
                                             description="Add Extra Columns/Rows",
+                                            # children=[
+                                            #     dbc.Row(
+                                            #         children=[
+                                            #             dbc.Col(width=1),
+                                            #             dbc.Col(
+                                            #                 children=[
+                                            #                     html.H3('Additional Metadata'),
+                                            #                     html.Br(),
+                                            #                     # dbc.Checklist(
+                                            #                     #     options=[
+                                            #                     #         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
+                                            #                     #     ],
+                                            #                     #     id="extra_checklist",
+                                            #                     # ),
+                                            #                 ],
+                                            #                 width=3
+                                            #             ),
+                                            #             dbc.Col(
+                                            #                 children=[
+                                            #                     html.H3('Number of Samples'),
+                                            #                     html.Br(),
+                                            #                     dmc.NumberInput(
+                                            #                         id='sample_count_input',
+                                            #                         label="Number of Samples",
+                                            #                         description="Integer from 1 to infinity",
+                                            #                         value=1,
+                                            #                         min=1,
+                                            #                         step=1,
+                                            #                         style={"width": 250},
+                                            #                     ),
+                                            #                 ],
+                                            #                 width=3
+                                            #             ),
+                                            #             dbc.Col(width=4)
+                                            #         ]
+                                            #     ),
+                                            #     html.Br(),
+                                            #     # dbc.Row(
+                                            #     #     children=extra_column_cols
+                                            #     # )
+                                            # ] 
                                             children=[
+                                                html.Br(),
                                                 dbc.Row(
                                                     children=[
-                                                        dbc.Col(width=1),
+                                                        dbc.Col(width=2),
                                                         dbc.Col(
                                                             children=[
-                                                                html.H3('Additional Metadata'),
+                                                                dbc.Row(
+                                                                    children=[
+                                                                        html.H3("Sample Dimensions"),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Sample Mass", "value": 'mass'},
+                                                                                {"label": "Sample Volume", "value": 'volume'},
+                                                                            ],
+                                                                            id="dimension_checklist",
+                                                                            input_checked_style={
+                                                                                'backgroundColor':'#1A3E68',
+                                                                                'borderColor':'#1A3E68'
+                                                                            }
+                                                                        ),
+                                                                    ]
+                                                                ),
                                                                 html.Br(),
-                                                                # dbc.Checklist(
-                                                                #     options=[
-                                                                #         {"label":temp_key, "value":temp_key} for temp_key in EXTRA_COLUMNS
-                                                                #     ],
-                                                                #     id="extra_checklist",
-                                                                # ),
+                                                                dbc.Row(
+                                                                    children=[
+                                                                        html.H3("Sample Extras"),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Sex", "value": 'sex'},
+                                                                                {"label": "Height", "value": 'height'},
+                                                                                {"label": "Weight", "value": 'weight'},
+                                                                                {"label": "Age", "value": 'age'},
+                                                                                {"label": "Ethnicity", "value": 'ethnicity'},
+                                                                                {"label": "Geographical Origin", "value": 'geographicalOrigin'},
+                                                                                {"label": "Strain", "value": 'strain'},                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+                                                                            ],
+                                                                            id="extras_checklist",
+                                                                            input_checked_style={
+                                                                                'backgroundColor':'#1A3E68',
+                                                                                'borderColor':'#1A3E68'
+                                                                            }
+                                                                        ),
+                                                                    ]
+                                                                ),                                                                
+                                                            ],
+                                                            width=3
+                                                        ),
+                                                        dbc.Col(
+                                                            children=[
+                                                                dbc.Row(
+                                                                    children=[
+                                                                        html.H3("Study Factors"),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Drug", "value": 'drug'},
+                                                                                {"label": "Genotype", "value": 'genotype'},
+                                                                                {"label": "Disease", "value": 'disease'},
+                                                                                {"label": "Diet", "value": 'diet'},
+                                                                                {"label": "Exercise", "value": 'exercise'},                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+                                                                            ],
+                                                                            id="factors_checklist",
+                                                                            input_checked_style={
+                                                                                'backgroundColor':'#1A3E68',
+                                                                                'borderColor':'#1A3E68'
+                                                                            }
+                                                                        ),
+                                                                    ]
+                                                                ),  
+                                                                html.Br(),
+                                                                dbc.Row(
+                                                                    children=[
+                                                                        html.H3("Time Series"),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Time Series/Longitudinal Information", "value": 'longitudinal'},                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                            ],
+                                                                            id="longitudinal_checklist",
+                                                                            input_checked_style={
+                                                                                'backgroundColor':'#1A3E68',
+                                                                                'borderColor':'#1A3E68'
+                                                                            }
+                                                                        ),
+                                                                    ]
+                                                                ),
+                                                                html.Br(),
+                                                                dbc.Row(
+                                                                    children=[
+                                                                        html.H3("Other"),
+                                                                        dbc.Checklist(
+                                                                            options=[
+                                                                                {"label": "Other Inclusion Factors", "value": 'inclusion'},
+                                                                                {"label": "Other Exclusion Factors", "value": 'exclusion'},
+                                                                                {"label": "Comment", "value": 'comment'},                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                            ],
+                                                                            id="other_checklist",
+                                                                            input_checked_style={
+                                                                                'backgroundColor':'#1A3E68',
+                                                                                'borderColor':'#1A3E68'
+                                                                            }
+                                                                        ),
+                                                                    ]
+                                                                ),  
                                                             ],
                                                             width=3
                                                         ),
@@ -253,14 +420,10 @@ layout = html.Div(
                                                             ],
                                                             width=3
                                                         ),
-                                                        dbc.Col(width=4)
                                                     ]
-                                                ),
-                                                html.Br(),
-                                                # dbc.Row(
-                                                #     children=extra_column_cols
-                                                # )
-                                            ] 
+                                                )
+                                            ]
+                                            
                                         ),
                                         dmc.StepperStep(
                                             label="Third step",
@@ -278,7 +441,6 @@ layout = html.Div(
                                                                     children=[
                                                                         html.H6('Download and complete sample metadata form.'),
                                                                         #html.H6('Reupload '),
-                                                                        dbc.NavLink('Reupload here.', href='/',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
                                                                         html.Br(),
                                                                     ],
                                                                     #className="d-grid gap-4 col-6 mx-auto",
@@ -297,11 +459,14 @@ layout = html.Div(
                                                             children=[
                                                                 html.Div(
                                                                     children=[
-                                                                        
-                                                                        dbc.Button(
-                                                                            'Download Form',
-                                                                            id='button_form',
-                                                                        ),
+                                                                        dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
+                                                                        # dbc.Button(
+                                                                        #     'Download Form',
+                                                                        #     id='button_form',
+                                                                        # ),
+                                                                        html.Br(),
+                                                                        # html.H6('After completion'),
+                                                                        dbc.NavLink('After completion, reupload here.', href='/',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
                                                                     ],
                                                                     className="d-grid gap-3 col-6 mx-auto",
                                                                     style={'textAlign':'center'}
@@ -356,15 +521,16 @@ layout = html.Div(
                     position="center",
                     mt="xl",
                     children=[
-                        dbc.Button("Prev. step", id="stepper_generate_form_back"),# variant="default"),
-                        dbc.Button("Next step", id="stepper_generate_form_next")
+                        dmc.Button("Prev. step", id="stepper_generate_form_back",color='darkBlue',size='md'),# variant="default"),
+                        dmc.Button("Next step", id="stepper_generate_form_next",color='darkBlue',size='md')
                     ],
                 ),
             ]
         )
     ]
 )
-
+    ]
+)
 
 
 @callback(
@@ -432,18 +598,41 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
         # Input(component_id='stepper_generate_form_next', component_property="n_clicks")
         Input(component_id='sample_checklist', component_property='value'),
         # Input(component_id='study_checklist',component_property='value'),
-        Input(component_id="extra_checklist",component_property='value'),
+        # Input(component_id="extra_checklist",component_property='value'),
         Input(component_id="sample_count_input",component_property='value'),
+        
+        Input(component_id="dimension_checklist",component_property='value'),
+        Input(component_id="extras_checklist",component_property='value'),
+        Input(component_id="factors_checklist",component_property='value'),
+        Input(component_id="longitudinal_checklist",component_property='value'),
+        Input(component_id="other_checklist",component_property='value'),
     ],
     [
         State(component_id='sample_checklist', component_property='value'),
         # State(component_id='study_checklist',component_property='value'),
-        State(component_id="extra_checklist",component_property='value'),
+        # State(component_id="extra_checklist",component_property='value'),
         State(component_id="sample_count_input",component_property='value'),
+
+
+        State(component_id="dimension_checklist",component_property='value'),
+        State(component_id="extras_checklist",component_property='value'),
+        State(component_id="factors_checklist",component_property='value'),
+        State(component_id="longitudinal_checklist",component_property='value'),
+        State(component_id="other_checklist",component_property='value'),
+
+
+
     ],
     prevent_initial_call=True
 )
-def update_example_table(a,c,d,sample_checklist_values,extra_checklist_values,sample_count_input_value):
+def update_example_table(a,b,c,d,e,f,g,sample_checklist_values,sample_count_input_value,
+    dimension_checklist_value,
+    extras_checklist_value,
+    factors_checklist_value,
+    longitudinal_checklist_value,
+    other_checklist_value
+
+):
 
     #### This should be something different. should probably just generate an empty DT ####
     if sample_checklist_values==None:# and study_checklist_values==None:
@@ -454,12 +643,17 @@ def update_example_table(a,c,d,sample_checklist_values,extra_checklist_values,sa
     # if study_checklist_values==None:
     #     study_checklist_values=[]
 
-    if extra_checklist_values==None:
-        extra_checklist_values=[]
+
+    additional_header_checklist_values=list()
+    for temp_checklist in [dimension_checklist_value,extras_checklist_value,factors_checklist_value,longitudinal_checklist_value,other_checklist_value]:
+        if temp_checklist is not None:
+            additional_header_checklist_values+=temp_checklist
+    # if extra_checklist_values==None:
+    #     extra_checklist_values=[]
 
 
     archetype_headers=generate_form_headers(sample_checklist_values)#+study_checklist_values)
-    extra_headers=generate_extra_headers(extra_checklist_values)
+    extra_headers=generate_extra_headers(additional_header_checklist_values)
     
     total_headers=archetype_headers+extra_headers
     
