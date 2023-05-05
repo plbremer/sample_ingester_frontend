@@ -24,8 +24,8 @@ from . import samplemetadatauploadchecker
 
 dash.register_page(__name__, path='/submit-form')
 
-# BASE_URL_API = "http://127.0.0.1:4999/"
-BASE_URL_API = "http://api_alias:4999/"
+BASE_URL_API = "http://127.0.0.1:4999/"
+# BASE_URL_API = "http://api_alias:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
@@ -36,6 +36,7 @@ NUM_STEPS_SUBMIT=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
+HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude'}
 
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
@@ -481,8 +482,11 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
 
     pprint(replacement_dict)
 
-
+    print(upload_panda)
     for temp_col in upload_panda.columns:
+
+        if temp_col in HEADERS_TO_NOT_CURATE:
+            continue
 
         upload_panda[temp_col].replace(
             to_replace=replacement_dict[temp_col.split('.')[0]],
@@ -1067,21 +1071,34 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
         output_children.append(
             dbc.Row(
                 children=[
+
                     # dbc.Col(
                     #     html.H3('Metadata Header')
                     # ),    
-                    dbc.Col(width=2),
+                    dbc.Col(width=3),
                     dbc.Col(
-                        html.H2('You Wrote'),
-                        style={'text-align':'center'},
-                        width=3
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H2('You Wrote'),
+                                    style={'text-align':'left'},
+                                    width=4
+                                ),
+                                #dbc.Col(width=1),
+                                dbc.Col(
+                                    html.H2('Terms for future use'),
+                                    style={'text-align':'center'},
+                                    # width=3
+                                ),   
+
+
+
+                            ]
+                        ),
+                        width=5
                     ),
-                    #dbc.Col(width=1),
-                    dbc.Col(
-                        html.H2('Terms for future use'),
-                        style={'text-align':'center'},
-                        width=3
-                    ),   
+                    dbc.Col(width=4)
+                        
                     # dbc.Col(
                     #     # html.H2('Incorrect?') ,
                     #     # style={'text-align':'center'},
@@ -1090,6 +1107,35 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                 ]
             )
         )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1323,21 +1369,34 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
         output_children.append(
             dbc.Row(
                 children=[
+
                     # dbc.Col(
                     #     html.H3('Metadata Header')
                     # ),    
-                    dbc.Col(width=2),
+                    dbc.Col(width=3),
                     dbc.Col(
-                        html.H2('You Wrote'),
-                        style={'text-align':'center'},
-                        width=3
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H2('You Wrote'),
+                                    style={'text-align':'left'},
+                                    width=4
+                                ),
+                                #dbc.Col(width=1),
+                                dbc.Col(
+                                    html.H2('Vocabulary Search'),
+                                    style={'text-align':'center'},
+                                    # width=6
+                                ),   
+
+
+
+                            ]
+                        ),
+                        width=5
                     ),
-                    #dbc.Col(width=1),
-                    dbc.Col(
-                        html.H2('Vocabulary Search'),
-                        style={'text-align':'center'},
-                        width=3
-                    ),   
+                    dbc.Col(width=4)
+                        
                     # dbc.Col(
                     #     # html.H2('Incorrect?') ,
                     #     # style={'text-align':'center'},
@@ -1889,17 +1948,11 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
 
                                 dbc.Row(
                                     children=[
-                                        # dbc.Col(width=2),
+                                        dbc.Col(width=3),
                                         dbc.Col(
                                             children=[
-                                                html.H6('If all are correct, check here:'),
-                                                # dmc.Checkbox(
-                                                #     id='step_2_curation_checkbox_all_correct',
-                                                #     checked=False,
-                                                #     style={'horizontal-align': 'center'}
-                                                # ),
+                                                html.H6('No errors? Check here:'),
                                             ],
-                                            # width=2
                                         ),
                                         dbc.Col(
                                             children=[
@@ -1907,24 +1960,17 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                                                     id='step_2_curation_checkbox_all_correct',
                                                     checked=False,
                                                     style={'horizontal-align': 'center'},
-                                                    # label='If all are correct, check here:',
+
                                                     styles= {
                                                         "input": {"borderColor": 'black'}
                                                     },
                                                     color='darkBlue'
                                                 ),
                                             ],
-                                            # width=1
                                         ),
-                                        # dbc.Col(width=4),
+
                                     ]
                                 )
-
-
-
-
-
-
 
                             ],
                             color='#fff4e4',
@@ -1937,7 +1983,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                     ],
                     width=4
                 ),
-                dbc.Col(width=4)
+                dbc.Col(width=6)
 
             ],
             
