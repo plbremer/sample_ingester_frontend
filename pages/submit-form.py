@@ -22,8 +22,8 @@ from . import samplemetadatauploadchecker
 
 dash.register_page(__name__, path='/submit-form')
 
-# BASE_URL_API = "http://127.0.0.1:4999/"
-BASE_URL_API = "http://api_alias:4999/"
+BASE_URL_API = "http://127.0.0.1:4999/"
+# BASE_URL_API = "http://api_alias:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
@@ -482,7 +482,7 @@ def control_download_button(
 
     worksheet=temp_writer.sheets['title_page']
     worksheet.hide_gridlines()
-    worksheet.write('B2','Enjoy the curations :)')
+    worksheet.write('B2','Standardized metadata on next sheet')
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
@@ -525,7 +525,7 @@ def control_download_button(
                 pass
 
     return [
-        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
+        dcc.send_bytes(temp_data,"Fiehnlab_metadata_standardization_form_CURATED.xlsx")
     ]
 
 

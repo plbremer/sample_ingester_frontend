@@ -48,8 +48,6 @@ def generate_extra_headers(selected_types):
 dash.register_page(__name__, path='/generate-form')
 
 def generate_step_1_error_checker(sample_checklist_value):
-    print('-----------')
-    print(sample_checklist_value)
     if sample_checklist_value==None:
         return 'Must select at least 1 sample type.'
     if len(sample_checklist_value)==0:
@@ -222,7 +220,7 @@ layout = dmc.MantineProvider(
                                                                     children=[
                                                                         dbc.Row(
                                                                             children=[
-                                                                                html.H3("Study Factors"),
+                                                                                html.H3("Sample Factors"),
                                                                                 dbc.Checklist(
                                                                                     options=[
                                                                                         {"label": "Drug", "value": 'drug'},
@@ -245,7 +243,7 @@ layout = dmc.MantineProvider(
                                                                                 html.H3("Time Series"),
                                                                                 dbc.Checklist(
                                                                                     options=[
-                                                                                        {"label": "Time Series/Longitudinal Information", "value": 'longitudinal'},                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                        {"label": "Time Series/Longitudinal", "value": 'longitudinal'},                                                                                                                                                                                                                                                                                                                                                                                                      
                                                                                     ],
                                                                                     id="longitudinal_checklist",
                                                                                     input_checked_style={
@@ -278,11 +276,11 @@ layout = dmc.MantineProvider(
                                                                 ),
                                                                 dbc.Col(
                                                                     children=[
-                                                                        html.H3('Number of Samples'),
+                                                                        html.H3('Total Number of Samples'),
                                                                         html.Br(),
                                                                         dmc.NumberInput(
                                                                             id='sample_count_input',
-                                                                            label="Number of Samples",
+                                                                            label="Select Number of Samples",
                                                                             description="Integer from 1 to infinity",
                                                                             value=1,
                                                                             min=1,
@@ -331,7 +329,7 @@ layout = dmc.MantineProvider(
                                                                             children=[
                                                                                 dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
                                                                                 html.Br(),
-                                                                                dbc.NavLink('After completion, reupload here.', href='/',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
+                                                                                dbc.NavLink('After completion, reupload here.', href='/submit-form',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
                                                                             ],
                                                                             className="d-grid gap-3 col-6 mx-auto",
                                                                             style={'textAlign':'center'}
@@ -567,7 +565,7 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
     worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
     worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
     worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
-    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate with ~ or insert column with same header',rule_format)    
+    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate values with ~ or insert column with same header',rule_format)    
 
     return workbook, worksheet
 
@@ -662,5 +660,5 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     temp_data=output_stream.getvalue()
 
     return [
-        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form.xlsx")
+        dcc.send_bytes(temp_data,"Fiehnlab_metadata_standardization_form.xlsx")
     ]
