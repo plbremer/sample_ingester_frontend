@@ -418,9 +418,13 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         for index,series in temp_tuple[1].iterrows():
             replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']
 
+    print(replacement_dict)
+    print(upload_panda)
+
+
     for temp_col in upload_panda.columns:
 
-        if temp_col in HEADERS_TO_NOT_CURATE:
+        if temp_col.split('.')[0] in HEADERS_TO_NOT_CURATE:
             continue
 
         upload_panda[temp_col].replace(
@@ -803,14 +807,14 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                                 children=[
                                     html.H6(''),
                                     # html.H6('Automatic Curation Step'),
-                                    html.H6('•Remaining words are added to vocabularies•'),
-                                    html.H6('•Please confirm spelling•'),
+                                    html.H4('•We add these terms for the next user•'),
+                                    html.H4('•Please confirm spelling•',style={"color": "red", "font-weight": "bold"}),
                                     html.H6(''),
                                 ],
                                 color='#fff4e4',
                                 style={
                                     'textAlign':'center',
-                                    "box-shadow": "1px 2px 7px 0px grey",
+                                    "box-shadow": "1px 2px 7px 0px red",
                                     "border-radius": "10px"
                                 }
                             ),
@@ -959,15 +963,15 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                                 children=[
                                     html.H6(''),
                                     # html.H6('Automatic Curation Step'),
-                                    html.H6('•We try manually searching vocabularies for matches•'),
-                                    html.H6('•If no match, leave blank•'),
-                                    html.H6('•Species searches may lag•'),
+                                    html.H4('•Manually check vocabularies for matches•',style={"color": "red", "font-weight": "bold"}),
+                                    html.H4('•If no match, leave blank•',style={"color": "red", "font-weight": "bold"}),
+                                    # html.H6('•Species searches may lag•'),
                                     html.H6(''),
                                 ],
                                 color='#fff4e4',
                                 style={
                                     'textAlign':'center',
-                                    "box-shadow": "1px 2px 7px 0px grey",
+                                    "box-shadow": "1px 2px 7px 0px red",
                                     "border-radius": "10px"
                                 }
                             ),
@@ -1034,8 +1038,8 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                                                             'index':series['header']+'_'+series['written_string']
                                                         },
                                                         multi=False,
-                                                        placeholder='Type substring to search',
-                                                        options=['Type substring to populate options.'],
+                                                        placeholder='Type to search',
+                                                        options=['Type to populate options.'],
                                                         optionHeight=60
                                                     ),
                                                     style={'text-align':'center'},
@@ -1173,14 +1177,14 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                         dbc.Card(
                             children=[
                                 html.H6(''),
-                                html.H6('•We try to map written words to vocabulary terms•'),
-                                html.H6('•Please mark any mistakes•'),
+                                html.H4('•We map written words to vocabulary terms•'),
+                                html.H4('•Please mark any mistakes•',style={"color": "red", "font-weight": "bold"}),
                                 html.H6(''),
                             ],
                             color='#fff4e4',
                             style={
                                 'textAlign':'center',
-                                "box-shadow": "1px 2px 7px 0px grey",
+                                "box-shadow": "1px 2px 7px 0px red",
                                 "border-radius": "10px"
                             }
                         ),

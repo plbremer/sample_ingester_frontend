@@ -471,6 +471,12 @@ def update_example_table(a,b,c,d,e,f,g,sample_checklist_values,sample_count_inpu
     if sample_checklist_values==None:
         sample_checklist_values=[]
 
+    if sample_count_input_value==None or sample_count_input_value=='':
+        sample_count_input_value=1
+    else:
+        sample_count_input_value=int(sample_count_input_value)
+
+
     additional_header_checklist_values=list()
     for temp_checklist in [dimension_checklist_value,extras_checklist_value,factors_checklist_value,longitudinal_checklist_value,other_checklist_value]:
         if temp_checklist is not None:
@@ -559,13 +565,56 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
         'valign': 'vcenter',
         'font_size':16
     })
+    example_format_bold=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+    example_format_text=workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
         
     #write the #first sheet
-    worksheet.merge_range('B2:L2','Guidelines',top_format)
-    worksheet.merge_range('C4:S4','One Sample Per Row',rule_format)
-    worksheet.merge_range('C6:S6','Columns can be empty',rule_format)
-    worksheet.merge_range('C8:S8','Use fragments/phrases - not descriptions ("Mediterranean Diet" not "assorted fish, whole grains, plant oils, etc.")',rule_format)
-    worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate values with ~ or insert column with same header',rule_format)    
+    worksheet.write('B2','Guidelines',top_format)
+    worksheet.write('C4','One Sample Per Row',rule_format)
+    worksheet.write('C6','Columns can be empty',rule_format)
+    worksheet.write('C8','Use fragments/phrases - avoid descriptions. Example: (Avoid "Patient consumed assorted fish, whole grains, plant oils, etc..." Instead, use: "Mediterranean Diet")',rule_format)
+    # worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate values with ~ or insert column with same header',rule_format)    
+    # worksheet.merge_range('C10:S10','For multiples - (multiple drugs, species, etc.) separate values with \'~\'',rule_format)
+    worksheet.write('C10','For multiples - (multiple drugs, species, etc.) separate values with \'~\'',rule_format)
+    
+
+    # worksheet.write_rich_string('D11:D12','Example:',example_format_bold)
+
+    # worksheet.merge_range('F11:F11','drugName',example_format_bold)
+    # worksheet.merge_range('G11:G11','drugDoseMagnitude',example_format_bold)
+    # worksheet.merge_range('H11:H11','drugDoseUnit',example_format_bold)
+
+    # worksheet.merge_range('F12:F12','drugName',example_format_text)
+    # worksheet.merge_range('G12:G12','drugDoseMagnitude',example_format_text)
+    # worksheet.merge_range('H12:H12','drugDoseUnit',example_format_text)
+
+
+    worksheet.write('D11','Example:',example_format_bold)
+
+    worksheet.write('E11','drugName',example_format_bold)
+    worksheet.write('F11','drugDoseMagnitude',example_format_bold)
+    worksheet.write('G11','drugDoseUnit',example_format_bold)
+
+    worksheet.write('E12','caffeine~aspirin',example_format_text)
+    worksheet.write('F12','20~40',example_format_text)
+    worksheet.write('G12','mg~mg',example_format_text)
+
+    worksheet.set_column('D:D', 15)
+    worksheet.set_column('E:E', 20)
+    worksheet.set_column('F:F', 20)
+    worksheet.set_column('G:G', 20)
+
+
+    # worksheet.autofit()
 
     return workbook, worksheet
 
