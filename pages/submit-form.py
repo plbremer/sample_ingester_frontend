@@ -34,7 +34,7 @@ NUM_STEPS_SUBMIT=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
-HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude'}
+HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude','time'}
 
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
@@ -369,6 +369,9 @@ def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_dat
         except AttributeError:
             output_valid.append(None)
             output_main.append(None)
+        except IndexError:
+            output_valid.append(temp_string)
+            output_main.append(temp_string)
 
 
     store_3_panda['valid_string']=output_valid
@@ -1098,13 +1101,13 @@ def update_options(
     }
     temp_values=requests.post(BASE_URL_API+'/generatesubstringmatchesresource/',json=outbound_json).json()
 
+    print(temp_values)
 
-    return [[
-        { 
-            'label': temp_string,
-            'value': temp_string
-        } for temp_string in temp_values
-    ]]
+    return [
+        [
+            {'label': temp_string,'value': temp_string} if (temp_string.split(' AKA ')[0] != temp_string.split(' AKA ')[1]) else {'label': temp_string.split(' AKA ')[0],'value': temp_string} for temp_string in temp_values
+        ]
+    ]
 
 
 
