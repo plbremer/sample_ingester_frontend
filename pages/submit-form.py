@@ -112,7 +112,8 @@ layout = dmc.MantineProvider(
             ]
         }
     },
-    children=[
+    children=[dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+    # children=[
         html.Div(
             children=[
 
@@ -259,7 +260,9 @@ layout = dmc.MantineProvider(
                                                                     children=[
                                                                         html.Div(
                                                                             dmc.Button(
-                                                                                'Download Form',
+                                                                                # children=[dbc.Spinner(size="sm"), " Loading..."],
+                                                                                children=['Download Form'],
+                                                                                
                                                                                 id='button_download_curated',color='darkBlue',size='md'
                                                                             ),
                                                                             className="d-grid gap-2 col-6 mx-auto",
@@ -342,6 +345,7 @@ layout = dmc.MantineProvider(
             ],
         )
     ]
+    )]
 )
 
 @callback(
@@ -873,7 +877,7 @@ def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_
                                             children=[
                                                 dbc.Col(
                                                     html.H6(series['header']+': '+series['written_string']),
-                                                    style={'text-align':'center'},
+                                                    style={'text-align':'center','white-space':'normal'},
                                                     width=3
                                                 ),
                                                 dbc.Col(
@@ -1028,7 +1032,7 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                                             children=[
                                                 dbc.Col(
                                                     html.H6(series['header']+': '+series['written_string']),
-                                                    style={'text-align':'center'},
+                                                    style={'text-align':'center','white-space':'normal'},
                                                     width=3
                                                 ),
                                                 dbc.Col(
@@ -1240,7 +1244,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
                                         children=[
                                             dbc.Col(
                                                 html.H6(series['header']+': '+series['written_string']),
-                                                style={'text-align':'center'},
+                                                style={'text-align':'center','white-space':'normal'},
                                                 width=4
                                             ),
                                             dbc.Col(
