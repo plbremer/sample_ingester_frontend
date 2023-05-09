@@ -1,11 +1,20 @@
 {
     "mass":["mass","massUnit"],
+    "volume":["volume","volumeUnit"],
     "sex":["sex"],
     "height":["height","heightUnit"],
     "weight":["weight","weightUnit"],
     "age":["age","ageUnit"],
+    "longitudinal":["zeroTimeEvent","time","timeUnit"],
+    "diet":["diet"],
+    "exercise":["exercise"],
+    "disease":["disease"],
+    "drug":["drugName","drugDoseMagnitude","drugDoseUnit"],
     "exclusion":["exclusion"],
     "inclusion":["inclusion"],
     "comment":["comment"],
-    "volume":["volume","volumeUnit"]
+    "geneKnockout":["geneKnockout"],
+    "ethnicity":["ethnicity"],
+    "strain":["strain"],
+    "geographicalOrigin":["geographicalOrigin"]
 }

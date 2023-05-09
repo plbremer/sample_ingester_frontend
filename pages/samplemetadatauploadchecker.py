@@ -12,7 +12,6 @@ class SampleMetadataUploadChecker:
 
     def __init__(self,content_string,valid_columns):
         self.content_string=content_string
-        #self.header_json=header_json
         self.total_header_set=valid_columns
         
     def create_workbook(self):
@@ -39,13 +38,6 @@ class SampleMetadataUploadChecker:
         )
 
     def headers_malformed(self):
-        #print(self.header_json)
-        # total_header_set=set()
-        # for temp_button in self.header_json.keys():
-        #     #for temp_header in self.header_json[temp_button]:
-        #     total_header_set=total_header_set.union(set(self.header_json[temp_button]))
-        #print('$$$$$$$$$$$$$$$$4')
-        #print(total_header_set)
         presented_columns={temp_col.split('.')[0] for temp_col in self.dataframe.columns}
         malformed_columns=presented_columns.difference(self.total_header_set)
         if len(malformed_columns)>0:

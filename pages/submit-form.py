@@ -7,8 +7,6 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash
 
-import hashlib
-import pickle
 
 import numpy as np
 import pandas as pd
@@ -32,10 +30,11 @@ with open('assets/form_header_dict_basics.json','r') as f:
 with open('assets/extra_columns.json','r') as f:
     EXTRA_COLUMNS=json.load(f)
 
-NUM_STEPS_2=5
+NUM_STEPS_SUBMIT=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
+HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude','time','cellCount'}
 
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
@@ -65,16 +64,11 @@ def parse_stored_excel_file(store_panda):
     output_dict=dict()
     for temp_key in temp_header_dict.keys():
         output_dict[temp_key.split('.')[0]]=list()
-    # print(output_dict)
+
 
     for temp_key in temp_header_dict.keys():
-        # print(temp_key)
-        # print(output_dict[temp_key.split('.')[0]])
-        # print(output_dict[temp_key])
         output_dict[temp_key.split('.')[0]] = output_dict[temp_key.split('.')[0]] + temp_header_dict[temp_key]
     
-
-
     return output_dict
 
 def split_columns_if_delimited(temp_dataframe):
@@ -85,12 +79,11 @@ def split_columns_if_delimited(temp_dataframe):
     #much easier to conserve the order than to reorder
     #do in parallel with temp_dataframe_2
     new_dataframe_list=list()
-    #new_dataframe_list_2=list()
+    # print(temp_dataframe.dtypes)
     for temp_column in temp_dataframe.columns:
         if temp_dataframe[temp_column].dtype==object:
-            #num_cols_after_split=len(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True))
-            temp_expanded_columns=temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
-            #temp_expanded_columns_2=temp_dataframe_2
+            # print(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.'))
+            temp_expanded_columns=temp_dataframe[temp_column].astype(str).str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
         else:
             temp_expanded_columns=temp_dataframe[temp_column]
         new_dataframe_list.append(temp_expanded_columns)
@@ -101,185 +94,343 @@ def split_columns_if_delimited(temp_dataframe):
     return output_dataframe
 
 
-layout = html.Div(
+layout = dmc.MantineProvider(
+    theme={
+        "colors":{
+            "darkBlue":[
+                "#617285",
+                "#54677D",
+                "#485D77",
+                "#3C5471",
+                "#304C6D",
+                "#25456A",
+                "#1A3E68",
+                "#1E3857",
+                "#203349",
+                "#212E3E",
+                "#202A35",
+                "#1F262E",
+                "#1D2228"
+            ]
+        }
+    },
+    # children=[dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
     children=[
-
-        dcc.Store('store_furthest_active',data=0),
-        dcc.Store('upload_store'),
-        dcc.Store('store_2'),
-        dcc.Store('store_3'),
-        dcc.Store('store_4'),
-        dcc.Download(id="download_curated_form"),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-
         html.Div(
             children=[
+
+                dcc.Store('store_furthest_active',data=0),
+                dcc.Store('upload_store'),
+                dcc.Store('store_2'),
+                dcc.Store('store_3'),
+                dcc.Store('store_4'),
                 
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
 
-                dbc.Row(
+                html.Div(
                     children=[
-                        dbc.Col(width=1),
-                        dbc.Col(
+                        
+
+                        dbc.Row(
                             children=[
-                                
-
-
-                                dmc.Stepper(
-                                    id="stepper_submit_form",
-                                    active=0,
-                                    breakpoint="sm",
+                                dbc.Col(width=1),
+                                dbc.Col(
                                     children=[
-                                        dmc.StepperStep(
-                                            id='step_1',
-                                            label="First step",
-                                            description="Upload Form",
+                                        
+
+
+                                        dmc.Stepper(
+                                            id="stepper_submit_form",
+                                            active=0,
+                                            color='darkBlue',
+                                            breakpoint="sm",
                                             children=[
-                                                html.Div(id='Div_curate_button_or_error_messages'),
-                                                dbc.Row(
-                                                    children=[
-                                                        dbc.Col(width=4),
-                                                        dbc.Col(
+                                                
+                                                dmc.StepperStep(
+                                                    id='step_1',
+                                                    label="First step",
+                                                    description="Upload Form",
+                                                    children=
+                                                    [
+                                                        dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+                                                        html.Br(),
+                                                        html.Div(id='submit_step_1_error_div'),
+                                                        dbc.Row(
                                                             children=[
-                                                                dcc.Upload(
-                                                                    id='upload_form',
-                                                                    children=html.Div([
-                                                                        'Upload Completed Form',
-                                                                    ]),
-                                                                    style={
-                                                                        'width': '100%',
-                                                                        'height': '60px',
-                                                                        'lineHeight': '60px',
-                                                                        'borderWidth': '1px',
-                                                                        'borderStyle': 'dashed',
-                                                                        'borderRadius': '5px',
-                                                                        'textAlign': 'center',
-                                                                        'margin': '10px'
-                                                                    },
+                                                                dbc.Col(width=4),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        dcc.Upload(
+                                                                            id='upload_form',
+                                                                            children=html.Div([
+                                                                                'Upload Completed Form',
+                                                                            ]),
+                                                                            style={
+                                                                                'width': '100%',
+                                                                                'height': '60px',
+                                                                                'lineHeight': '60px',
+                                                                                'borderWidth': '1px',
+                                                                                'borderStyle': 'dashed',
+                                                                                'borderRadius': '5px',
+                                                                                'textAlign': 'center',
+                                                                                'margin': '10px'
+                                                                            },
+                                                                        ),
+                                                                    ],
+                                                                    width=4
                                                                 ),
-                                                            ],
-                                                            width=4
-                                                        ),
-                                                        dbc.Col(width=4)
-                                                    ]
-                                                ),                                                
-                                            ]
-                                        ),
-                                        dmc.StepperStep(
-                                            id='step_2',
-                                            label="Second step",
-                                            description="Validate Automatic Curation",
-                                            children=[
-                                                html.H6('second step')
-                                                
-                                            ] 
-                                        ),
-                                        dmc.StepperStep(
-                                            id='step_3',
-                                            label="3 step",
-                                            description="Match to Substrings",
-                                            children=[
-                                                html.H6('3 step')
-                                                
-                                            ] 
-                                        ),
-                                        dmc.StepperStep(
-                                            id='step_4',
-                                            label="4 step",
-                                            description="Create New Terms",
-                                            children=[
-                                                html.H6('4 step')
-                                                
-                                            ] 
-                                        ),
-                                        dmc.StepperStep(
-                                            id='step_5',
-                                            label="5 step",
-                                            description="Download Curated Form",
-                                            children=[
-                                                html.Br(),
-                                                html.Br(),
-                                                dbc.Row(
-                                                    children=[
-                                                        dbc.Col(width=5),
-                                                        dbc.Col(
-                                                            children=[
-                                                                html.Div(
-                                                                    dbc.Button(
-                                                                        'Download Form',
-                                                                        id='button_download_curated',
-                                                                    ),
-                                                                    className="d-grid gap-2 col-6 mx-auto",
-                                                                ),
-                                                            ],
-                                                            width=2
-                                                        ),
-                                                        dbc.Col(width=5)
+                                                                dbc.Col(width=4)
+                                                            ]
+                                                        ),   
+                                                        ])                                             
                                                     ]
                                                 ),
-                                                
-                                            ] 
-                                        ),
-                                        dmc.StepperCompleted(
-                                            # label='some_label',
-                                            # description='some description',
-                                            children=[
-                                                dbc.Row(
+                                                dmc.StepperStep(
+                                                    id='step_2',
+                                                    label="Second step",
+                                                    description="Validate Automatic Curation",
                                                     children=[
-                                                        dbc.Col(width=5),
-                                                        dbc.Col(
-                                                            children=[
-                                                                html.Div(
-                                                                    dbc.Button(
-                                                                        dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
-                                                                    ),
-                                                                    className="d-grid gap-2 col-6 mx-auto",
-                                                                ),
-                                                            ],
-                                                            width=2
+                                                        # dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+                                                        # html.H6('second step')
+                                                        html.Div(id="submit_step_2_error_div",children=[]),
+                                                        dmc.Checkbox(
+                                                            id={
+                                                                'type':'step_2_curation_checkbox',
+                                                                'index':'temp'
+                                                            },
+                                                            # multi=False,
+                                                            # #placeholder='Type compound name to search',
+                                                            # options=['Type substring to populate options.'],
+                                                            # optionHeight=60
+                                                            checked=False,
+                                                            style={'horizontal-align': 'center'}
                                                         ),
-                                                        dbc.Col(width=5)
+                                                        dmc.Checkbox(
+                                                            id='step_2_curation_checkbox_all_correct',
+                                                            checked=False,
+                                                            style={'horizontal-align': 'center'}
+                                                        ),
+                                                    # ]) 
+                                                    ]
+                                                ),
+                                                dmc.StepperStep(
+                                                    id='step_3',
+                                                    label="3 step",
+                                                    description="Match to Substrings",
+                                                    children=[
+                                                        html.H6('3 step')
+                                                        
+                                                    ] 
+                                                ),
+                                                dmc.StepperStep(
+                                                    id='step_4',
+                                                    label="4 step",
+                                                    description="Create New Terms",
+                                                    children=[
+                                                        html.Div(id="submit_step_4_error_div",children=[]),
+                                                        
+                                                    ] 
+                                                ),
+                                                dmc.StepperStep(
+                                                    id='step_5',
+                                                    label="5 step",
+                                                    description="Download Curated Form",
+                                                    children=[
+                                                        dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+                                                            dcc.Download(id="download_curated_form"),
+                                                            
+
+                                                            html.Br(),
+                                                            html.Br(),
+                                                            html.Br(),
+                                                            dbc.Row(
+                                                                children=[
+                                                                    dbc.Col(width=2),
+                                                                    dbc.Col(
+                                                                        children=[
+                                                                            html.Div(
+                                                                                children=[dmc.Group(
+                                                                                    align='center',
+                                                                                    children=[
+                                                                                        html.Div(
+                                                                                            # dmc.Button(
+                                                                                            #     dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                            #     id='button_download_curated',color='darkBlue',size='md'
+                                                                                            # ),
+                                                                                            dmc.Button('Download Standardized Form', id='button_download_curated',color='darkBlue',size='md'),
+                                                                                            className="d-grid gap-1 col-4 mx-auto",
+                                                                                            style={'textAlign':'center'}
+                                                                                        ),
+
+
+                                                                                        html.Div(
+                                                                                            dmc.Button(
+                                                                                                dbc.NavLink('Return Home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                                id='button_download_curated',color='darkBlue',size='md'
+                                                                                            ),
+                                                                                            className="d-grid gap-1 col-4 mx-auto",
+                                                                                            style={'textAlign':'center'}
+                                                                                        ),
+                                                                                    ]
+                                                                                )],
+                                                                            style={'textAlign':'center'}
+                                                                            )
+                                                                        ],
+                                                                        width=8
+                                                                    ),
+
+
+                                                                    dbc.Col(width=2)
+                                                                ]
+                                                            ),
+                                                            html.Br(),
+                                                            html.Br(),
+                                                        ])
+                                                    ]
+                                                ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        
+                                                        
+                                                        
+                                                        
+                                                #         html.Br(),
+                                                #         html.Br(),
+                                                #         dbc.Row(
+                                                #             children=[
+                                                #                 dbc.Col(width=4),
+                                                #                 dbc.Col(
+                                                #                     children=[
+                                                #                         html.Div(
+                                                #                             children=[
+                                                #                                 html.H6('Download the standardized metadata form.'),
+                                                #                                 #html.H6('Reupload '),
+                                                #                                 html.Br(),
+                                                #                             ],
+                                                #                             #className="d-grid gap-4 col-6 mx-auto",
+                                                #                             style={'textAlign':'center'}
+                                                #                         ),
+                                                #                     ],
+                                                #                     width=4
+                                                #                 ),
+                                                #                 dbc.Col(width=4)
+                                                #             ]
+                                                #         ),
+                                                #         dbc.Row(
+                                                #             children=[
+                                                #                 dbc.Col(width=4),
+                                                #                 dbc.Col(
+                                                #                     children=[
+                                                #                         html.Div(
+                                                #                             dmc.Button(
+                                                #                                 # children=[dbc.Spinner(size="sm"), " Loading..."],
+                                                #                                 children=['Download Form'],
+                                                                                
+                                                #                                 id='button_download_curated',color='darkBlue',size='md'
+                                                #                             ),
+                                                #                             className="d-grid gap-2 col-6 mx-auto",
+                                                #                             style={'textAlign':'center'}
+                                                #                         ),
+                                                #                     ],
+                                                #                     width=4
+                                                #                 ),
+                                                #                 dbc.Col(width=4)
+                                                #             ]
+                                                #         ),
+                                                #         ])
+                                                #     ] 
+                                                # ),
+
+                                                # we never reach this
+
+                                                dmc.StepperCompleted(
+                                                    # label='some_label',
+                                                    # description='some description',
+                                                    children=[
+                                                        html.Br(),
+                                                        dbc.Row(
+                                                            children=[
+                                                                dbc.Col(width=4),
+                                                                dbc.Col(
+                                                                    children=[
+                                                                        html.Div(
+                                                                            dmc.Button(
+                                                                                dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                id='button_download_curated',color='darkBlue',size='md'
+                                                                            ),
+                                                                            className="d-grid gap-2 col-6 mx-auto",
+                                                                            style={'textAlign':'center'}
+                                                                        ),
+                                                                    ],
+                                                                    width=4
+                                                                ),
+                                                                dbc.Col(width=4)
+                                                            ]
+                                                        ),
+
+
+
+
+
+                                                        # dbc.Row(
+                                                        #     children=[
+                                                        #         dbc.Col(width=5),
+                                                        #         dbc.Col(
+                                                        #             children=[
+                                                        #                 html.Div(
+                                                        #                     dbc.Button(
+                                                        #                         dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                        #                     ),
+                                                        #                     className="d-grid gap-2 col-6 mx-auto",
+                                                        #                 ),
+                                                        #             ],
+                                                        #             width=2
+                                                        #         ),
+                                                        #         dbc.Col(width=5)
+                                                        #     ]
+                                                        # ),
                                                     ]
                                                 ),
                                             ]
-                                        ),
+                                        )
                                     ]
-                                )
+                                ),
+                                dbc.Col(width=1),
                             ]
                         ),
-                        dbc.Col(width=1),
+                        dmc.Group(
+                            position="center",
+                            mt="xl",
+                            children=[
+                                dmc.Button("Prev. step", id="stepper_submit_form_back",color='darkBlue',size='md'),# variant="default"),
+                                dmc.Button("Next step", id="stepper_submit_form_next",color='darkBlue',size='md')
+                            ],
+                        ),
                     ]
-                ),
-                dmc.Group(
-                    position="center",
-                    mt="xl",
-                    children=[
-                        dbc.Button("Prev. step", id="stepper_submit_form_back"),# variant="default"),
-                        dbc.Button("Next step", id="stepper_submit_form_next")
-                    ],
-                ),
-            ]
+                )
+            ],
         )
-    ],
+    ]
+    # )]
 )
 
-
-def check_equal_hashings(state,input):
-    #state_json=json.dumps()
-    hash_state=hash(pickle.dumps(state))
-    hash_input=hash(pickle.dumps(input))
-  # print(hash_state)
-  # print(hash_input)
-    if hash_state==hash_input:
-        return True
-    else:
-        return False
-
-
-
-#     return [stepper_submit_form_active]
 @callback(
     [
         Output(component_id="store_3", component_property="data", allow_duplicate=True),
@@ -288,16 +439,12 @@ def check_equal_hashings(state,input):
         Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
     ],
     [
-        #State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
         State(component_id="store_3", component_property="data"),
     ],
     prevent_initial_call=True
 )
 def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_data):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
-    print(store_3_panda)
-    
-    print(input_store_dropdown_empty_options_value_ALL)
 
     output_valid=list()
     output_main=list()
@@ -309,19 +456,13 @@ def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_dat
         except AttributeError:
             output_valid.append(None)
             output_main.append(None)
+        except IndexError:
+            output_valid.append(temp_string)
+            output_main.append(temp_string)
 
 
     store_3_panda['valid_string']=output_valid
     store_3_panda['main_string']=output_main
-    # temp_index=store_3_panda.loc[
-    #     (store_3_panda.header==ctx.triggered_id['index'].split('_')[0]) &
-    #     (store_3_panda.written_string==ctx.triggered_id['index'].split('_')[1])
-    # ].index[0]
-    # print(temp_index)
-
-    # store_3_panda.at[temp_index,'valid_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[0]
-    # store_3_panda.at[temp_index,'main_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[1]
-
 
     return [store_3_panda.to_dict(orient='records')]
 
@@ -335,42 +476,14 @@ def update_store_3_data(input_store_dropdown_empty_options_value_ALL,store_3_dat
         Input(component_id={'type':'input_creation','index':ALL}, component_property="value"),
     ],
     [
-        #State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
         State(component_id="store_4", component_property="data"),
     ],
     prevent_initial_call=True
 )
 def update_store_4_data(input_creation_value_ALL,store_4_data):
     store_4_panda=pd.DataFrame.from_records(store_4_data)
-    print('in update 4')
-    print(store_4_panda)
-    print(input_creation_value_ALL)
-    
-    # print(input_store_dropdown_empty_options_value_ALL)
-
-    # output_valid=list()
-    # output_main=list()
-    # for temp_string in input_store_dropdown_empty_options_value_ALL:
-    #     try:
-    #         output_valid.append(temp_string.split(' AKA ')[0])
-    #         output_main.append(temp_string.split(' AKA ')[1])
-            
-    #     except AttributeError:
-    #         output_valid.append(None)
-    #         output_main.append(None)
-
-
     store_4_panda['valid_string']=input_creation_value_ALL
     store_4_panda['main_string']=input_creation_value_ALL
-    # temp_index=store_4_panda.loc[
-    #     (store_4_panda.header==ctx.triggered_id['index'].split('_')[0]) &
-    #     (store_4_panda.written_string==ctx.triggered_id['index'].split('_')[1])
-    # ].index[0]
-    # print(temp_index)
-
-    # store_4_panda.at[temp_index,'valid_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[0]
-    # store_4_panda.at[temp_index,'main_string']=input_store_dropdown_empty_options_value_MATCH.split(' AKA ')[1]
-
 
     return [store_4_panda.to_dict(orient='records')]
 
@@ -385,22 +498,27 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         inplace=True,
         ignore_index=True
     )
-    print(total_replacement_panda)
 
     replacement_dict=dict()
     for temp_tuple in total_replacement_panda.groupby('header'):
         replacement_dict[temp_tuple[0]]=dict()
         for index,series in temp_tuple[1].iterrows():
-            replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']+' AKA '+series['valid_string']
+            replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']
 
-    pprint(replacement_dict)
+    print(replacement_dict)
+    print(upload_panda)
 
 
     for temp_col in upload_panda.columns:
 
+        if temp_col.split('.')[0] in HEADERS_TO_NOT_CURATE:
+            continue
+
+        if temp_col.split('.')[0] not in replacement_dict.keys():
+            continue
+
         upload_panda[temp_col].replace(
             to_replace=replacement_dict[temp_col.split('.')[0]],
-            #value=None,
             inplace=True
         )    
     return upload_panda,total_replacement_panda
@@ -408,7 +526,6 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
 
 @callback(
     [
-        #Output(component_id="Div_new_vocab_error_messages", component_property="children"),
         Output(component_id="download_curated_form", component_property="data")
     ],
     [
@@ -429,18 +546,13 @@ def control_download_button(
     store_3_data,
     store_4_data
 ):
-    print(upload_store_data)
     upload_panda=pd.DataFrame.from_records(upload_store_data)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
     store_3_panda=pd.DataFrame.from_records(store_3_data)
     store_4_panda=pd.DataFrame.from_records(store_4_data)
-    print(upload_panda)
-    print(store_2_panda)
-    print(store_3_panda)
-    print(store_4_panda)
+
 
     download_panda,total_replacement_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
-    print(download_panda)
     ####generate the downlaodable excel file
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
@@ -448,8 +560,7 @@ def control_download_button(
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
     #skip the last row which has the merger archetype info
-    
-    print('pre to excel')
+
     download_panda.to_excel(
         temp_writer,
         sheet_name='sample_sheet_curated',
@@ -463,61 +574,70 @@ def control_download_button(
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
     workbook=temp_writer.book
     worksheet=temp_writer.sheets['sample_sheet_curated']
-    #workbook,worksheet=update_excel_sheet_curated_sample_formatting(workbook,worksheet,store_panda)
-    # to_excel(temp_writer,sheet_name='sample_sheet',index=False)
+
     worksheet.autofit()
 
     worksheet=temp_writer.sheets['title_page']
     worksheet.hide_gridlines()
-    worksheet.write('B2','Enjoy the curations :)')
+    worksheet.write('B2','Standardized metadata on next sheet')
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
 
 
-    ########################################
-
-    
     #####accumulate all new vocabulary terms per header
 
+    #######################
+    ###update use count###
+    for index,series in total_replacement_panda.iterrows():
+        
+        try:
+
+            usecount_success=requests.post(
+                BASE_URL_API+'/updateusecountresource/',json={
+                    'header':series['header'],
+                    'main_string':series['main_string']
+                },
+                timeout=0.1
+            )
 
 
-    # store_2_data=panda_for_store_2.to_dict(orient='records')
-    print('pretrain')
+           
+        except:
+            print('bypassed that long use_count session')
+            pass
+        
+        
+        
+        
+    ######################
+
     ####train new vocab####
     #we only want to train each "type of vocabulary" once
     if len(store_4_panda.index)>0:
         for temp_tuple in store_4_panda.groupby('header'):
         
-            #the first element in these tuples is the grouping definition, the second is the panda subset
-            # for index,series in temp_tuple[1].iterrows():
-            training_success=requests.post(
-                BASE_URL_API+'/trainvocabularyterms/',json={
+            vocab_add_success=requests.post(
+                BASE_URL_API+'/addtermstovocabularyresource/',json={
                     'header':temp_tuple[0],
                     'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
                 }
             )
-    #######################
-    print('pre usecount')
-    ###update use count###
-    for index,series in total_replacement_panda.iterrows():
-        usecount_success=requests.post(
-            BASE_URL_API+'/updateusecountresource/',json={
-                'header':series['header'],
-                'main_string':series['main_string']
-            }
-        )
-    ######################
-    
 
+            try:
+                training_success=requests.post(
+                    BASE_URL_API+'/trainvocabularyresource/',json={
+                        'header':temp_tuple[0],
+                    },
+                    timeout=1
+                )
+            except:
+                print('bypassed that long training session')
+                pass
 
     return [
-        dcc.send_bytes(temp_data,"binbase_sample_ingestion_form_curated.xlsx")
+        dcc.send_bytes(temp_data,"Fiehnlab_metadata_standardization_form_CURATED.xlsx")
     ]
-
-
-
-
 
 
 @callback(
@@ -529,9 +649,12 @@ def control_download_button(
         Output(component_id="store_3", component_property="data"),
         Output(component_id="store_4", component_property="data"),
 
+        Output(component_id="submit_step_1_error_div", component_property="children", allow_duplicate=True),
         Output(component_id="step_2", component_property="children"),
+        Output(component_id="submit_step_2_error_div", component_property="children"),
         Output(component_id="step_3", component_property="children"),
         Output(component_id="step_4", component_property="children"),
+        Output(component_id="submit_step_4_error_div", component_property="children"),
 
     ],
     [
@@ -539,30 +662,28 @@ def control_download_button(
         Input(component_id='stepper_submit_form_next', component_property="n_clicks"),
         Input(component_id="upload_store", component_property="data"),
         Input(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
-
         Input(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
-        Input(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
-        # Input(component_id="stepper_submit_form", component_property="active"),
     ],
     [
         State(component_id="stepper_submit_form", component_property="active"),
-        # State(component_id="stepper_submit_form", component_property="children")
         State(component_id="store_furthest_active", component_property="data"),
         State(component_id="upload_store", component_property="data"),
         State(component_id="store_2", component_property="data"),
         State(component_id="store_3", component_property="data"),
         State(component_id="store_4", component_property="data"),
+        State(component_id="submit_step_1_error_div", component_property="children"),
         State(component_id="step_2", component_property="children"),
+        State(component_id="submit_step_2_error_div", component_property="children"),
         State(component_id="step_3", component_property="children"),
         State(component_id="step_4", component_property="children"),
-
+        State(component_id="submit_step_4_error_div", component_property="children"),
         State(component_id={'type':'step_2_curation_checkbox','index':ALL}, component_property="checked"),
-
+        State(component_id='step_2_curation_checkbox_all_correct', component_property="checked"),
         State(component_id={'type':'dropdown_empty_options','index':ALL}, component_property="value"),
-        State(component_id={'type':'step_3_curation_checkbox','index':ALL}, component_property="checked"),
-        
+        State(component_id={'type':'input_creation','index':ALL}, component_property="value"),
     ],
-    prevent_initial_call=True
+    prevent_initial_call=True,
+    suppress_callback_exceptions=True
 )
 def update_step_submit(
     stepper_submit_form_back_n_clicks, 
@@ -570,97 +691,126 @@ def update_step_submit(
     input_upload_store_data,
     input_step_2_curation_checkbox_n_clicks_ALL,
     input_store_dropdown_empty_options_value_ALL,
-    input_store_step_3_curation_checkbox_n_clicks_ALL,
-
     stepper_submit_form_active,
     store_furthest_active_data,
     upload_store_data,
     store_2_data,
     store_3_data,
     store_4_data,
+    submit_step_1_error_div_children,
     step_2_children,
+    submit_step_2_error_div_children,
     step_3_children,
     step_4_children,
-
+    submit_step_4_error_div_children,
     state_step_2_curation_checkbox_n_clicks_ALL,
+    step_2_curation_checkbox_all_correct_checked,
     state_dropdown_empty_options_value_ALL,
-    state_step_3_curation_checkbox_n_clicks_ALL,
-):#,my_children):
+    input_creation_value_ALL
+):
     '''
     we wnat to only do work according to the step that we are outputting
     for example, we only want to output the step_2_children if stepper_submit_form_active becomes 1
     '''
-    print('')
-    print(ctx.triggered_id)
-    print(type(ctx.triggered_id))
     
     # need_to_generate_new_children=True
+    #if a new upload triggered things
     if ctx.triggered_id=='upload_store': #the ALL ones
         store_furthest_active_data=stepper_submit_form_active
-        # junk_patch=Patch()
-        # need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
 
+    #if a button click in one of the children steps triggered things
     if type(ctx.triggered_id)==dash._utils.AttributeDict:
-        print('met dict if')
         store_furthest_active_data=stepper_submit_form_active
-        # junk_patch=Patch()
-        #need_to_generate_new_children=False
-        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
-        # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+        return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
 
-    # # store_furthest_active=stepper_submit_form_active
-    # #return everything, keeping children as is
-    
-  # print(f'we are starting callback on step {stepper_submit_form_active}')
-  # print(f'the starting callback with max step on {store_furthest_active_data}')
-    
-    
+    #if we are going back, just go back
     if ctx.triggered_id=="stepper_submit_form_back" and stepper_submit_form_active>0:
         stepper_submit_form_active-=1
         junk_patch=Patch()
-        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
-        # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+        #the [] is returned to get rid of error messages
+        return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,[],junk_patch,junk_patch,[]]
 
-    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_2:
+    #if we are going forward....
+    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<(NUM_STEPS_SUBMIT-1):
+        #if we are on the first step
+        if stepper_submit_form_active==0:
+
+            submit_step_1_errors=submit_step_1_error_checker(upload_store_data)
+
+            #if there are errors
+            if submit_step_1_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_1_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,curate_button_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
+        elif stepper_submit_form_active==1:
+            submit_step_2_errors=submit_step_2_error_checker(state_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked)
+            if submit_step_2_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_2_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,curate_button_children,step_3_children,step_4_children,submit_step_4_error_div_children]
+        elif stepper_submit_form_active==3:
+            submit_step_4_errors=submit_step_4_error_checker(input_creation_value_ALL,store_3_data)
+            if submit_step_4_errors!=False:
+                junk_patch=Patch()
+                curate_button_children=dbc.Row(
+                    children=[
+                        dbc.Col(width=4),
+                        dbc.Col(
+                            children=[dmc.Alert(submit_step_4_errors,withCloseButton=True)],
+                            width=4,
+                        ),
+                        dbc.Col(width=4)
+                    ]
+                )
+                return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,curate_button_children]
+
+
+        #if the errors are non existent, then proceed with updates
         stepper_submit_form_active+=1   
         junk_patch=Patch()
         if stepper_submit_form_active > store_furthest_active_data:
             store_furthest_active_data=stepper_submit_form_active
         else:
-            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
-            # return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,step_2_children,step_3_children]
+            return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch]
 
     # #if we enter step 2
     if stepper_submit_form_active==1:
-        # return [store_furthest_active_data,stepper_submit_form_active]
         upload_store_panda=pd.DataFrame.from_records(upload_store_data)
         '''
             species.0 species.1.0 species.1.1 organ.0
         0     humen       mouse   porcupine   liver
         1     humen        mouo        None   lunge
         '''
-        # print(upload_store_panda)
+
         written_strings_per_category=parse_stored_excel_file(upload_store_panda)
         '''
         {'organ': ['liver', 'lunge'],
         'species': ['humen', 'mouse', 'mouo', 'porcupine']}
         '''
-        # pprint(written_strings_per_category)
-        #NEED TO ADD######
-        #if the upload matches what is on the screen currently, do not search neighbors, just rebuild with current checkboxes etc
-        ###################
+
         panda_for_store_2,step_2_children=generate_step_2_layout_and_data_for_store(written_strings_per_category)
         store_2_data=panda_for_store_2.to_dict(orient='records')
-        print(panda_for_store_2)
-        # print(store_2_data)       
-        #print(dict_for_store_2)
-        # print(pd.DataFrame.from_records(store_2_data))
-        # print('&'*20)
-    #curation_dict,output_children
-    #elif stepper_submit_form_active!=1:
+
     elif stepper_submit_form_active==2:
-        # print(step_2_curation_checkbox_n_clicks_ALL)
         panda_for_store_3,step_3_children=generate_step_3_layout_and_data_for_store(
             store_2_data,
             state_step_2_curation_checkbox_n_clicks_ALL,
@@ -668,31 +818,57 @@ def update_step_submit(
         store_3_data=panda_for_store_3.to_dict(orient='records')
 
     elif stepper_submit_form_active==3:
-        # print(step_2_curation_checkbox_n_clicks_ALL)
         panda_for_store_4,step_4_children=generate_step_4_layout_and_data_for_store(
             store_3_data,
-            state_step_3_curation_checkbox_n_clicks_ALL,
+            state_dropdown_empty_options_value_ALL
         )
         store_4_data=panda_for_store_4.to_dict(orient='records')
 
-    # elif stepper_submit_form_active==4:
-    #     # print(step_2_curation_checkbox_n_clicks_ALL)
-    #     panda_for_store_4,step_4_children=generate_step_4_layout_and_data_for_store(
-    #         store_3_data,
-    #         state_step_3_curation_checkbox_n_clicks_ALL,
-    #     )
-    #     store_4_data=panda_for_store_4.to_dict(orient='records')
+    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,submit_step_1_error_div_children,step_2_children,submit_step_2_error_div_children,step_3_children,step_4_children,submit_step_4_error_div_children]
 
 
-    return [stepper_submit_form_active,store_furthest_active_data,store_2_data,store_3_data,store_4_data,step_2_children,step_3_children,step_4_children]
+def submit_step_4_error_checker(input_creation_value_ALL,store_3_data):
+    #if any are none, then return with error
 
-def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_checkbox_n_clicks_ALL):
+    for temp in input_creation_value_ALL:
+        if temp=='' or temp==None:
+            return 'Values cannot be empty. Either add a new term or accept one on previous steps.'
+    
+    outbound_json={
+        'new_vocabulary':input_creation_value_ALL
+    }
+
+    temp_values=requests.post(BASE_URL_API+'/validatetermsfortrainingresource/',json=outbound_json).json()
+
+    for temp_error in temp_values['errors']:
+        if temp_error!=False:
+            return temp_error
+
+    return False
+
+def submit_step_2_error_checker(state_step_2_curation_checkbox_n_clicks_ALL,step_2_curation_checkbox_all_correct_checked):
+
+    #^ means XOR in python for bitwise comparisons
+    if ((any(state_step_2_curation_checkbox_n_clicks_ALL)) ^ step_2_curation_checkbox_all_correct_checked):
+        return False
+    else:
+        return ['Please indicate if curations are wrong OR all are correct.']
+
+def submit_step_1_error_checker(upload_store_data):
+    if upload_store_data==None:
+        return 'Must upload a valid .xlsx'
+    else:
+        return False
+
+
+def generate_step_4_layout_and_data_for_store(store_3_data,state_dropdown_empty_options_value_ALL):
     store_3_panda=pd.DataFrame.from_records(store_3_data)
-    store_4_panda_output=store_3_panda.copy().loc[step_3_curation_checkbox_n_clicks_ALL]
 
-    written_strings_for_new_terms_panda=store_3_panda.loc[step_3_curation_checkbox_n_clicks_ALL]
-    if len(written_strings_for_new_terms_panda.index)==0:
-        #print('need to figure this out')
+    subset_boolean_list=[True if temp==None else False for temp in state_dropdown_empty_options_value_ALL]
+
+    store_4_panda_output=store_3_panda.loc[subset_boolean_list]
+
+    if len(store_4_panda_output.index)==0:
         output_children=[
             html.Br(),
             html.Br(),
@@ -712,88 +888,129 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
                     dbc.Col(
                         width=3
                     ),   
+                    html.Div(
+                        id="submit_step_4_error_div",
+                        children=[]       
+                    )
                 ]
             ),
         ]
-        
         html.H3('need to figure out when there are no curations to do')
     else:
         output_children=list()
 
+        output_children.append(html.Br())
+
         output_children.append(
             dbc.Row(
                 children=[
+                    dbc.Col(width=4),
                     dbc.Col(
-                        html.H3('Metadata Header')
-                    ),    
-                    dbc.Col(
-                        html.H3('Written String')
+                        html.Div(
+                            dbc.Card(
+                                children=[
+                                    html.H6(''),
+                                    # html.H6('Automatic Curation Step'),
+                                    html.H4('•We add these terms for the next user•'),
+                                    html.H4('•Please confirm spelling•',style={"color": "red", "font-weight": "bold"}),
+                                    html.H6(''),
+                                ],
+                                color='#fff4e4',
+                                style={
+                                    'textAlign':'center',
+                                    "box-shadow": "1px 2px 7px 0px red",
+                                    "border-radius": "10px"
+                                }
+                            ),
+                            
+                        ),
+                        width=4
                     ),
-                    dbc.Col(
-                        html.H3('New Term')
-                    ),   
+                    dbc.Col(width=4),
                 ]
             )
         )
+        output_children.append(html.Br())
 
-
-        for temp_group in written_strings_for_new_terms_panda.groupby('header'):
-            
-            for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i==0:
-                    output_children.append(
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=3),
+                    dbc.Col(
                         dbc.Row(
                             children=[
                                 dbc.Col(
-                                    html.H6(series['header'])
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
+                                    html.H2('You Wrote'),
+                                    style={'text-align':'left'},
+                                    width=4
                                 ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
                                 dbc.Col(
-                                    dcc.Input(
-                                        id={
-                                            'type':'input_creation',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        placeholder="Nothing matches - Enter New"
-                                    )
-                                )
+                                    html.H2('Terms for future use'),
+                                    style={'text-align':'center'},
+                                    # width=3
+                                ),   
                             ]
-                        )
-                    )
-                else:
-                    output_children.append(
-                        dbc.Row(
+                        ),
+                        width=5
+                    ),
+                    dbc.Col(width=4)
+                ]
+            )
+        )
+        output_children.append(
+            html.Div(
+                id="submit_step_4_error_div",
+                children=[]       
+            )
+        )
+
+        for index,series in store_4_panda_output.iterrows():
+            output_children.append(
+                dbc.Row(
+                    children=[
+                        dbc.Col(width=3),
+                        dbc.Col(
                             children=[
-                                dbc.Col(
-                                    html.H6(' ')
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Input(
-                                        id={
-                                            'type':'input_creation',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        placeholder="Nothing matches - Enter New"
-                                    )
+                                dbc.Card(
+                                    children=[
+                                        dbc.Row(
+                                            children=[
+                                                dbc.Col(
+                                                    html.H6(series['header']+': '+series['written_string']),
+                                                    style={'text-align':'center','white-space':'normal'},
+                                                    width=3
+                                                ),
+                                                dbc.Col(
+                                                    html.Div(
+                                                        dcc.Input(
+                                                            id={
+                                                                'type':'input_creation',
+                                                                'index':series['header']+'_'+series['written_string'],
+                                                            },
+                                                            value=series['written_string']
+                                                            #placeholder="Please enter new term"
+                                                        ),
+                                                        className="d-flex justify-content-center align-items-center"
+                                                    ),
+                                                    # width=3
+                                                )
+                                            ]
+                                        )
+                                    ],
+                                    color='#fff4e4',
+                                    style={
+                                        "box-shadow": "1px 2px 7px 0px grey",
+                                        "border-radius": "10px"
+                                    },
+                                    className="text-center text-nowrap my-2 p-2 mw-55"
                                 )
-                            ]
-                        )
-                    )
+                            ],
+                            width=6
+                        ),
+                        dbc.Col(width=3)
+                    ],
+                ),
+            )
 
 
     store_4_panda_output['valid_string']=np.nan
@@ -803,15 +1020,14 @@ def generate_step_4_layout_and_data_for_store(store_3_data,step_3_curation_check
 
 
 def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_checkbox_n_clicks_ALL):
-  # print('in step 3')
-    #print(step_2_curation_checkbox_n_clicks_ALL)
+
     store_2_panda=pd.DataFrame.from_records(store_2_data)
 
     store_3_panda_output=store_2_panda.copy().loc[step_2_curation_checkbox_n_clicks_ALL]
-    #print(store_2_panda)
+
     written_strings_to_substring_panda=store_2_panda.loc[step_2_curation_checkbox_n_clicks_ALL]
     if len(written_strings_to_substring_panda.index)==0:
-        #print('need to figure this out')
+
         output_children=[
             html.Br(),
             html.Br(),
@@ -838,113 +1054,120 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
         output_children=list()
 
         output_children.append(
+            html.Br()
+        )
+
+        output_children.append(
             dbc.Row(
                 children=[
+                    dbc.Col(width=4),
                     dbc.Col(
-                        html.H3('Metadata Header')
-                    ),    
-                    dbc.Col(
-                        html.H3('Written String')
+                        html.Div(
+                            dbc.Card(
+                                children=[
+                                    html.H6(''),
+                                    # html.H6('Automatic Curation Step'),
+                                    html.H4('•Manually check vocabularies for matches•',style={"color": "red", "font-weight": "bold"}),
+                                    html.H4('•If no match, leave blank•',style={"color": "red", "font-weight": "bold"}),
+                                    # html.H4('•If no match, leave blank•',style={"color": "black", "font-weight": "bold"}),
+                                    # html.H6('•Species searches may lag•'),
+                                    html.H6(''),
+                                ],
+                                color='#fff4e4',
+                                style={
+                                    'textAlign':'center',
+                                    "box-shadow": "1px 2px 7px 0px red",
+                                    "border-radius": "10px"
+                                }
+                            ),
+                            
+                        ),
+                        width=4
                     ),
-                    dbc.Col(
-                        html.H3('Substring Search')
-                    ),   
-                    dbc.Col(
-                        html.H3('None exist?') 
-                    ),
+                    dbc.Col(width=4),
                 ]
             )
         )
-        #for temp_header in curation_dict.keys():
-        for temp_group in written_strings_to_substring_panda.groupby('header'):
+        output_children.append(html.Br())
+
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=3),
+                    dbc.Col(
+                        dbc.Row(
+                            children=[
+                                dbc.Col(
+                                    html.H2('You Wrote'),
+                                    style={'text-align':'left'},
+                                    width=4
+                                ),
+                                dbc.Col(
+                                    html.H2('Vocabulary Search'),
+                                    style={'text-align':'center'},
+                                ),   
+
+                            ]
+                        ),
+                        width=5
+                    ),
+                    dbc.Col(width=4)
+                        
+                ]
+            )
+        )
+
             
-            for i,(index,series) in enumerate(temp_group[1].iterrows()):
-                if i==0:
-                    output_children.append(
-                        dbc.Row(
+        for index,series in store_3_panda_output.iterrows():
+            
+            output_children.append(
+                dbc.Row(
+                    children=[
+                        dbc.Col(width=3),
+                        dbc.Col(
                             children=[
-                                dbc.Col(
-                                    html.H6(series['header'])
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Dropdown(
-                                        id={
-                                            'type':'dropdown_empty_options',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        multi=False,
-                                        placeholder='Type substring to search',
-                                        options=['Type substring to populate options.'],
-                                        optionHeight=60
-                                    ),  
-                                ),
-                                dbc.Col(
-                                    dmc.Checkbox(
-                                        id={
-                                            'type':'step_3_curation_checkbox',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        # multi=False,
-                                        # #placeholder='Type compound name to search',
-                                        # options=['Type substring to populate options.'],
-                                        # optionHeight=60
-                                        checked=False
-                                    ),  
-                                ),
-                            ]
-                        )
-                    )
-                else:
-                    output_children.append(
-                        dbc.Row(
-                            children=[
-                                dbc.Col(
-                                    html.H6(' ')
-                                ),    
-                                dbc.Col(
-                                    html.H6(series['written_string'])
-                                ),
-                                # dbc.Col(
-                                #     html.H6(
-                                #         curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                #     )
-                                # ),   
-                                dbc.Col(
-                                    dcc.Dropdown(
-                                        id={
-                                            'type':'dropdown_empty_options',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        multi=False,
-                                        placeholder='Type compound name to search',
-                                        options=['Type substring to populate options.'],
-                                        optionHeight=60
-                                    ),  
-                                ),
-                                dbc.Col(
-                                    dmc.Checkbox(
-                                        id={
-                                            'type':'step_3_curation_checkbox',
-                                            'index':series['header']+'_'+series['written_string']
-                                        },
-                                        # multi=False,
-                                        # #placeholder='Type compound name to search',
-                                        # options=['Type substring to populate options.'],
-                                        # optionHeight=60
-                                        checked=False
-                                    ),  
-                                ),
-                            ]
-                        )
-                    )
+
+                                dbc.Card(
+                                    children=[
+                                        dbc.Row(
+                                            children=[
+                                                dbc.Col(
+                                                    html.H6(series['header']+': '+series['written_string']),
+                                                    style={'text-align':'center','white-space':'normal'},
+                                                    width=3
+                                                ),
+                                                dbc.Col(
+                                                    dcc.Dropdown(
+                                                        id={
+                                                            'type':'dropdown_empty_options',
+                                                            'index':series['header']+'_'+series['written_string']
+                                                        },
+                                                        multi=False,
+                                                        placeholder='Type to search',
+                                                        options=['Type to populate options.'],
+                                                        optionHeight=60
+                                                    ),
+                                                    style={'text-align':'center'},
+                                                    # width=3
+                                                ),
+                                            ]
+                                        )
+                                    ],
+                                    color='#fff4e4',
+                                    style={
+                                        "box-shadow": "1px 2px 7px 0px grey",
+                                        "border-radius": "10px"
+                                    },
+                                    className="text-center text-nowrap my-2 p-2 mw-55"
+                                )
+                            ],
+                            width=6
+                        ),
+                        dbc.Col(width=3)
+                    ],
+                ),
+            )
+              
 
 
     store_3_panda_output['valid_string']=np.nan
@@ -960,9 +1183,6 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
     [
         Input(component_id={'type':'dropdown_empty_options','index':MATCH},component_property='search_value'),
     ],
-    # [
-    #     State(component_id={'type':'header_written_pair','index':MATCH},component_property="children"),
-    # ],
 )
 def update_options(
     dropdown_empty_options_search_value,
@@ -978,10 +1198,6 @@ def update_options(
     if not dropdown_empty_options_search_value:
         raise PreventUpdate
 
-    # this_header_type=header_written_pair_children[0].split(':')[0].split('.')[0]
-    # if this_header_type not in HEADERS_WITH_SHORT_NGRAMS:
-    # if the "header type" eg species is not in 
-    #print(ctx.triggered_id['index'])
     if ctx.triggered_id['index'].split('_')[0] not in HEADERS_WITH_SHORT_NGRAMS:
         if len(dropdown_empty_options_search_value)<3:
             raise PreventUpdate
@@ -992,18 +1208,15 @@ def update_options(
         'header':current_index,
         'substring':dropdown_empty_options_search_value
     }
-    #print(outbound_json)
-
     temp_values=requests.post(BASE_URL_API+'/generatesubstringmatchesresource/',json=outbound_json).json()
 
+    print(temp_values)
 
-    #print(temp_values)
-    return [[
-        { 
-            'label': temp_string,
-            'value': temp_string
-        } for temp_string in temp_values
-    ]]
+    return [
+        [
+            {'label': temp_string,'value': temp_string} if (temp_string.split(' AKA ')[0] != temp_string.split(' AKA ')[1]) else {'label': temp_string.split(' AKA ')[0],'value': temp_string} for temp_string in temp_values
+        ]
+    ]
 
 
 
@@ -1029,103 +1242,12 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
             response = requests.post(BASE_URL_API + "/predictvocabularytermsresource/", json=prediction_request)
             this_strings_neighbors = pd.read_json(response.json(), orient="records")  
         
-            #print(this_strings_neighbors)
             curation_dict[temp_header][temp_written_string]={
                 'main_string':this_strings_neighbors.at[0,'main_string'],
                 'valid_string':this_strings_neighbors.at[0,'valid_string']
             }
     
-
-
-
-
-        #for 
-    output_children=list()
-
-    output_children.append(
-        dbc.Row(
-            children=[
-                dbc.Col(
-                    html.H3('Metadata Header')
-                ),    
-                dbc.Col(
-                    html.H3('Written String')
-                ),
-                dbc.Col(
-                    html.H3('Curated String')
-                ),   
-                dbc.Col(
-                    html.H3('Curation Wrong?') 
-                ),
-            ]
-        )
-    )
-    for temp_header in curation_dict.keys():
-
-        for i,temp_written_string in enumerate(curation_dict[temp_header]):
-            if i==0:
-                output_children.append(
-                    dbc.Row(
-                        children=[
-                            dbc.Col(
-                                html.H6(temp_header)
-                            ),    
-                            dbc.Col(
-                                html.H6(temp_written_string)
-                            ),
-                            dbc.Col(
-                                html.H6(
-                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                )
-                            ),   
-                            dbc.Col(
-                                dmc.Checkbox(
-                                    id={
-                                        'type':'step_2_curation_checkbox',
-                                        'index':str(temp_header)+'_'+str(temp_written_string)
-                                    },
-                                    # multi=False,
-                                    # #placeholder='Type compound name to search',
-                                    # options=['Type substring to populate options.'],
-                                    # optionHeight=60
-                                    checked=False
-                                ),  
-                            ),
-                        ]
-                    )
-                )
-            else:
-                output_children.append(
-                    dbc.Row(
-                        children=[
-                            dbc.Col(
-                                html.H6(' ')
-                            ),    
-                            dbc.Col(
-                                html.H6(temp_written_string)
-                            ),
-                            dbc.Col(
-                                html.H6(
-                                    curation_dict[temp_header][temp_written_string]['valid_string']+' AKA '+curation_dict[temp_header][temp_written_string]['main_string']
-                                )
-                            ),   
-                            dbc.Col(
-                                dmc.Checkbox(
-                                    id={
-                                        'type':'step_2_curation_checkbox',
-                                        'index':str(temp_header)+'_'+str(temp_written_string)
-                                    },
-                                    # multi=False,
-                                    # #placeholder='Type compound name to search',
-                                    # options=['Type substring to populate options.'],
-                                    # optionHeight=60
-                                    checked=False
-                                ),  
-                            ),
-                        ]
-                    )
-                )
-
+    #what we really should do is make the panda firs so that the rest of this method can look like steps 3 and 4
     curation_panda_dict={
         'header':[],
         'written_string':[],
@@ -1133,22 +1255,202 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         'main_string':[]
     }
     for temp_header in curation_dict.keys():
-        # output_children.append(
-        #     dbc.Row(
-        #         children=[
-        #             dbc.Col(
-        #                 html.H3(temp_header)
-        #             )
-        #         ]
-        #     )
-        # )
         for temp_written_string in (curation_dict[temp_header]):
             curation_panda_dict['header'].append(temp_header)
             curation_panda_dict['written_string'].append(temp_written_string)
             curation_panda_dict['valid_string'].append(curation_dict[temp_header][temp_written_string]['valid_string'])
             curation_panda_dict['main_string'].append(curation_dict[temp_header][temp_written_string]['main_string'])
     curation_panda=pd.DataFrame.from_dict(curation_panda_dict)
-    
+
+    output_children=list()
+
+    output_children.append(
+        html.Div(
+            id="submit_step_2_error_div",
+            children=[]       
+        )
+    )
+    output_children.append(
+        html.Br()
+    )
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    html.Div(
+                        dbc.Card(
+                            children=[
+                                html.H6(''),
+                                html.H4('•We map written words to vocabulary terms•'),
+                                html.H4('•Please mark any mistakes•',style={"color": "red", "font-weight": "bold"}),
+                                html.H6(''),
+                            ],
+                            color='#fff4e4',
+                            style={
+                                'textAlign':'center',
+                                "box-shadow": "1px 2px 7px 0px red",
+                                "border-radius": "10px"
+                            }
+                        ),
+                    ),
+                    width=4
+                ),
+                dbc.Col(width=4),
+            ]
+        )
+    )
+    output_children.append(html.Br())
+    output_children.append(
+        html.Div(
+            id="submit_step_2_error_div",
+            children=[]       
+        )
+    )
+    output_children.append(html.Br())
+
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(width=3),
+                dbc.Col(
+                    html.H2('You Wrote'),
+                    style={'text-align':'center'},
+                    width=2
+                ),
+                dbc.Col(
+                    html.H2('We Guessed'),
+                    style={'text-align':'center'},
+                    width=2
+                ),   
+                dbc.Col(
+                    html.H2('Incorrect?') ,
+                    style={'text-align':'center'},
+                    width=2
+                ),
+            ]
+        )
+    )
+    for index,series in curation_panda.iterrows():
+        
+        output_children.append(
+            dbc.Row(
+                children=[
+                    dbc.Col(width=3),
+                    dbc.Col(
+                        children=[
+                            dbc.Card(
+                                children=[
+                                    dbc.Row(
+                                        children=[
+                                            dbc.Col(
+                                                html.H6(series['header']+': '+series['written_string']),
+                                                style={'text-align':'center','white-space':'normal'},
+                                                width=4
+                                            ),
+                                            dbc.Col(
+                                                html.H6(
+                                                    series['main_string']
+                                                ),
+                                                style={'text-align':'center'},
+                                                width=4
+                                            ), 
+                                            dbc.Col(
+                                                html.Div(
+                                                    dmc.Checkbox(
+                                                        id={
+                                                            'type':'step_2_curation_checkbox',
+                                                            'index':str(temp_header)+'_'+str(temp_written_string)
+                                                        },
+                                                        checked=False,
+                                                        style={'horizontal-align': 'center'},
+                                                        styles= {
+                                                            "input": {"borderColor": 'black'}
+                                                        },
+                                                        color='darkBlue'
+                                                    ),
+                                                    className="d-flex justify-content-center align-items-center"
+                                                    #style={'text-align':'center'},
+                                                ),
+                                                align='center',
+                                                width=4
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                color='#fff4e4',
+                                style={
+                                    "box-shadow": "1px 2px 7px 0px grey",
+                                    "border-radius": "10px"
+                                },
+                                className="text-center text-nowrap my-2 p-2 mw-55"
+                            )
+                        ],
+                        width=6
+                    ),
+                    dbc.Col(width=3)
+                ],
+            ),
+        )
+
+
+    output_children.append(
+        html.Br(),
+    )
+
+    output_children.append(
+        dbc.Row(
+            children=[
+                dbc.Col(width=4),
+                dbc.Col(
+                    children=[
+                        dbc.Card(
+                            children=[
+                                dbc.Row(
+                                    children=[
+                                        dbc.Col(width=3),
+                                        dbc.Col(
+                                            children=[
+                                                html.H6('No errors? Check here:'),
+                                            ],
+                                        ),
+                                        dbc.Col(
+                                            children=[
+                                                dmc.Checkbox(
+                                                    id='step_2_curation_checkbox_all_correct',
+                                                    checked=False,
+                                                    style={'horizontal-align': 'center'},
+
+                                                    styles= {
+                                                        "input": {"borderColor": 'black'}
+                                                    },
+                                                    color='darkBlue'
+                                                ),
+                                            ],
+                                        ),
+
+                                    ]
+                                )
+                            ],
+                            color='#fff4e4',
+                            style={
+                                "box-shadow": "1px 2px 7px 0px grey",
+                                "border-radius": "10px"
+                            },
+                            className="text-center text-nowrap my-2 p-2 mw-55"
+                        )
+                    ],
+                    width=4
+                ),
+                dbc.Col(width=6)
+
+            ],
+            
+        ),
+        
+    )
+
+
     return curation_panda,output_children
 
 
@@ -1156,7 +1458,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
     [
         Output(component_id="upload_form",component_property="children"),
         Output(component_id="upload_store",component_property="data"),
-        Output(component_id="Div_curate_button_or_error_messages",component_property="children"),
+        Output(component_id="submit_step_1_error_div",component_property="children"),
     ],
     [
         Input(component_id="upload_form", component_property="contents"),
@@ -1192,17 +1494,15 @@ def upload_form(
     )
     excel_sheet_checks=list()
     excel_sheet_checks.append(my_SampleMetadataUploadChecker.create_workbook())
-    print(excel_sheet_checks)
     if excel_sheet_checks[0]==False:
         excel_sheet_checks.append(my_SampleMetadataUploadChecker.lacks_sheetname())
-    print(excel_sheet_checks)
     #if we ahve any errors
     if any(map(lambda x: isinstance(x,str),excel_sheet_checks)):
         curate_button_children=dbc.Row(
             children=[
                 dbc.Col(width=4),
                 dbc.Col(
-                    children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in excel_sheet_checks if element!=False],
+                    children=[dmc.Alert(element,withCloseButton=True) for element in excel_sheet_checks if element!=False],
                     width=4,
                 ),
                 dbc.Col(width=4)
@@ -1220,7 +1520,7 @@ def upload_form(
                 children=[
                     dbc.Col(width=4),
                     dbc.Col(
-                        children=[html.H6(element,style={'color':'red','text-align':'center'}) for element in dataframe_checks if element!=False],
+                        children=[dmc.Alert(element,withCloseButton=True) for element in dataframe_checks if element!=False],
                         width=4,
                     ),
                     dbc.Col(width=4)
@@ -1231,30 +1531,7 @@ def upload_form(
 
         #if there are no problems with the excel file or dataframe
         else:
-            curate_button_children=dbc.Row(
-                children=[
-                    dbc.Col(width=5),
-                    dbc.Col(
-                        children=[
-                            html.H6('form passes checks')
-                            # dcc.Link(
-                            #     children=[                        
-                            #         html.Div(
-                            #             dbc.Button(
-                            #                 'Process Form',
-                            #                 id='button_form',
-                            #             ),
-                            #             className="d-grid gap-2 col-6 mx-auto",
-                            #         ),
-                            #     ],
-                            #     href='/curate-and-download',
-                            # )
-                        ],
-                        width=2
-                    ),
-                    dbc.Col(width=5)
-                ]
-            )
+            curate_button_children=[]
 
             decoded=base64.b64decode(content_string)
             temp_dataframe=pd.read_excel(
@@ -1263,28 +1540,12 @@ def upload_form(
                 #skiprows=1
                 index_col=0
             )
-            # temp_dataframe_2=pd.read_excel(
-            #     io.BytesIO(decoded),
-            #     sheet_name='sample_sheet',
-            #     header=None,
-            #     nrows=1
-            # )
-            #need to set the temp_dataframe_2 headers to be those from the temp_dataframe in order for the concat to work
-            # temp_dataframe_2.columns=temp_dataframe.columns
-            # temp_dataframe=pd.concat(
-            #     [temp_dataframe,temp_dataframe_2],
-            #     axis='index',
-            #     ignore_index=True
-            # )
-            temp_dataframe=split_columns_if_delimited(temp_dataframe)
-            temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
-
-            # print(temp_dataframe)
             
-            # store_dict={
-            #     'input_dataframe':temp_dataframe_as_json,
-            # }
+
+            temp_dataframe=split_columns_if_delimited(temp_dataframe)
+            print(temp_dataframe)
+            temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
     displayed_name=html.Div([upload_form_filename],className='text-center')
     return [displayed_name,temp_dataframe_output,curate_button_children]
