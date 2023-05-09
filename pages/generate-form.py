@@ -106,6 +106,12 @@ layout = dmc.MantineProvider(
                                             active=0,
                                             color='darkBlue',
                                             breakpoint="sm",
+
+                                            # progressIcon=html.H6('Current',style={"color": "red", "font-weight": "bold"}),
+                                            # completedIcon='Done',
+                                            # iconSize=100,
+
+
                                             children=[
                                                 dmc.StepperStep(
                                                     id='generate_step_1',
@@ -300,50 +306,141 @@ layout = dmc.MantineProvider(
                                                     description="Download form",
                                                     children=[
                                                         dcc.Download(id="download_form"),
+                                                        
+                                                        # dbc.Row(
+                                                        #     children=[
+                                                        #         dbc.Col(width=4),
+                                                        #         dbc.Col(
+                                                        #             children=[
+                                                        #                 html.Div(
+                                                        #                     children=[
+                                                        #                         html.H6('Download and complete sample metadata form.'),
+                                                        #                         html.Br(),
+                                                        #                     ],
+                                                        #                     style={'textAlign':'center'}
+                                                        #                 ),
+                                                        #             ],
+                                                        #             width=4
+                                                        #         ),
+                                                        #         dbc.Col(width=4)
+                                                        #     ]
+                                                        # ),
+                                                        # dbc.Row(
+                                                        #     children=[
+                                                        #         dbc.Col(width=4),
+                                                        #         dbc.Col(
+                                                        #             children=[
+                                                        #                 html.Div(
+                                                        #                     children=[
+                                                        #                         dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
+                                                        #                         # html.Br(),
+                                                        #                         # dbc.NavLink('After completion, reupload here.', href='/submit-form',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
+                                                        #                     ],
+                                                        #                     className="d-grid gap-3 col-6 mx-auto",
+                                                        #                     style={'textAlign':'center'}
+                                                        #                 ),
+                                                        #             ],
+                                                        #             width=4
+                                                        #         ),
+    
+                                                        #         dbc.Col(width=4)
+                                                        #     ]
+                                                        # ),
+
+                                                        # html.Br(),
+                                                        # html.Br(),
+
+
+                                                        
+                                                        # dbc.Row(
+                                                        #     children=[
+                                                        #         dbc.Col(width=2),
+                                                        #         dbc.Col(
+                                                        #             children=[
+                                                        #                 html.Div(
+                                                        #                     # dmc.Button(
+                                                        #                     #     dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                        #                     #     id='button_download_curated',color='darkBlue',size='md'
+                                                        #                     # ),
+                                                        #                     dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
+                                                        #                     className="d-grid gap-2 col-6 mx-auto",
+                                                        #                     style={'textAlign':'center'}
+                                                        #                 ),
+                                                        #             ],
+                                                        #             width=4
+                                                        #         ),
+
+                                                        #         dbc.Col(
+                                                        #             children=[
+                                                        #                 html.Div(
+                                                        #                     dmc.Button(
+                                                        #                         dbc.NavLink('Submit Completed Form', href='/submit-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                        #                         id='button_download_curated',color='darkBlue',size='md'
+                                                        #                     ),
+                                                        #                     className="d-grid gap-2 col-6 mx-auto",
+                                                        #                     style={'textAlign':'center'}
+                                                        #                 ),
+                                                        #             ],
+                                                        #             width=4
+                                                        #         ),
+
+
+                                                        #         dbc.Col(width=2)
+                                                        #     ]
+                                                        # ),
+
+                                                        html.Br(),
                                                         html.Br(),
                                                         html.Br(),
                                                         dbc.Row(
                                                             children=[
-                                                                dbc.Col(width=4),
+                                                                dbc.Col(width=2),
                                                                 dbc.Col(
                                                                     children=[
                                                                         html.Div(
-                                                                            children=[
-                                                                                html.H6('Download and complete sample metadata form.'),
-                                                                                html.Br(),
-                                                                            ],
-                                                                            style={'textAlign':'center'}
-                                                                        ),
+                                                                            children=[dmc.Group(
+                                                                                align='center',
+                                                                                children=[
+                                                                                    html.Div(
+                                                                                        # dmc.Button(
+                                                                                        #     dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                        #     id='button_download_curated',color='darkBlue',size='md'
+                                                                                        # ),
+                                                                                        dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
+                                                                                        className="d-grid gap-1 col-4 mx-auto",
+                                                                                        style={'textAlign':'center'}
+                                                                                    ),
+
+
+                                                                                    html.Div(
+                                                                                        dmc.Button(
+                                                                                            dbc.NavLink('Submit Completed Form', href='/submit-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                            id='button_download_curated',color='darkBlue',size='md'
+                                                                                        ),
+                                                                                        className="d-grid gap-1 col-4 mx-auto",
+                                                                                        style={'textAlign':'center'}
+                                                                                    ),
+                                                                                ]
+                                                                            )],
+                                                                        style={'textAlign':'center'}
+                                                                        )
                                                                     ],
-                                                                    width=4
+                                                                    width=8
                                                                 ),
-                                                                dbc.Col(width=4)
-                                                            ]
-                                                        ),
-                                                        dbc.Row(
-                                                            children=[
-                                                                dbc.Col(width=4),
-                                                                dbc.Col(
-                                                                    children=[
-                                                                        html.Div(
-                                                                            children=[
-                                                                                dmc.Button('Download Form', id='button_form',color='darkBlue',size='md'),
-                                                                                html.Br(),
-                                                                                dbc.NavLink('After completion, reupload here.', href='/submit-form',style = {'color': 'blue','font-weight':'bold'},className='navlink-parker'),
-                                                                            ],
-                                                                            className="d-grid gap-3 col-6 mx-auto",
-                                                                            style={'textAlign':'center'}
-                                                                        ),
-                                                                    ],
-                                                                    width=4
-                                                                ),
-                                                                dbc.Col(width=4)
+
+
+                                                                dbc.Col(width=2)
                                                             ]
                                                         ),
                                                         html.Br(),
                                                         html.Br(),
+
+
+
+
                                                     ]
                                                 ),
+                                                # we never actually reac this step.
                                                 dmc.StepperCompleted(
                                                     children=[
                                                         html.Br(),
@@ -425,7 +522,7 @@ def update(stepper_generate_form_back_n_clicks, stepper_generate_form_next_n_cli
 
     if ctx.triggered_id=="stepper_generate_form_back" and current>0:
         current-=1
-    elif ctx.triggered_id=="stepper_generate_form_next" and current<NUM_STEPS:
+    elif ctx.triggered_id=="stepper_generate_form_next" and current<(NUM_STEPS-1):
         current+=1        
 
     return [current,[]]
@@ -618,6 +715,92 @@ def fill_title_sheet(temp_writer,workbook,worksheet):
 
     return workbook, worksheet
 
+
+
+def fill_example_sheet(temp_writer,workbook,worksheet):
+    worksheet=temp_writer.sheets['example_sample_sheet']
+    # worksheet.hide_gridlines()
+
+    example_format_bold=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+    example_format_text=workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+
+    worksheet.write('B1','species',example_format_bold)
+    worksheet.write('C1','organ',example_format_bold)
+    worksheet.write('D1','cellLine',example_format_bold)
+    worksheet.write('E1','cellCount',example_format_bold)
+    worksheet.write('F1','mass',example_format_bold)
+    worksheet.write('G1','massUnit',example_format_bold)
+    worksheet.write('H1','drugName',example_format_bold)
+    worksheet.write('I1','drugDoseMagnitude',example_format_bold)
+    worksheet.write('J1','drugDoseUnit',example_format_bold)
+    # worksheet.write('K1','zeroTimeEvent',example_format_bold)
+    # worksheet.write('L1','time',example_format_bold)
+    # worksheet.write('M1','timeUnit',example_format_bold)
+
+
+    for i in range(2,14):
+        worksheet.write(f'A{i}',f'{i-1}',example_format_bold)
+    for i in range(2,14):
+        worksheet.write(f'B{i}','human',example_format_text)
+    for i in range(2,8):
+        worksheet.write(f'C{i}','kidney',example_format_text)
+    for i in range(8,14):
+        worksheet.write(f'D{i}','hek293',example_format_text)
+    for i in range(8,14):
+        worksheet.write(f'E{i}','1e6',example_format_text)
+    for i in range(2,8):
+        worksheet.write(f'F{i}','5',example_format_text)
+    for i in range(2,8):
+        worksheet.write(f'G{i}','mg',example_format_text)
+    for i in range(2,5):
+        worksheet.write(f'H{i}','control',example_format_text)
+    for i in range(5,8):
+        worksheet.write(f'H{i}','KERENDIA',example_format_text)
+    for i in range(8,11):
+        worksheet.write(f'H{i}','control',example_format_text)
+    for i in range(11,14):
+        worksheet.write(f'H{i}','KERENDIA',example_format_text)
+    for i in range(5,8):
+        worksheet.write(f'I{i}','20',example_format_text)
+    for i in range(11,14):
+        worksheet.write(f'I{i}','20',example_format_text)
+    for i in range(5,8):
+        worksheet.write(f'J{i}','mg',example_format_text)
+    for i in range(11,14):
+        worksheet.write(f'J{i}','mg',example_format_text)
+
+
+    # for i in range(9,14):
+    #     worksheet.write(f'D{i}','hek293',example_format_text)
+
+
+
+
+    worksheet.set_column('D:D', 15)
+    worksheet.set_column('E:E', 15)
+    worksheet.set_column('F:F', 15)
+    worksheet.set_column('G:G', 15)
+    worksheet.set_column('H:H', 15)
+    worksheet.set_column('I:I', 20)
+    worksheet.set_column('J:J', 15)
+
+    # worksheet.autofit()
+
+    return workbook, worksheet
+
+
+
+
+
 def update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe):
     my_format=workbook.add_format({
         'bold': 1,
@@ -680,13 +863,15 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='Instructions',index=False)
 
+    
+
     # print('--------------------------')
     # print(temp_dataframe)
 
     temp_dataframe.index=[i+1 for i in temp_dataframe.index]
     temp_dataframe.to_excel(temp_writer,sheet_name='sample_sheet')#,index=False)#,startrow=1)
 
-
+    empty_df.to_excel(temp_writer,sheet_name='example_sample_sheet',index=False)
 
     #https://xlsxwriter.readthedocs.io/working_with_pandas.html
     #https://community.plotly.com/t/generate-multiple-tabs-in-excel-file-with-dcc-send-data-frame/53460/7
@@ -704,6 +889,12 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     ###NEEED TO UPDAT#############3
     workbook, worksheet=update_excel_sheet_sample_formatting(workbook,worksheet,temp_dataframe)#,group_to_header_dict,group_to_archetype_dict)
     workbook, worksheet=fill_title_sheet(temp_writer,workbook,worksheet)
+
+
+    # workbook=temp_writer.book
+    worksheet=temp_writer.sheets['example_sample_sheet']
+
+    workbook, worksheet=fill_example_sheet(temp_writer,workbook,worksheet)
 
     temp_writer.save()
     temp_data=output_stream.getvalue()

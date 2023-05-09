@@ -34,7 +34,7 @@ NUM_STEPS_SUBMIT=5
 SPLIT_CHAR='~'
 NEIGHBORS_TO_RETRIEVE=100
 HEADERS_WITH_SHORT_NGRAMS={'heightUnit','weightUnit','ageUnit','massUnit','volumeUnit','timeUnit','drugDoseUnit'}
-HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude','time'}
+HEADERS_TO_NOT_CURATE={'mass','volume','height','weight','age','drugDoseMagnitude','time','cellCount'}
 
 with open('additional_files/subset_per_heading.json', 'r') as fp:
     subset_per_heading_json=json.load(fp)
@@ -79,9 +79,11 @@ def split_columns_if_delimited(temp_dataframe):
     #much easier to conserve the order than to reorder
     #do in parallel with temp_dataframe_2
     new_dataframe_list=list()
+    # print(temp_dataframe.dtypes)
     for temp_column in temp_dataframe.columns:
         if temp_dataframe[temp_column].dtype==object:
-            temp_expanded_columns=temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
+            # print(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.'))
+            temp_expanded_columns=temp_dataframe[temp_column].astype(str).str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
         else:
             temp_expanded_columns=temp_dataframe[temp_column]
         new_dataframe_list.append(temp_expanded_columns)
@@ -112,8 +114,8 @@ layout = dmc.MantineProvider(
             ]
         }
     },
-    children=[dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
-    # children=[
+    # children=[dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+    children=[
         html.Div(
             children=[
 
@@ -122,7 +124,7 @@ layout = dmc.MantineProvider(
                 dcc.Store('store_2'),
                 dcc.Store('store_3'),
                 dcc.Store('store_4'),
-                dcc.Download(id="download_curated_form"),
+                
                 html.Br(),
                 html.Br(),
                 html.Br(),
@@ -146,11 +148,14 @@ layout = dmc.MantineProvider(
                                             color='darkBlue',
                                             breakpoint="sm",
                                             children=[
+                                                
                                                 dmc.StepperStep(
                                                     id='step_1',
                                                     label="First step",
                                                     description="Upload Form",
-                                                    children=[
+                                                    children=
+                                                    [
+                                                        dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
                                                         html.Br(),
                                                         html.Div(id='submit_step_1_error_div'),
                                                         dbc.Row(
@@ -179,7 +184,8 @@ layout = dmc.MantineProvider(
                                                                 ),
                                                                 dbc.Col(width=4)
                                                             ]
-                                                        ),                                                
+                                                        ),   
+                                                        ])                                             
                                                     ]
                                                 ),
                                                 dmc.StepperStep(
@@ -187,6 +193,7 @@ layout = dmc.MantineProvider(
                                                     label="Second step",
                                                     description="Validate Automatic Curation",
                                                     children=[
+                                                        # dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
                                                         # html.H6('second step')
                                                         html.Div(id="submit_step_2_error_div",children=[]),
                                                         dmc.Checkbox(
@@ -206,7 +213,8 @@ layout = dmc.MantineProvider(
                                                             checked=False,
                                                             style={'horizontal-align': 'center'}
                                                         ),
-                                                    ] 
+                                                    # ]) 
+                                                    ]
                                                 ),
                                                 dmc.StepperStep(
                                                     id='step_3',
@@ -231,52 +239,127 @@ layout = dmc.MantineProvider(
                                                     label="5 step",
                                                     description="Download Curated Form",
                                                     children=[
-                                                        html.Br(),
-                                                        html.Br(),
-                                                        dbc.Row(
-                                                            children=[
-                                                                dbc.Col(width=4),
-                                                                dbc.Col(
-                                                                    children=[
-                                                                        html.Div(
-                                                                            children=[
-                                                                                html.H6('Download the standardized metadata form.'),
-                                                                                #html.H6('Reupload '),
-                                                                                html.Br(),
-                                                                            ],
-                                                                            #className="d-grid gap-4 col-6 mx-auto",
+                                                        dbc.Spinner(size="lg", color='#1A3E68', type="border", fullscreen=False,children=[
+                                                            dcc.Download(id="download_curated_form"),
+                                                            
+
+                                                            html.Br(),
+                                                            html.Br(),
+                                                            html.Br(),
+                                                            dbc.Row(
+                                                                children=[
+                                                                    dbc.Col(width=2),
+                                                                    dbc.Col(
+                                                                        children=[
+                                                                            html.Div(
+                                                                                children=[dmc.Group(
+                                                                                    align='center',
+                                                                                    children=[
+                                                                                        html.Div(
+                                                                                            # dmc.Button(
+                                                                                            #     dbc.NavLink('Go home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                            #     id='button_download_curated',color='darkBlue',size='md'
+                                                                                            # ),
+                                                                                            dmc.Button('Download Standardized Form', id='button_download_curated',color='darkBlue',size='md'),
+                                                                                            className="d-grid gap-1 col-4 mx-auto",
+                                                                                            style={'textAlign':'center'}
+                                                                                        ),
+
+
+                                                                                        html.Div(
+                                                                                            dmc.Button(
+                                                                                                dbc.NavLink('Return Home', href='/',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link')),
+                                                                                                id='button_download_curated',color='darkBlue',size='md'
+                                                                                            ),
+                                                                                            className="d-grid gap-1 col-4 mx-auto",
+                                                                                            style={'textAlign':'center'}
+                                                                                        ),
+                                                                                    ]
+                                                                                )],
                                                                             style={'textAlign':'center'}
-                                                                        ),
-                                                                    ],
-                                                                    width=4
-                                                                ),
-                                                                dbc.Col(width=4)
-                                                            ]
-                                                        ),
-                                                        dbc.Row(
-                                                            children=[
-                                                                dbc.Col(width=4),
-                                                                dbc.Col(
-                                                                    children=[
-                                                                        html.Div(
-                                                                            dmc.Button(
-                                                                                # children=[dbc.Spinner(size="sm"), " Loading..."],
-                                                                                children=['Download Form'],
-                                                                                
-                                                                                id='button_download_curated',color='darkBlue',size='md'
-                                                                            ),
-                                                                            className="d-grid gap-2 col-6 mx-auto",
-                                                                            style={'textAlign':'center'}
-                                                                        ),
-                                                                    ],
-                                                                    width=4
-                                                                ),
-                                                                dbc.Col(width=4)
-                                                            ]
-                                                        ),
-                                                        
-                                                    ] 
+                                                                            )
+                                                                        ],
+                                                                        width=8
+                                                                    ),
+
+
+                                                                    dbc.Col(width=2)
+                                                                ]
+                                                            ),
+                                                            html.Br(),
+                                                            html.Br(),
+                                                        ])
+                                                    ]
                                                 ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        
+                                                        
+                                                        
+                                                        
+                                                #         html.Br(),
+                                                #         html.Br(),
+                                                #         dbc.Row(
+                                                #             children=[
+                                                #                 dbc.Col(width=4),
+                                                #                 dbc.Col(
+                                                #                     children=[
+                                                #                         html.Div(
+                                                #                             children=[
+                                                #                                 html.H6('Download the standardized metadata form.'),
+                                                #                                 #html.H6('Reupload '),
+                                                #                                 html.Br(),
+                                                #                             ],
+                                                #                             #className="d-grid gap-4 col-6 mx-auto",
+                                                #                             style={'textAlign':'center'}
+                                                #                         ),
+                                                #                     ],
+                                                #                     width=4
+                                                #                 ),
+                                                #                 dbc.Col(width=4)
+                                                #             ]
+                                                #         ),
+                                                #         dbc.Row(
+                                                #             children=[
+                                                #                 dbc.Col(width=4),
+                                                #                 dbc.Col(
+                                                #                     children=[
+                                                #                         html.Div(
+                                                #                             dmc.Button(
+                                                #                                 # children=[dbc.Spinner(size="sm"), " Loading..."],
+                                                #                                 children=['Download Form'],
+                                                                                
+                                                #                                 id='button_download_curated',color='darkBlue',size='md'
+                                                #                             ),
+                                                #                             className="d-grid gap-2 col-6 mx-auto",
+                                                #                             style={'textAlign':'center'}
+                                                #                         ),
+                                                #                     ],
+                                                #                     width=4
+                                                #                 ),
+                                                #                 dbc.Col(width=4)
+                                                #             ]
+                                                #         ),
+                                                #         ])
+                                                #     ] 
+                                                # ),
+
+                                                # we never reach this
+
                                                 dmc.StepperCompleted(
                                                     # label='some_label',
                                                     # description='some description',
@@ -345,7 +428,7 @@ layout = dmc.MantineProvider(
             ],
         )
     ]
-    )]
+    # )]
 )
 
 @callback(
@@ -431,6 +514,9 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         if temp_col.split('.')[0] in HEADERS_TO_NOT_CURATE:
             continue
 
+        if temp_col.split('.')[0] not in replacement_dict.keys():
+            continue
+
         upload_panda[temp_col].replace(
             to_replace=replacement_dict[temp_col.split('.')[0]],
             inplace=True
@@ -504,12 +590,26 @@ def control_download_button(
     #######################
     ###update use count###
     for index,series in total_replacement_panda.iterrows():
-        usecount_success=requests.post(
-            BASE_URL_API+'/updateusecountresource/',json={
-                'header':series['header'],
-                'main_string':series['main_string']
-            }
-        )
+        
+        try:
+
+            usecount_success=requests.post(
+                BASE_URL_API+'/updateusecountresource/',json={
+                    'header':series['header'],
+                    'main_string':series['main_string']
+                },
+                timeout=0.1
+            )
+
+
+           
+        except:
+            print('bypassed that long use_count session')
+            pass
+        
+        
+        
+        
     ######################
 
     ####train new vocab####
@@ -632,7 +732,7 @@ def update_step_submit(
         return [stepper_submit_form_active,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,junk_patch,[],junk_patch,junk_patch,[]]
 
     #if we are going forward....
-    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<NUM_STEPS_SUBMIT:
+    elif ctx.triggered_id=="stepper_submit_form_next" and stepper_submit_form_active<(NUM_STEPS_SUBMIT-1):
         #if we are on the first step
         if stepper_submit_form_active==0:
 
@@ -969,6 +1069,7 @@ def generate_step_3_layout_and_data_for_store(store_2_data,step_2_curation_check
                                     # html.H6('Automatic Curation Step'),
                                     html.H4('•Manually check vocabularies for matches•',style={"color": "red", "font-weight": "bold"}),
                                     html.H4('•If no match, leave blank•',style={"color": "red", "font-weight": "bold"}),
+                                    # html.H4('•If no match, leave blank•',style={"color": "black", "font-weight": "bold"}),
                                     # html.H6('•Species searches may lag•'),
                                     html.H6(''),
                                 ],
@@ -1439,7 +1540,11 @@ def upload_form(
                 #skiprows=1
                 index_col=0
             )
+
+            
+
             temp_dataframe=split_columns_if_delimited(temp_dataframe)
+            print(temp_dataframe)
             temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
     displayed_name=html.Div([upload_form_filename],className='text-center')
