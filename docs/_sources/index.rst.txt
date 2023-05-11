@@ -12,6 +12,14 @@ for easy retrospective analysis
 
    installation
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API
+
+   api
+
+
+
 
 
 Indices and tables

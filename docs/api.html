@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Docker &mdash; Sample Metadata Standardizer 0.0 documentation</title>
+  <title>API &mdash; Sample Metadata Standardizer 0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,8 +20,7 @@
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Sample Metadata Ingester" href="index.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,11 +39,8 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Installation</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Docker</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Docker-compose">Docker-compose</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Docker</a></li>
 </ul>
 
         </div>
@@ -61,9 +57,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Docker</li>
+      <li>API</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/installation.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/api.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -95,49 +91,31 @@
     text-align: unset;
 }
 </style>
-<section id="Docker">
-<h1>Docker<a class="headerlink" href="#Docker" title="Permalink to this headline"></a></h1>
-<section id="Docker-compose">
-<h2>Docker-compose<a class="headerlink" href="#Docker-compose" title="Permalink to this headline"></a></h2>
-<p>You can provide the following docker-compose.yml file to your local machine or to a cloud service like AWS Beanstalk.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>version: &quot;3.5&quot;
-
-services:
-  frontend:
-    image: rictuar/sampleingester-frontend
-    container_name: front_end
-    ports:
-      - 80:8050
-    networks:
-      my_network:
-        aliases:
-          - frontend_alias
-    restart: on-failure
-
-  api:
-    image: rictuar/sampleingester-api
-    container_name: api
-    ports:
-      - 4999:4999
-    networks:
-      my_network:
-        aliases:
-          - api_alias
-    restart: on-failure
-
-networks:
-  my_network:
-</pre></div>
-</div>
+<section id="API">
+<h1>API<a class="headerlink" href="#API" title="Permalink to this headline"></a></h1>
+<section id="Get-all-authors">
+<h2>Get all authors<a class="headerlink" href="#Get-all-authors" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/authorid/">http://127.0.0.1:4999/authorid/</a> will return something like “[{“author_id”: “parkerbremer”}]” with all unique authorIDs</p>
+</section>
+<section id="Get-Studies-for-an-Author">
+<h2>Get Studies for an Author<a class="headerlink" href="#Get-Studies-for-an-Author" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/studyid/">http://127.0.0.1:4999/studyid/</a> with a payload like { “author_id”:“parkerbremer” } will return something like</p>
+<p>“[{“study_id”: “1683762619.73521”}, {“study_id”: “1683762695.7018”}, {“study_id”: “1683762769.09463”}, {“study_id”: “1683762864.56339”}, {“study_id”: “1683762912.87341”}, {“study_id”: “1683762974.10524”}, {“study_id”: “1683763008.57449”}, {“study_id”: “1683763024.50884”}]”</p>
+<p>with all studyIDs corresponding ot that author</p>
+</section>
+<section id="Get-Single-Study">
+<h2>Get Single Study<a class="headerlink" href="#Get-Single-Study" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/studyid/">http://127.0.0.1:4999/studyid/</a> with a payload like { “study_id”:“1683762619.73521” } will return something like</p>
+<p>“[{“author_id”: “parkerbremer”, “study_id”: “1683762619.73521”, “sample_id”: “0”, “metadata_parallel_id”: “0”, “cellLine”: null, “age”: null, “geneKnockout”: null, “ageUnit”: null, “volume”: null, “heightUnit”: null, “exercise”: null, “weight”: null, “diet”: null, “time”: null, “species”: null, “timeUnit”: null, “disease”: null, “drugName”: null, “otherInclusionCriteria”: null, “zeroTimeEvent”: null, “material”: null, “mass”: null, “organ”: null, “geographicalOrigin”: null, “sex”: null,
+“otherExclusionCriteria”: null, “height”: null, “ethnicity”: null, “drugDoseUnit”: null, “cellCount”: null, “drugDoseMagnitude”: null, “massUnit”: null, “weightUnit”: null, “strain”: null, “volumeUnit”: null}]”</p>
+<p>with all samples from that study</p>
 </section>
 </section>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Sample Metadata Ingester" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-    </div>
+          <footer>
 
   <hr/>
 
