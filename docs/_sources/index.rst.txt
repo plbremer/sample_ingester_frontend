@@ -1,0 +1,22 @@
+.. Sample Metadata Ingester
+
+Sample Metadata Ingester
+==============================================
+
+A tool to standardize and store sample metadata
+for easy retrospective analysis
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Installation
+
+   installation
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
