@@ -25,6 +25,9 @@ class SampleMetadataUploadChecker:
     def lacks_sheetname(self):
         if ('sample_sheet' not in self.workbook.sheetnames):
             return 'sheet named \"sample_sheet\" not found'
+        if ('author_metadata' not in self.workbook.sheetnames):
+            return 'sheet named \"sample_sheet\" not found'
+                        
         else:
             return False
 

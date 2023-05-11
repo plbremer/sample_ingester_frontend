@@ -797,7 +797,32 @@ def fill_example_sheet(temp_writer,workbook,worksheet):
 
     return workbook, worksheet
 
+def fill_author_sheet(temp_writer,workbook,worksheet):
+    worksheet=temp_writer.sheets['author_metadata']
+    # worksheet.hide_gridlines()
 
+    example_format_bold=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+    example_format_text=workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+
+    worksheet.write('A1','Requested Information',example_format_bold)
+    worksheet.write('B1','Value',example_format_bold)
+    worksheet.write('A2','Author Name',example_format_bold)
+    worksheet.write('B2','Name here',example_format_text)
+
+    # worksheet.autofit()
+    worksheet.set_column('A:A', 25)
+    worksheet.set_column('B:B', 25)
+
+    return workbook, worksheet
 
 
 
@@ -863,6 +888,7 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='Instructions',index=False)
 
+    empty_df.to_excel(temp_writer,sheet_name='author_metadata',index=False)
     
 
     # print('--------------------------')
@@ -895,6 +921,10 @@ def generate_form(button_form_n_clicks,dt_for_preview_columns,dt_for_preview_dat
     worksheet=temp_writer.sheets['example_sample_sheet']
 
     workbook, worksheet=fill_example_sheet(temp_writer,workbook,worksheet)
+
+    worksheet=temp_writer.sheets['author_metadata']
+    workbook, worksheet=fill_author_sheet(temp_writer,workbook,worksheet)
+
 
     temp_writer.save()
     temp_data=output_stream.getvalue()
