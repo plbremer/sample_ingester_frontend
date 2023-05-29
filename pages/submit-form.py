@@ -72,6 +72,7 @@ def parse_stored_excel_file(store_panda):
     return output_dict
 
 def split_columns_if_delimited(temp_dataframe):
+    #we always do this function, but only actually split if delimit character is prsent
     #for each column
     #split it
     #delete the orignal
@@ -85,13 +86,32 @@ def split_columns_if_delimited(temp_dataframe):
             # print(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.'))
             temp_expanded_columns=temp_dataframe[temp_column].astype(str).str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
         else:
-            temp_expanded_columns=temp_dataframe[temp_column]
+            temp_expanded_columns=temp_dataframe[temp_column].astype(str)
         new_dataframe_list.append(temp_expanded_columns)
 
     output_dataframe=pd.concat(new_dataframe_list,axis='columns')
     output_dataframe.fillna(value=np.nan,inplace=True)
 
     return output_dataframe
+
+def add_dot_zero_if_none(temp_dataframe):
+    column_rename_dict={
+        temp_col:temp_col+'.0' for temp_col in temp_dataframe if '.' not in temp_col
+    }
+    
+
+    temp_dataframe.rename(
+        column_rename_dict,
+        inplace=True,
+        axis='columns'
+        
+    )
+    print('########################################################')
+    print(column_rename_dict)
+    print(temp_dataframe)
+
+
+    return temp_dataframe
 
 
 layout = dmc.MantineProvider(
@@ -591,6 +611,15 @@ def control_download_button(
 
 
     download_panda,total_replacement_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
+
+
+    #we have to also manually change the non curated nan to 'not available' because they do not receive the curation treatment
+    download_panda.replace(
+        to_replace={'nan':'not available'},
+        inplace=True
+    )
+
+
     ####generate the downlaodable excel file
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
@@ -670,7 +699,7 @@ def control_download_button(
                     'header':series['header'],
                     'main_string':series['main_string']
                 },
-                timeout=0.1
+                # timeout=0.1
             )
 
 
@@ -1621,6 +1650,8 @@ def upload_form(
             
 
             temp_dataframe=split_columns_if_delimited(temp_dataframe)
+
+            temp_dataframe=add_dot_zero_if_none(temp_dataframe)
             print(temp_dataframe)
             # temp_dataframe_output=dict()
             temp_dataframe_output=temp_dataframe.to_dict(orient='records')

@@ -98,6 +98,16 @@ layout = dmc.MantineProvider(
                         dbc.Col(width=2)
                     ]
                 ),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.Br(),
                 dbc.Row(
                     children=[
                         dbc.Col(width=4),
@@ -111,7 +121,7 @@ layout = dmc.MantineProvider(
                                     children=[
                                         dmc.Button(
                                             children=[
-                                                dbc.NavLink('What is this tool?', href='/generate-form',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                                dbc.NavLink('What is this tool?', href='/explain-tool',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
                                             ],
                                             size='xl',
                                             color='darkBlue'
