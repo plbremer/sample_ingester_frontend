@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API &mdash; Sample Metadata Standardizer 0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Sample Metadata Standardizer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Docker</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Sample Metadata Standardizer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="API">
+<h1>API<a class="headerlink" href="#API" title="Permalink to this headline"></a></h1>
+<section id="Get-all-authors">
+<h2>Get all authors<a class="headerlink" href="#Get-all-authors" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/authorid/">http://127.0.0.1:4999/authorid/</a> will return something like “[{“author_id”: “parkerbremer”}]” with all unique authorIDs</p>
+</section>
+<section id="Get-Studies-for-an-Author">
+<h2>Get Studies for an Author<a class="headerlink" href="#Get-Studies-for-an-Author" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/studyid/">http://127.0.0.1:4999/studyid/</a> with a payload like { “author_id”:“parkerbremer” } will return something like</p>
+<p>“[{“study_id”: “1683762619.73521”}, {“study_id”: “1683762695.7018”}, {“study_id”: “1683762769.09463”}, {“study_id”: “1683762864.56339”}, {“study_id”: “1683762912.87341”}, {“study_id”: “1683762974.10524”}, {“study_id”: “1683763008.57449”}, {“study_id”: “1683763024.50884”}]”</p>
+<p>with all studyIDs corresponding ot that author</p>
+</section>
+<section id="Get-Single-Study">
+<h2>Get Single Study<a class="headerlink" href="#Get-Single-Study" title="Permalink to this headline"></a></h2>
+<p>A get request to <a class="reference external" href="http://127.0.0.1:4999/studyid/">http://127.0.0.1:4999/studyid/</a> with a payload like { “study_id”:“1683762619.73521” } will return something like</p>
+<p>“[{“author_id”: “parkerbremer”, “study_id”: “1683762619.73521”, “sample_id”: “0”, “metadata_parallel_id”: “0”, “cellLine”: null, “age”: null, “geneKnockout”: null, “ageUnit”: null, “volume”: null, “heightUnit”: null, “exercise”: null, “weight”: null, “diet”: null, “time”: null, “species”: null, “timeUnit”: null, “disease”: null, “drugName”: null, “otherInclusionCriteria”: null, “zeroTimeEvent”: null, “material”: null, “mass”: null, “organ”: null, “geographicalOrigin”: null, “sex”: null,
+“otherExclusionCriteria”: null, “height”: null, “ethnicity”: null, “drugDoseUnit”: null, “cellCount”: null, “drugDoseMagnitude”: null, “massUnit”: null, “weightUnit”: null, “strain”: null, “volumeUnit”: null}]”</p>
+<p>with all samples from that study</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Parker Bremer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

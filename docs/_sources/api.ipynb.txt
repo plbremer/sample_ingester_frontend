@@ -1,0 +1,105 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "67fb0fc3",
+   "metadata": {},
+   "source": [
+    "# API"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ea5eb10b",
+   "metadata": {},
+   "source": [
+    "## Get all authors"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "651eff14",
+   "metadata": {},
+   "source": [
+    "A get request to \n",
+    "http://127.0.0.1:4999/authorid/\n",
+    "will return something like\n",
+    "\"[{\\\"author_id\\\": \\\"parkerbremer\\\"}]\"\n",
+    "with all unique authorIDs"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "33bc4e58",
+   "metadata": {},
+   "source": [
+    "## Get Studies for an Author"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0b241913",
+   "metadata": {},
+   "source": [
+    "A get request to \n",
+    "http://127.0.0.1:4999/studyid/\n",
+    "with a payload like\n",
+    "    {\n",
+    "        \"author_id\":\"parkerbremer\"\n",
+    "    }\n",
+    "will return something like\n",
+    "\n",
+    "\"[{\\\"study_id\\\": \\\"1683762619.73521\\\"}, {\\\"study_id\\\": \\\"1683762695.7018\\\"}, {\\\"study_id\\\": \\\"1683762769.09463\\\"}, {\\\"study_id\\\": \\\"1683762864.56339\\\"}, {\\\"study_id\\\": \\\"1683762912.87341\\\"}, {\\\"study_id\\\": \\\"1683762974.10524\\\"}, {\\\"study_id\\\": \\\"1683763008.57449\\\"}, {\\\"study_id\\\": \\\"1683763024.50884\\\"}]\"\n",
+    "\n",
+    "with all studyIDs corresponding ot that author"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2ca943f1",
+   "metadata": {},
+   "source": [
+    "## Get Single Study"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c86267e3",
+   "metadata": {},
+   "source": [
+    "A get request to \n",
+    "http://127.0.0.1:4999/studyid/\n",
+    "with a payload like\n",
+    "    {\n",
+    "        \"study_id\":\"1683762619.73521\"\n",
+    "    }\n",
+    "will return something like\n",
+    "\n",
+    "\"[{\\\"author_id\\\": \\\"parkerbremer\\\", \\\"study_id\\\": \\\"1683762619.73521\\\", \\\"sample_id\\\": \\\"0\\\", \\\"metadata_parallel_id\\\": \\\"0\\\", \\\"cellLine\\\": null, \\\"age\\\": null, \\\"geneKnockout\\\": null, \\\"ageUnit\\\": null, \\\"volume\\\": null, \\\"heightUnit\\\": null, \\\"exercise\\\": null, \\\"weight\\\": null, \\\"diet\\\": null, \\\"time\\\": null, \\\"species\\\": null, \\\"timeUnit\\\": null, \\\"disease\\\": null, \\\"drugName\\\": null, \\\"otherInclusionCriteria\\\": null, \\\"zeroTimeEvent\\\": null, \\\"material\\\": null, \\\"mass\\\": null, \\\"organ\\\": null, \\\"geographicalOrigin\\\": null, \\\"sex\\\": null, \\\"otherExclusionCriteria\\\": null, \\\"height\\\": null, \\\"ethnicity\\\": null, \\\"drugDoseUnit\\\": null, \\\"cellCount\\\": null, \\\"drugDoseMagnitude\\\": null, \\\"massUnit\\\": null, \\\"weightUnit\\\": null, \\\"strain\\\": null, \\\"volumeUnit\\\": null}]\"\n",
+    "\n",
+    "with all samples from that study"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
