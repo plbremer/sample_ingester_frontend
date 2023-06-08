@@ -22,8 +22,8 @@ from . import samplemetadatauploadchecker
 
 dash.register_page(__name__, path='/submit-form')
 
-# BASE_URL_API = "http://127.0.0.1:4999/"
-BASE_URL_API = "http://api_alias:4999/"
+BASE_URL_API = "http://127.0.0.1:4999/"
+# BASE_URL_API = "http://api_alias:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
@@ -505,8 +505,8 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         for index,series in temp_tuple[1].iterrows():
             replacement_dict[temp_tuple[0]][series['written_string']]=series['main_string']
 
-    print(replacement_dict)
-    print(upload_panda)
+  # print(replacement_dict)
+  # print(upload_panda)
 
 
     for temp_col in upload_panda.columns:
@@ -604,7 +604,7 @@ def control_download_button(
 
            
         except:
-            print('bypassed that long use_count session')
+          # print('bypassed that long use_count session')
             pass
         
         
@@ -623,17 +623,18 @@ def control_download_button(
                     'new_vocabulary':temp_tuple[1]['main_string'].unique().tolist()
                 }
             )
-
-            try:
-                training_success=requests.post(
-                    BASE_URL_API+'/trainvocabularyresource/',json={
-                        'header':temp_tuple[0],
-                    },
-                    timeout=1
-                )
-            except:
-                print('bypassed that long training session')
-                pass
+            # no longer want to train each time because it is very slow
+            # instead, train only according to some clock, like once every day or something
+            # try:
+            #     training_success=requests.post(
+            #         BASE_URL_API+'/trainvocabularyresource/',json={
+            #             'header':temp_tuple[0],
+            #         },
+            #         timeout=1
+            #     )
+            # except:
+            #   # print('bypassed that long training session')
+            #     pass
 
     return [
         dcc.send_bytes(temp_data,"Fiehnlab_metadata_standardization_form_CURATED.xlsx")
@@ -1210,7 +1211,7 @@ def update_options(
     }
     temp_values=requests.post(BASE_URL_API+'/generatesubstringmatchesresource/',json=outbound_json).json()
 
-    print(temp_values)
+  # print(temp_values)
 
     return [
         [
@@ -1544,7 +1545,7 @@ def upload_form(
             
 
             temp_dataframe=split_columns_if_delimited(temp_dataframe)
-            print(temp_dataframe)
+          # print(temp_dataframe)
             temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
     displayed_name=html.Div([upload_form_filename],className='text-center')
