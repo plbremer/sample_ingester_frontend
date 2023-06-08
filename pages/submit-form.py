@@ -72,6 +72,7 @@ def parse_stored_excel_file(store_panda):
     return output_dict
 
 def split_columns_if_delimited(temp_dataframe):
+    #we always do this function, but only actually split if delimit character is prsent
     #for each column
     #split it
     #delete the orignal
@@ -85,13 +86,32 @@ def split_columns_if_delimited(temp_dataframe):
             # print(temp_dataframe[temp_column].str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.'))
             temp_expanded_columns=temp_dataframe[temp_column].astype(str).str.split(SPLIT_CHAR,expand=True).add_prefix(temp_column+'.')
         else:
-            temp_expanded_columns=temp_dataframe[temp_column]
+            temp_expanded_columns=temp_dataframe[temp_column].astype(str)
         new_dataframe_list.append(temp_expanded_columns)
 
     output_dataframe=pd.concat(new_dataframe_list,axis='columns')
     output_dataframe.fillna(value=np.nan,inplace=True)
 
     return output_dataframe
+
+def add_dot_zero_if_none(temp_dataframe):
+    column_rename_dict={
+        temp_col:temp_col+'.0' for temp_col in temp_dataframe if '.' not in temp_col
+    }
+    
+
+    temp_dataframe.rename(
+        column_rename_dict,
+        inplace=True,
+        axis='columns'
+        
+    )
+    print('########################################################')
+    print(column_rename_dict)
+    print(temp_dataframe)
+
+
+    return temp_dataframe
 
 
 layout = dmc.MantineProvider(
@@ -121,6 +141,7 @@ layout = dmc.MantineProvider(
 
                 dcc.Store('store_furthest_active',data=0),
                 dcc.Store('upload_store'),
+                dcc.Store('author_store'),
                 dcc.Store('store_2'),
                 dcc.Store('store_3'),
                 dcc.Store('store_4'),
@@ -523,6 +544,40 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         )    
     return upload_panda,total_replacement_panda
 
+def fill_author_sheet_curated(temp_writer,workbook,worksheet,temp_study_id,temp_author_id,provided_author_name):
+    worksheet=temp_writer.sheets['author_metadata_curated']
+    # worksheet.hide_gridlines()
+
+    example_format_bold=workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+    example_format_text=workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size':11
+    })
+
+    worksheet.write('A1','Requested Information',example_format_bold)
+    worksheet.write('B1','Value',example_format_bold)
+    worksheet.write('A2','Provided Author Name',example_format_bold)
+    worksheet.write('B2',provided_author_name,example_format_text)
+
+    worksheet.write('A3','Generated Author ID',example_format_bold)
+    worksheet.write('B3',temp_author_id,example_format_text)
+
+    worksheet.write('A4','Generated Study ID',example_format_bold)
+    worksheet.write('B4',temp_study_id,example_format_text)
+
+    # worksheet.autofit()
+    worksheet.set_column('A:A', 25)
+    worksheet.set_column('B:B', 25)
+
+    return workbook, worksheet
+
+
 
 @callback(
     [
@@ -536,6 +591,7 @@ def generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_p
         State(component_id="store_2", component_property="data"),
         State(component_id="store_3", component_property="data"),
         State(component_id="store_4", component_property="data"),
+        State(component_id="author_store", component_property="data"),
     ],
     prevent_initial_call=True
 )
@@ -544,22 +600,67 @@ def control_download_button(
     upload_store_data,
     store_2_data,
     store_3_data,
-    store_4_data
+    store_4_data,
+    author_store_data
 ):
     upload_panda=pd.DataFrame.from_records(upload_store_data)
     store_2_panda=pd.DataFrame.from_records(store_2_data)
     store_3_panda=pd.DataFrame.from_records(store_3_data)
     store_4_panda=pd.DataFrame.from_records(store_4_data)
+    author_panda=pd.DataFrame.from_records(author_store_data)
 
 
     download_panda,total_replacement_panda=generate_excel_for_download_from_stores(upload_panda,store_2_panda,store_3_panda,store_4_panda)
+
+
+    #we have to also manually change the non curated nan to 'not available' because they do not receive the curation treatment
+    download_panda.replace(
+        to_replace={'nan':'not available'},
+        inplace=True
+    )
+
+
     ####generate the downlaodable excel file
     output_stream=io.BytesIO()
     temp_writer=pd.ExcelWriter(output_stream,engine='xlsxwriter')
+    workbook=temp_writer.book
 
     empty_df=pd.DataFrame()
     empty_df.to_excel(temp_writer,sheet_name='title_page',index=False)
     #skip the last row which has the merger archetype info
+
+
+    provided_author_name=author_panda.at[0,'Value']
+    if pd.isnull(provided_author_name)==True:
+        provided_author_name='noauthornameprovided'
+    
+    ####this is where we call the submission API####
+    #sending provided author name, sample metadata sheet
+    #receiving a study id and an author id if successful
+    temp_study_id='1234.52345'
+    temp_author_id='oliverfiehn'
+
+    study_upload_success=requests.post(
+        BASE_URL_API+'/addstudytodatabase/',json={
+            'provided_author_name':provided_author_name,
+            'sample_metadata_sheet_panda':download_panda.to_dict(orient='records')
+        },
+        # timeout=0.1
+    ).json()
+    temp_study_id=study_upload_success['study_id']
+    temp_author_id=study_upload_success['author_id']
+
+
+
+    #####
+
+
+    empty_df.to_excel(temp_writer,sheet_name='author_metadata_curated',index=False)
+    worksheet=temp_writer.sheets['author_metadata_curated']
+    workbook, worksheet=fill_author_sheet_curated(temp_writer,workbook,worksheet,temp_study_id,temp_author_id,provided_author_name)
+
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print(download_panda)
 
     download_panda.to_excel(
         temp_writer,
@@ -598,7 +699,7 @@ def control_download_button(
                     'header':series['header'],
                     'main_string':series['main_string']
                 },
-                timeout=0.1
+                # timeout=0.1
             )
 
 
@@ -1460,6 +1561,7 @@ def generate_step_2_layout_and_data_for_store(written_strings_per_category):
         Output(component_id="upload_form",component_property="children"),
         Output(component_id="upload_store",component_property="data"),
         Output(component_id="submit_step_1_error_div",component_property="children"),
+        Output(component_id="author_store",component_property="data"),
     ],
     [
         Input(component_id="upload_form", component_property="contents"),
@@ -1510,12 +1612,15 @@ def upload_form(
             ]
         )
         temp_dataframe_output=None
+        temp_author_output=None
+
     else:
         dataframe_checks=list()
         my_SampleMetadataUploadChecker.create_dataframe()
         dataframe_checks.append(my_SampleMetadataUploadChecker.headers_malformed())
         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_underscore())
         dataframe_checks.append(my_SampleMetadataUploadChecker.contains_no_sample_rows())
+        # if there are any errors
         if any(map(lambda x: isinstance(x,str),dataframe_checks)):
             curate_button_children=dbc.Row(
                 children=[
@@ -1529,6 +1634,7 @@ def upload_form(
             )
             
             temp_dataframe_output=None
+            temp_author_output=None
 
         #if there are no problems with the excel file or dataframe
         else:
@@ -1545,8 +1651,23 @@ def upload_form(
             
 
             temp_dataframe=split_columns_if_delimited(temp_dataframe)
-          # print(temp_dataframe)
+
+            temp_dataframe=add_dot_zero_if_none(temp_dataframe)
+            print(temp_dataframe)
+            # temp_dataframe_output=dict()
             temp_dataframe_output=temp_dataframe.to_dict(orient='records')
 
+            temp_dataframe=pd.read_excel(
+                io.BytesIO(decoded),
+                sheet_name='author_metadata',
+                #skiprows=1
+                index_col=None
+            )
+
+            temp_author_output=temp_dataframe.to_dict(orient='records')
+            print(temp_dataframe)
+
+
+
     displayed_name=html.Div([upload_form_filename],className='text-center')
-    return [displayed_name,temp_dataframe_output,curate_button_children]
+    return [displayed_name,temp_dataframe_output,curate_button_children,temp_author_output]
