@@ -118,20 +118,20 @@ layout = dmc.MantineProvider(
                                 html.Br(),
                                 html.Div(
                                     
-                                    children=[
-                                        dmc.Button(
-                                            children=[
-                                                dbc.NavLink('What is this tool?', href='/explain-tool',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
-                                            ],
-                                            size='xl',
-                                            color='darkBlue'
-                                            # color='green'
-                                            # color='#FFCD00'
-                                            # color= '#FFCD00'
-                                            # classNames={'button':'dmc-button'}
-                                        ),
-                                    ],
-                                    style={'textAlign':'center'},
+                                    # children=[
+                                    #     dmc.Button(
+                                    #         children=[
+                                    #             dbc.NavLink('What is this tool?', href='/explain-tool',style = {'color': 'white','font-weight':'bold'},className='navlink-parker'),#,className='nav-link'))
+                                    #         ],
+                                    #         size='xl',
+                                    #         color='darkBlue'
+                                    #         # color='green'
+                                    #         # color='#FFCD00'
+                                    #         # color= '#FFCD00'
+                                    #         # classNames={'button':'dmc-button'}
+                                    #     ),
+                                    # ],
+                                    # style={'textAlign':'center'},
                                     
                                 )
                             
