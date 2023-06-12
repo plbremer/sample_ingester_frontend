@@ -22,8 +22,8 @@ from . import samplemetadatauploadchecker
 
 dash.register_page(__name__, path='/submit-form')
 
-BASE_URL_API = "http://127.0.0.1:4999/"
-# BASE_URL_API = "http://api_alias:4999/"
+# BASE_URL_API = "http://127.0.0.1:4999/"
+BASE_URL_API = "http://api_alias:4999/"
 
 with open('assets/form_header_dict_basics.json','r') as f:
     FORM_HEADER_DICT=json.load(f)
@@ -726,16 +726,17 @@ def control_download_button(
             )
             # no longer want to train each time because it is very slow
             # instead, train only according to some clock, like once every day or something
+            # update, for the moment, until we install timer, train everytime
             # try:
-            #     training_success=requests.post(
-            #         BASE_URL_API+'/trainvocabularyresource/',json={
-            #             'header':temp_tuple[0],
-            #         },
-            #         timeout=1
-            #     )
+            training_success=requests.post(
+                BASE_URL_API+'/trainvocabularyresource/',json={
+                    'header':temp_tuple[0],
+                },
+                # timeout=1
+            )
             # except:
-            #   # print('bypassed that long training session')
-            #     pass
+              # print('bypassed that long training session')
+                # pass
 
     return [
         dcc.send_bytes(temp_data,"Fiehnlab_metadata_standardization_form_CURATED.xlsx")
