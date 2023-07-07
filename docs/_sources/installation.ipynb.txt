@@ -59,6 +59,22 @@
     "  my_network:\n",
     "```"
    ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "78d2f286",
+   "metadata": {},
+   "source": [
+    "## Docker Images"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b95ee20c",
+   "metadata": {},
+   "source": [
+    "The Docker images are available at https://hub.docker.com/r/rictuar/sampleingester-frontend and https://hub.docker.com/r/rictuar/sampleingester-api"
+   ]
   }
  ],
  "metadata": {
